@@ -1,0 +1,1161 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Migration Agent: Web App User Guide</title>
+<meta name="description" content="End-user guide to the Migration Agent hosted web app and its CLI: projects, runs, the graph explorer, findings review, members, limits and honest expectations.">
+<style>
+:root{
+  color-scheme:light dark;
+  --bg:#f6f2e9;--panel:#fffdf8;--panel2:#faf6ec;--ink:#1f2328;--mute:#5b6270;--line:#e3dccb;--line2:#d2c9b3;
+  --teal:#0f766e;--teal-soft:#dcefeb;--indigo:#4338ca;--indigo-soft:#e7e6fa;
+  --warn:#8a4b08;--warn-soft:#fbeed2;--danger:#b42318;--danger-soft:#fbe4e1;--ok:#166534;--ok-soft:#dcf1e1;
+  --code:#16150f;--codefg:#ece8dc;--codeline:#2c2a22;--shadow:0 10px 30px -18px rgba(60,45,10,.35);
+  --serif:"Iowan Old Style","Palatino Linotype",Palatino,"Book Antiqua",Georgia,serif;
+  --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,"Helvetica Neue",Arial,sans-serif;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#12110e;--panel:#1a1913;--panel2:#201e17;--ink:#ece8dd;--mute:#a9a597;--line:#2f2d25;--line2:#403d32;
+    --teal:#4fd1c0;--teal-soft:#14302c;--indigo:#a9b4ff;--indigo-soft:#232349;
+    --warn:#f0b866;--warn-soft:#33260f;--danger:#ff9b8f;--danger-soft:#3a1914;--ok:#7fd99a;--ok-soft:#14301c;
+    --code:#0b0a07;--codefg:#ece8dc;--codeline:#2c2a22;--shadow:0 10px 30px -18px rgba(0,0,0,.8);
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#12110e;--panel:#1a1913;--panel2:#201e17;--ink:#ece8dd;--mute:#a9a597;--line:#2f2d25;--line2:#403d32;
+  --teal:#4fd1c0;--teal-soft:#14302c;--indigo:#a9b4ff;--indigo-soft:#232349;
+  --warn:#f0b866;--warn-soft:#33260f;--danger:#ff9b8f;--danger-soft:#3a1914;--ok:#7fd99a;--ok-soft:#14301c;
+  --code:#0b0a07;--codefg:#ece8dc;--codeline:#2c2a22;--shadow:0 10px 30px -18px rgba(0,0,0,.8);
+}
+:root[data-theme="light"]{color-scheme:light}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:20px}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{animation:none!important;transition:none!important}}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.7 var(--sans);-webkit-text-size-adjust:100%}
+a{color:var(--indigo);text-underline-offset:3px}
+a:hover{color:var(--teal)}
+:focus-visible{outline:3px solid var(--indigo);outline-offset:2px;border-radius:4px}
+.skip{position:absolute;left:12px;top:-60px;background:var(--ink);color:var(--bg);padding:10px 14px;border-radius:8px;z-index:100;text-decoration:none}
+.skip:focus{top:12px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+/* hero */
+.hero{border-bottom:1px solid var(--line);background:
+  radial-gradient(800px 300px at 85% -60px,var(--indigo-soft),transparent 70%),
+  radial-gradient(700px 300px at 5% -80px,var(--teal-soft),transparent 70%),var(--bg)}
+.hero-in{max-width:1180px;margin:0 auto;padding:56px 20px 44px}
+.topbar{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:36px;font-size:14px}
+.brand{font-family:var(--mono);font-size:13px;letter-spacing:.04em;color:var(--mute)}
+.brand b{color:var(--teal)}
+.btn{font:inherit;font-size:14px;border:1px solid var(--line2);background:var(--panel);color:var(--ink);border-radius:10px;padding:8px 14px;min-height:40px;cursor:pointer}
+.btn:hover{border-color:var(--teal)}
+.eyebrow{font:600 12px/1 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--teal)}
+h1{font:400 clamp(38px,6.4vw,70px)/1.04 var(--serif);letter-spacing:-.02em;margin:14px 0 16px;max-width:15ch}
+h1 em{color:var(--indigo);font-style:italic}
+.lede{max-width:62ch;font-size:19px;color:var(--mute);margin:0 0 22px}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
+.chip{display:inline-flex;gap:6px;align-items:center;padding:5px 12px;border:1px solid var(--line2);border-radius:99px;background:var(--panel);font-size:13px;color:var(--mute)}
+.chip b{color:var(--ink);font-weight:600}
+
+/* layout */
+.layout{display:grid;grid-template-columns:250px minmax(0,1fr);gap:56px;max-width:1180px;margin:0 auto;padding:36px 20px 96px}
+.side{position:sticky;top:20px;align-self:start;max-height:calc(100vh - 40px);overflow:auto;font-size:14px;padding-right:6px}
+.side b.h{display:block;margin:0 0 8px;font:600 11.5px/1 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--mute)}
+.side a{display:block;padding:5px 10px;border-left:2px solid var(--line);color:var(--mute);text-decoration:none;line-height:1.4}
+.side a:hover{color:var(--teal);border-color:var(--teal)}
+.side a.on{color:var(--ink);border-color:var(--teal);font-weight:600;background:linear-gradient(90deg,var(--teal-soft),transparent)}
+.side .grp{margin:14px 0 4px;font:600 11px/1 var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--mute);padding-left:12px}
+.mnav{display:none;margin:0 0 24px;border:1px solid var(--line2);border-radius:12px;background:var(--panel)}
+.mnav summary{cursor:pointer;padding:12px 16px;font-weight:600;min-height:44px}
+.mnav nav{padding:4px 12px 14px;columns:2;column-gap:20px;font-size:14px}
+.mnav a{display:block;padding:4px 0;break-inside:avoid}
+main{min-width:0}
+section{margin-bottom:68px}
+h2{font:400 clamp(28px,4vw,40px)/1.15 var(--serif);letter-spacing:-.01em;margin:0 0 18px;padding-top:6px}
+h2 .n{font:600 13px var(--mono);color:var(--teal);display:block;margin-bottom:6px;letter-spacing:.1em}
+h3{font:600 19px/1.35 var(--sans);margin:36px 0 8px}
+h3 .tag{font:600 11px var(--mono);letter-spacing:.06em;text-transform:uppercase;margin-left:8px;vertical-align:2px}
+h4{font:600 15px/1.4 var(--sans);margin:22px 0 6px}
+p{margin:0 0 14px}
+ul,ol{padding-left:22px;margin:0 0 16px}
+li{margin:5px 0}
+hr{border:0;border-top:1px solid var(--line);margin:28px 0}
+code{font:13.5px var(--mono);background:var(--panel2);border:1px solid var(--line);padding:1px 6px;border-radius:6px;overflow-wrap:anywhere}
+kbd{font:12.5px var(--mono);border:1px solid var(--line2);border-bottom-width:2px;background:var(--panel);padding:1px 7px;border-radius:6px;white-space:nowrap}
+.ui{font-weight:600;color:var(--ink);background:var(--indigo-soft);padding:0 6px;border-radius:5px;white-space:nowrap}
+.pw{position:relative;margin:14px 0 20px}
+pre{background:var(--code);color:var(--codefg);padding:16px 18px;border-radius:14px;overflow:auto;margin:0;line-height:1.55;font:13px/1.6 var(--mono);box-shadow:var(--shadow);border:1px solid var(--codeline)}
+pre code{background:none;border:0;padding:0;color:inherit;font:inherit;overflow-wrap:normal}
+.copy{position:absolute;top:8px;right:8px;font:12px var(--mono);background:#ffffff14;color:#d9d5c8;border:1px solid #ffffff2a;border-radius:8px;padding:4px 10px;cursor:pointer;min-height:30px}
+.copy:hover{background:#ffffff26}
+.tw{overflow-x:auto;margin:14px 0 22px;border:1px solid var(--line);border-radius:14px;background:var(--panel)}
+table{border-collapse:collapse;width:100%;font-size:14.5px;min-width:560px}
+caption{text-align:left;padding:10px 14px;font-size:13px;color:var(--mute)}
+th,td{text-align:left;padding:10px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font:600 11.5px var(--mono);text-transform:uppercase;letter-spacing:.08em;color:var(--mute);background:var(--panel2)}
+tr:last-child td{border-bottom:0}
+td code{font-size:12.5px}
+
+/* components */
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px;margin:18px 0 22px}
+.card{padding:18px 20px;border:1px solid var(--line);border-radius:16px;background:var(--panel)}
+.card b{display:block;margin-bottom:4px}
+.card p{margin:0;color:var(--mute);font-size:15px}
+.call{padding:14px 18px;border-left:4px solid var(--teal);background:var(--teal-soft);border-radius:0 12px 12px 0;margin:18px 0}
+.call p:last-child{margin:0}
+.call.warn{border-color:var(--warn);background:var(--warn-soft)}
+.call.bad{border-color:var(--danger);background:var(--danger-soft)}
+.call.na{border-color:var(--indigo);background:var(--indigo-soft)}
+.call .t{font:700 12px var(--mono);letter-spacing:.08em;text-transform:uppercase;display:block;margin-bottom:4px}
+.call.warn .t{color:var(--warn)}.call.bad .t{color:var(--danger)}.call.na .t{color:var(--indigo)}.call .t{color:var(--teal)}
+.cli{border:1px dashed var(--line2);border-radius:14px;padding:12px 16px 4px;margin:18px 0;background:var(--panel2)}
+.cli>.t{font:700 11.5px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--mute);display:block;margin-bottom:6px}
+.cli .pw{margin:8px 0 12px}
+.badge{display:inline-block;font:600 11px/1 var(--mono);letter-spacing:.05em;text-transform:uppercase;padding:4px 8px;border-radius:99px;white-space:nowrap}
+.badge.na{background:var(--indigo-soft);color:var(--indigo)}
+.badge.ok{background:var(--ok-soft);color:var(--ok)}
+.badge.warn{background:var(--warn-soft);color:var(--warn)}
+.badge.bad{background:var(--danger-soft);color:var(--danger)}
+.badge.mute{background:var(--panel2);color:var(--mute);border:1px solid var(--line)}
+ol.steps{list-style:none;padding:0;counter-reset:s;margin:18px 0}
+ol.steps>li{counter-increment:s;position:relative;padding:0 0 18px 52px;margin:0}
+ol.steps>li::before{content:counter(s);position:absolute;left:0;top:0;width:34px;height:34px;border-radius:10px;background:var(--teal);color:#fff;display:grid;place-items:center;font:700 15px var(--mono)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) ol.steps>li::before{color:#04201c}}
+:root[data-theme="dark"] ol.steps>li::before{color:#04201c}
+ol.steps>li::after{content:"";position:absolute;left:16px;top:38px;bottom:4px;width:2px;background:var(--line)}
+ol.steps>li:last-child::after{display:none}
+ol.steps>li>b:first-child{display:block;margin-bottom:2px}
+figure{margin:22px 0}
+figure .dia{overflow-x:auto;border:1px solid var(--line);border-radius:16px;background:var(--panel);padding:10px}
+figcaption{font-size:13.5px;color:var(--mute);margin-top:8px}
+svg text{font-family:var(--sans);fill:var(--ink)}
+svg .b{fill:var(--panel2);stroke:var(--line2);stroke-width:1.4}
+svg .bt{fill:var(--teal-soft);stroke:var(--teal);stroke-width:1.6}
+svg .bi{fill:var(--indigo-soft);stroke:var(--indigo);stroke-width:1.6}
+svg .bw{fill:var(--warn-soft);stroke:var(--warn);stroke-width:1.4}
+svg .ln{stroke:var(--mute);stroke-width:1.6;fill:none}
+svg .ld{stroke:var(--mute);stroke-width:1.4;fill:none;stroke-dasharray:5 4}
+svg .ar{fill:var(--mute)}
+svg .sm{font-size:11.5px;fill:var(--mute)}
+svg .tt{font-size:13px;font-weight:600}
+svg .mo{font-family:var(--mono);font-size:11.5px}
+.perm td:not(:first-child),.perm th:not(:first-child){text-align:center}
+.yes{color:var(--ok);font-weight:700}.no{color:var(--mute)}
+dl.gl{display:grid;grid-template-columns:minmax(150px,230px) 1fr;gap:0;border:1px solid var(--line);border-radius:14px;background:var(--panel);overflow:hidden}
+dl.gl dt{padding:10px 14px;font-weight:600;border-bottom:1px solid var(--line);background:var(--panel2)}
+dl.gl dd{margin:0;padding:10px 14px;border-bottom:1px solid var(--line)}
+dl.gl dt:last-of-type,dl.gl dd:last-of-type{border-bottom:0}
+details.faq{border:1px solid var(--line);border-radius:12px;background:var(--panel);margin:10px 0}
+details.faq summary{cursor:pointer;padding:13px 16px;font-weight:600;min-height:44px}
+details.faq div{padding:0 16px 8px}
+footer{border-top:1px solid var(--line);padding:30px 20px;text-align:center;color:var(--mute);font-size:13.5px}
+@media (max-width:900px){
+  .layout{grid-template-columns:1fr;gap:0;padding-top:24px}
+  .side{display:none}.mnav{display:block}
+  dl.gl{grid-template-columns:1fr}
+  dl.gl dt{border-bottom:0;padding-bottom:2px}
+}
+@media (max-width:520px){.mnav nav{columns:1}ol.steps>li{padding-left:44px}.hero-in{padding-top:36px}}
+@media print{.side,.mnav,.copy,.btn{display:none}.layout{display:block}body{background:#fff;color:#000}}
+</style>
+</head>
+<body>
+<a class="skip" href="#top">Skip to the guide</a>
+
+<header class="hero">
+  <div class="hero-in">
+    <div class="topbar">
+      <span class="brand"><b>migration</b> agent / user guide</span>
+      <button class="btn" id="theme" type="button" aria-label="Toggle light and dark theme">Toggle theme</button>
+    </div>
+    <span class="eyebrow">Web app and CLI &middot; for engineers</span>
+    <h1>Know what the service does <em>before</em> you rewrite it.</h1>
+    <p class="lede">This guide walks you through the hosted web app, page by page and button by button, with the matching command-line steps. It also tells you plainly what the tool can and cannot see, so you can trust the right parts of its output.</p>
+    <div class="chips">
+      <span class="chip"><b>Status</b> hosted platform in development</span>
+      <span class="chip"><b>Billing</b> not enabled</span>
+      <span class="chip"><b>Source access</b> read-only, never executed</span>
+    </div>
+  </div>
+</header>
+
+<div class="layout" id="top">
+<aside class="side" aria-label="Guide contents">
+  <b class="h">On this page</b>
+  <div class="grp">Start</div>
+  <a href="#what">What it does</a>
+  <a href="#quickstart">5-minute quickstart</a>
+  <a href="#concepts">Core concepts</a>
+  <div class="grp">Using the web app</div>
+  <a href="#signin">Sign up and log in</a>
+  <a href="#create">Create a project</a>
+  <a href="#estimate">Estimate, budget, profiles</a>
+  <a href="#runs">Start, watch, cancel a run</a>
+  <a href="#document">Read the document</a>
+  <a href="#graph">Graph explorer</a>
+  <a href="#userdocs">Docs for the Verifier</a>
+  <a href="#findings">Review findings</a>
+  <a href="#comments">Comments</a>
+  <a href="#reanalysis">Re-analysis and incremental</a>
+  <a href="#exports">Exports and changelog</a>
+  <a href="#usage">Usage and plan</a>
+  <a href="#members">Members and roles</a>
+  <a href="#audit">Audit log</a>
+  <a href="#delete">Deleting a project</a>
+  <a href="#a11y">Keyboard and accessibility</a>
+  <div class="grp">Reference</div>
+  <a href="#cli">CLI equivalents</a>
+  <a href="#honest">Reading results honestly</a>
+  <a href="#limits">Limits and quotas</a>
+  <a href="#trouble">Troubleshooting</a>
+  <a href="#notyet">Not available yet</a>
+  <a href="#glossary">Glossary</a>
+  <a href="#faq">FAQ</a>
+</aside>
+
+<main id="main">
+
+<details class="mnav">
+  <summary>Contents</summary>
+  <nav aria-label="Guide contents (compact)">
+    <a href="#what">What it does</a><a href="#quickstart">Quickstart</a><a href="#concepts">Core concepts</a>
+    <a href="#signin">Sign up and log in</a><a href="#create">Create a project</a><a href="#estimate">Estimate and budget</a>
+    <a href="#runs">Runs</a><a href="#document">The document</a><a href="#graph">Graph explorer</a>
+    <a href="#userdocs">Docs for the Verifier</a><a href="#findings">Findings</a><a href="#comments">Comments</a>
+    <a href="#reanalysis">Re-analysis</a><a href="#exports">Exports</a><a href="#usage">Usage and plan</a>
+    <a href="#members">Members and roles</a><a href="#audit">Audit log</a><a href="#delete">Deleting</a>
+    <a href="#a11y">Accessibility</a><a href="#cli">CLI equivalents</a><a href="#honest">Reading results</a>
+    <a href="#limits">Limits</a><a href="#trouble">Troubleshooting</a><a href="#notyet">Not available yet</a>
+    <a href="#glossary">Glossary</a><a href="#faq">FAQ</a>
+  </nav>
+</details>
+
+<div class="call warn" role="note">
+  <span class="t">Read this first</span>
+  <p>The hosted platform is <strong>in development</strong>. It is not a released or audited service, there is <strong>no billing</strong>, and several things people expect from a SaaS product (single sign-on, private repositories, e-mailed invitations, password reset) are <strong>not built</strong>. Every such gap is marked <span class="badge na">Not available yet</span> where it matters and collected in <a href="#notyet">one list</a>. Where the web app has no button for something that the server can do, this guide shows the API or CLI route instead and says so.</p>
+</div>
+
+<!-- ============================================================ 1 -->
+<section id="what">
+<h2><span class="n">01</span>What the product does, and who it is for</h2>
+<p>Migration Agent reads the source code of a legacy service and produces two things: an <strong>understanding document</strong> (readable prose organised into fixed sections such as endpoints, data model, business rules and quirks) and a <strong>knowledge graph</strong> of the things it found (components, endpoints, data entities, business rules and so on). Every claim in both points at a file, a line range and a <strong>verbatim quote</strong> from your code, and the quote is machine-checked against the real file before the claim is kept.</p>
+<p>A second pass, the <strong>blind Verifier</strong>, compares that code-derived document with the documentation your team already has (requirements, wikis, runbooks) and lists where they disagree. You decide who is right; some of your answers trigger a targeted re-analysis, which produces a new graph version.</p>
+
+<div class="cards">
+  <div class="card"><b>Who it is for</b><p>Engineers and tech leads who inherit or must migrate a service they did not write, and need a cited map before they commit to a plan.</p></div>
+  <div class="card"><b>What you get</b><p>A cited document, a browsable graph with evidence quotes, and a reviewable list of doc-versus-code disagreements.</p></div>
+  <div class="card"><b>What it never does</b><p>Execute your code, modify your source, or let the model write outside a read-only, path-jailed view of the ingested copy.</p></div>
+  <div class="card"><b>What it is not</b><p>A proof of correctness, a test suite, or a replacement for running the system. It is a well-cited reading aid. See <a href="#honest">reading results honestly</a>.</p></div>
+</div>
+
+<h3>Two ways to use it</h3>
+<div class="tw"><table>
+<caption>Web app versus CLI</caption>
+<thead><tr><th>Web app (hosted)</th><th>CLI (<code>migration-agent</code>)</th></tr></thead>
+<tbody><tr>
+<td>Teams, shared review, roles, audit log, usage metering. You never see an API key: the operator's server holds it. You choose a <em>model profile</em> (Fast, Balanced, Best), not a model name.</td>
+<td>One engineer, one machine. All state lives in a single <code>&lt;name&gt;.migration</code> folder. You bring your own model API key and pick models with a config file. Includes a local review UI bound to <code>127.0.0.1</code>.</td>
+</tr></tbody></table></div>
+<p>Both run the same engine, so results are comparable. The CLI is described in <code>docs/user-guide.md</code>; this guide gives the CLI equivalent of every web step in the <a href="#cli">CLI table</a>.</p>
+</section>
+
+<!-- ============================================================ 2 -->
+<section id="quickstart">
+<h2><span class="n">02</span>Quickstart: first result in about five minutes</h2>
+<p>You need the web app's address from whoever runs your deployment (locally it is <code>http://localhost:3000</code>) and a <strong>public</strong> https git repository, or a <code>.zip</code> / <code>.tar.gz</code> of your code.</p>
+<ol class="steps">
+<li><b>Create an account.</b> Open the app, choose <span class="ui">Start free</span> (or go to Sign up), enter a work email and a password of at least 10 characters, and press <span class="ui">Create workspace</span>. You land on <span class="ui">Projects</span>, signed in, as owner of a new workspace. If sign-up is closed on your deployment you will see "sign up is disabled": ask your operator for an account.</li>
+<li><b>Connect a service.</b> Press <span class="ui">New project</span>. Give it a name, keep <span class="ui">Git URL</span> selected, paste a repository such as <code>https://github.com/spring-projects/spring-petclinic</code>, and press <span class="ui">Create project</span>.</li>
+<li><b>Look at the estimate.</b> On the project's <span class="ui">Overview</span> tab, <span class="ui">Start a run</span> already shows an <span class="ui">Estimate before you start</span> (chunks to read and an estimated cost) and either <span class="ui">Allowed on your plan</span> or <span class="ui">Not allowed</span>. Leave <span class="ui">Run type</span> on Analyze and <span class="ui">Model profile</span> on Balanced. Set <span class="ui">Budget cap (USD)</span> to something you are comfortable losing.</li>
+<li><b>Start the run.</b> Press <span class="ui">Start run</span>. A live panel shows stages (<code>ingest</code>, <code>extract</code>, <code>analyze</code>), spend against your cap and a log. A small service finishes in about a minute; a large one can take much longer and is limited by the model provider's rate limits.</li>
+<li><b>Read the result.</b> When the status pill turns <span class="badge ok">Succeeded</span>, press <span class="ui">Read the document</span> for the prose, or <span class="ui">Explore the graph</span> and click any node to see its evidence quotes and confidence.</li>
+<li><b>Optional: check it against your own docs.</b> Upload your documentation (<a href="#userdocs">this is an API step today</a>), start a run of type <span class="ui">Verify: compare with your docs</span>, then open the <span class="ui">Findings</span> tab and answer each disagreement.</li>
+</ol>
+<div class="cli"><span class="t">Same thing in the CLI</span>
+<div class="pw"><pre><code>pip install ".[llm]"                         # needs Python 3.11+
+cp .env.example .env                         # add ANTHROPIC_API_KEY or GEMINI_API_KEY
+migration-agent init https://github.com/spring-projects/spring-petclinic --project ./petclinic.migration
+migration-agent ingest  petclinic.migration
+migration-agent extract petclinic.migration
+migration-agent analyze petclinic.migration --dry-run        # plan and cost estimate
+migration-agent analyze petclinic.migration --max-usd 1
+cp requirements.md petclinic.migration/user_docs/            # optional
+migration-agent verify  petclinic.migration
+migration-agent review  petclinic.migration                  # local review UI</code></pre></div></div>
+</section>
+
+<!-- ============================================================ 3 -->
+<section id="concepts">
+<h2><span class="n">03</span>Core concepts</h2>
+
+<h3>The pipeline, and why the Verifier is "blind"</h3>
+<figure>
+<div class="dia">
+<svg viewBox="0 0 980 340" width="100%" style="min-width:820px" role="img" aria-labelledby="pipe-t pipe-d">
+  <title id="pipe-t">Pipeline from source to findings</title>
+  <desc id="pipe-d">Your source goes through ingest, extract and analyze to produce the understanding document and graph. Your own documents and the generated document are the only two inputs to the Verifier, which produces findings. You review findings; some answers trigger a re-analysis that creates a new graph version.</desc>
+  <defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" class="ar"/></marker></defs>
+  <text x="14" y="22" class="sm">LANE 1: from code (the Verifier never helps here, your docs are never read)</text>
+  <rect class="b" x="14" y="36" width="120" height="64" rx="12"/><text x="74" y="63" text-anchor="middle" class="tt">Your source</text><text x="74" y="82" text-anchor="middle" class="sm">git URL or archive</text>
+  <rect class="bt" x="176" y="36" width="116" height="64" rx="12"/><text x="234" y="63" text-anchor="middle" class="tt">Ingest</text><text x="234" y="82" text-anchor="middle" class="sm">safe copy, redact</text>
+  <rect class="bt" x="334" y="36" width="116" height="64" rx="12"/><text x="392" y="63" text-anchor="middle" class="tt">Extract</text><text x="392" y="82" text-anchor="middle" class="sm">static facts, no LLM</text>
+  <rect class="bt" x="492" y="36" width="130" height="64" rx="12"/><text x="557" y="63" text-anchor="middle" class="tt">Analyze</text><text x="557" y="82" text-anchor="middle" class="sm">LLM + evidence check</text>
+  <rect class="bi" x="690" y="26" width="270" height="84" rx="12"/><text x="825" y="56" text-anchor="middle" class="tt">Understanding document</text><text x="825" y="76" text-anchor="middle" class="tt">+ knowledge graph vN</text><text x="825" y="96" text-anchor="middle" class="sm">every claim: file, lines, quote</text>
+  <path class="ln" d="M134 68H172" marker-end="url(#ah)"/><path class="ln" d="M292 68H330" marker-end="url(#ah)"/><path class="ln" d="M450 68H488" marker-end="url(#ah)"/><path class="ln" d="M622 68H686" marker-end="url(#ah)"/>
+
+  <text x="14" y="168" class="sm">LANE 2: verification (sees only the document and your docs)</text>
+  <rect class="b" x="14" y="182" width="150" height="64" rx="12"/><text x="89" y="209" text-anchor="middle" class="tt">Your own docs</text><text x="89" y="228" text-anchor="middle" class="sm">requirements, wiki, runbooks</text>
+  <rect class="bt" x="340" y="182" width="150" height="64" rx="12"/><text x="415" y="209" text-anchor="middle" class="tt">Blind Verifier</text><text x="415" y="228" text-anchor="middle" class="sm">run type: verify</text>
+  <rect class="bw" x="590" y="182" width="150" height="64" rx="12"/><text x="665" y="209" text-anchor="middle" class="tt">Findings</text><text x="665" y="228" text-anchor="middle" class="sm">both sides quoted</text>
+  <rect class="b" x="820" y="182" width="140" height="64" rx="12"/><text x="890" y="209" text-anchor="middle" class="tt">You decide</text><text x="890" y="228" text-anchor="middle" class="sm">4 possible answers</text>
+  <path class="ln" d="M164 214H336" marker-end="url(#ah)"/>
+  <path class="ln" d="M825 110V140Q825 150 760 150H430Q415 150 415 162V178" marker-end="url(#ah)"/>
+  <path class="ln" d="M490 214H586" marker-end="url(#ah)"/><path class="ln" d="M740 214H816" marker-end="url(#ah)"/>
+  <path class="ld" d="M890 250V300Q890 316 874 316H560Q545 316 545 300V104" marker-end="url(#ah)"/>
+  <text x="716" y="334" text-anchor="middle" class="sm">"The document is right" / "Look again" queue a re-analysis, which makes the next graph version</text>
+</svg>
+</div>
+<figcaption>Because the analysis never reads your docs and the Verifier never reads your code, a disagreement between them is real information instead of an echo.</figcaption>
+</figure>
+
+<h3>Vocabulary you will see in the app</h3>
+<dl class="gl">
+<dt>Workspace</dt><dd>Your team's container. Holds projects, members, usage and limits. Choose it in the <span class="ui">Workspace</span> selector in the left bar. Signing up creates one and makes you its owner.</dd>
+<dt>Project</dt><dd>One legacy service: one source (git URL or archive), its runs, its graph versions, findings, comments, and your uploaded docs.</dd>
+<dt>Run</dt><dd>One background job on a project. Types: <code>analyze</code> (ingest, extract, analyze), <code>verify</code> (blind Verifier) and <code>reanalyze</code> (re-read only what review changed). Statuses: <span class="badge mute">Queued</span> <span class="badge ok">Running</span> <span class="badge ok">Succeeded</span> <span class="badge bad">Failed</span> <span class="badge warn">Stopped at budget</span> <span class="badge mute">Cancelled</span>. Only one run of each type can be queued or running per project at a time.</dd>
+<dt>Snapshot / graph version</dt><dd>Each successful analysis or re-analysis saves an immutable graph snapshot, <code>v1</code>, <code>v2</code> and so on. Node IDs stay stable across versions (a registry maps a node's type, module and symbol to its ID), so versions diff cleanly.</dd>
+<dt>Node</dt><dd>One thing found in the code. Every node has an ID, a type, a name, a module, a plain-language responsibility, evidence, a derived confidence and two optional flags: <em>quirk</em> (odd behaviour worth preserving on purpose) and <em>suspected bug</em>.</dd>
+<dt>Edge</dt><dd>A relationship between two nodes. Types: <code>calls</code>, <code>reads</code>, <code>writes</code>, <code>depends_on</code>, <code>publishes</code>, <code>consumes</code>, <code>implements</code>, <code>configures</code>. Edges carry evidence and confidence too.</dd>
+<dt>Evidence</dt><dd>A file path, optional line range and symbol, and a verbatim quote. The quote is checked against the real file; claims whose quotes do not match are rejected or demoted.</dd>
+<dt>Confidence</dt><dd>Derived from evidence, never asserted by the model. See the table below.</dd>
+<dt>Finding</dt><dd>A disagreement the Verifier found, with a title, severity (high, medium, low), explanation, verbatim quotes from both sides and links to related nodes.</dd>
+<dt>Resolution</dt><dd>Your answer to a finding, one of four statuses. See <a href="#findings">Review findings</a>.</dd>
+<dt>User docs</dt><dd>Your existing documentation files. They are used <em>only</em> by the Verifier.</dd>
+<dt>Blind Verifier</dt><dd>The comparison step that sees exactly two inputs: the generated document and your docs. It never sees code and the analysis never saw your docs.</dd>
+</dl>
+
+<h3>Node types</h3>
+<div class="tw"><table>
+<caption>The engine knows nine node types; the explorer's filter chips offer the first six.</caption>
+<thead><tr><th>Type</th><th>ID prefix</th><th>Meaning</th><th>Filter chip</th></tr></thead>
+<tbody>
+<tr><td><code>component</code></td><td>COMP</td><td>A module, class or service unit with a responsibility</td><td>yes</td></tr>
+<tr><td><code>endpoint</code></td><td>EP</td><td>An HTTP route or API operation</td><td>yes</td></tr>
+<tr><td><code>data_entity</code></td><td>ENT</td><td>A table, model or persisted structure</td><td>yes</td></tr>
+<tr><td><code>business_rule</code></td><td>RULE</td><td>A decision, calculation or constraint the code enforces</td><td>yes</td></tr>
+<tr><td><code>external_dependency</code></td><td>EXT</td><td>A library, service or system the code depends on</td><td>yes</td></tr>
+<tr><td><code>config</code></td><td>CFG</td><td>A configuration key</td><td>yes</td></tr>
+<tr><td><code>job</code></td><td>JOB</td><td>A background job or consumer</td><td>no (use search)</td></tr>
+<tr><td><code>integration</code></td><td>INT</td><td>An integration or contract with another system</td><td>no (use search)</td></tr>
+<tr><td><code>dead_code</code></td><td>DEAD</td><td>Code that appears unreachable or unused</td><td>no (use search)</td></tr>
+</tbody></table></div>
+
+<h3>How confidence is derived</h3>
+<p>An evidence item is <strong>strong</strong> when it has a verbatim quote and is pinpointed by a line number or a symbol name. Confidence is then computed, not guessed:</p>
+<div class="tw"><table>
+<caption>Derived confidence levels</caption>
+<thead><tr><th>Level</th><th>Rule</th><th>How to read it</th></tr></thead>
+<tbody>
+<tr><td><span class="badge ok">high</span></td><td>At least two strong evidence items</td><td>Two independent, pinpointed, verified quotes agree. Still a reading of code, not a test result.</td></tr>
+<tr><td><span class="badge warn">medium</span></td><td>One strong item, or two or more weaker ones</td><td>Reasonably grounded; worth a glance at the quote.</td></tr>
+<tr><td><span class="badge mute">low</span></td><td>One weak item (for example a quote without a line or symbol)</td><td>A lead, not a fact. Check the quote yourself.</td></tr>
+<tr><td><span class="badge bad">none</span></td><td>No evidence</td><td>Listed under "Blind Spots / low confidence" in the document. Do not rely on it. (The explorer's meter is drawn for low, medium and high; a none node may show an empty meter.)</td></tr>
+</tbody></table></div>
+<div class="call"><span class="t">Why low is common</span><p>In the first measurements, <strong>no node reached "high"</strong> and most were "low". That can mean the evidence bar is strict, which is good for trust, or that the model is not yet supplying strong evidence, which is bad for usefulness. It has not been resolved. Low is not the same as wrong. See <a href="#honest">reading results honestly</a>.</p></div>
+
+<h3>What the understanding document contains</h3>
+<p>The document is rendered from the graph into fifteen fixed sections: Purpose and Capabilities; Boundary and External Dependencies; Component Responsibilities; Endpoints and API Surface; Data Model and Storage; Business Rules; Integrations and Contracts; Background Jobs and Consumers; Configuration and Environment; Auth, Error Handling and Cross-Cutting; Existing Tests; Quirks and Suspicious Code; Blind Spots / low confidence; Open Questions and Assumptions; and a Coverage Matrix that shows which inventory items (files, routes, config keys, dependencies) were accounted for. Read sections 13 to 15 first if you want to know what the tool is unsure about.</p>
+</section>
+
+<!-- ============================================================ 4 -->
+<section id="signin">
+<h2><span class="n">04</span>Sign up and log in</h2>
+<p><strong>Sign up.</strong> Go to the sign-up page (from the landing page choose <span class="ui">Start free</span>). Fields: <span class="ui">Name (optional)</span>, <span class="ui">Work email</span>, <span class="ui">Password</span> (at least 10 characters; the form says "Use at least 10 characters." otherwise). Press <span class="ui">Create workspace</span>. This creates your account and a default workspace in which you are the <em>owner</em>.</p>
+<p><strong>Log in.</strong> Choose <span class="ui">Log in</span>, enter email and password, press <span class="ui">Log in</span>. Too many failed attempts for one email trigger a growing wait ("too many failed sign-in attempts, try again later").</p>
+<p><strong>Sign out.</strong> <span class="ui">Sign out</span> is at the bottom of the left bar (in the menu on a phone). The theme button next to your name switches light and dark.</p>
+
+<div class="call warn"><span class="t">Sessions are short</span><p>The access token lives only in the page's memory and expires after about an hour by default. A page reload or an expired token sends you back to <span class="ui">Log in</span>. There is no silent refresh. Unsaved text (a half-written comment) is lost. Operators can enable tab-scoped persistence, so a reload may keep you signed in on some deployments.</p></div>
+<div class="call na"><span class="t">Not available yet</span><p>Single sign-on / OIDC login in the web UI, password reset, e-mail verification and account deletion. The UI uses the built-in password sign-in only. If you forget your password, ask your operator.</p></div>
+<div class="call"><span class="t">Closed sign-up</span><p>In production, self-service sign-up is <strong>off by default</strong> and the server answers 403 "sign up is disabled". Your operator then creates accounts for you. A workspace owner or admin can still invite colleagues who already have an account (see <a href="#members">Members and roles</a>).</p></div>
+<div class="cli"><span class="t">CLI equivalent</span><p>None needed: the CLI has no accounts. You supply a model API key through the environment or a <code>.env</code> file.</p></div>
+</section>
+
+<!-- ============================================================ 5 -->
+<section id="create">
+<h2><span class="n">05</span>Create a project</h2>
+<p>From <span class="ui">Projects</span> press <span class="ui">New project</span> (or <span class="ui">Connect a repository</span> on an empty workspace). The page is titled <span class="ui">Connect a service</span>, "Step 1 of 2". Viewers do not see the button.</p>
+<ol class="steps">
+<li><b>Project name.</b> 2 to 80 characters, for example <code>orders-service</code>.</li>
+<li><b>Source.</b> Choose <span class="ui">Git URL</span> or <span class="ui">Upload archive</span>.</li>
+<li><b>Press <span class="ui">Create project</span>.</b> The project is created, then the source is attached. You land on its Overview. If attaching the source fails, the project already exists; fix the source and submit again (the form says "Project created. Fix the source and submit again to continue.").</li>
+</ol>
+
+<h3>Git URL</h3>
+<p>Field <span class="ui">Repository URL</span>: "Public https URLs only. Private, loopback and link-local hosts are rejected."</p>
+<ul>
+<li>Scheme must be <code>https://</code>; port must be 443 (or omitted).</li>
+<li>No credentials in the URL, no query string, no fragment.</li>
+<li>The host must resolve to a <strong>public</strong> address. <code>localhost</code>, <code>.local</code>, <code>.internal</code>, private ranges, link-local, loopback and numeric hosts are refused. Operators may further restrict hosts to an allowlist.</li>
+<li>The repository is cloned shallowly <em>when you first estimate or run</em>, not when you press Create. That clone is then frozen as your project's source snapshot. Later commits to the remote do <strong>not</strong> show up until you replace the source (see <a href="#reanalysis">Re-analysis and incremental</a>).</li>
+</ul>
+<div class="call na"><span class="t">Not available yet</span><p>Private repositories, GitHub/GitLab app integration, SSH URLs and access tokens. If the repository is private, the clone fails with "git clone failed (repository not found or not public)". Workaround: download an archive yourself and use <span class="ui">Upload archive</span>.</p></div>
+
+<h3>Upload archive</h3>
+<p>Field <span class="ui">Archive</span>: drop a file or press <span class="ui">Choose file</span>. Accepted: <code>.zip</code>, <code>.tar.gz</code>, <code>.tgz</code>. The page checks the name and says "Use a .zip, .tar.gz or .tgz archive." Its size check says 200 MB, but <strong>the server's limit is the one that counts</strong>: 100 MB by default (and never more than your plan's source-size limit), so a file between 100 and 200 MB passes the page and is then refused with "file exceeds 100 MB". Prefer a clean archive without build output.</p>
+<div class="tw"><table>
+<caption>What the server rejects in an archive, and why</caption>
+<thead><tr><th>Message you may see</th><th>Why it is refused</th></tr></thead>
+<tbody>
+<tr><td>unsupported archive type (use .zip or .tar.gz)</td><td>Only zip and tar.gz are read.</td></tr>
+<tr><td>archive is corrupt or unsupported (...)</td><td>The file could not be parsed.</td></tr>
+<tr><td>encrypted archives are not supported</td><td>The server cannot read password-protected zips.</td></tr>
+<tr><td>archive contains links or special files</td><td>Symlinks, hard links and device files could point outside the archive.</td></tr>
+<tr><td>archive contains a path traversal entry / an absolute or backslash path / an invalid entry name</td><td>Entries like <code>../../etc/x</code> or <code>/etc/x</code> would write outside the sandbox.</td></tr>
+<tr><td>archive contains too many files / too many entries / duplicate entries</td><td>Default ceilings: 50,000 files, 100,000 entries in total (directories count), no duplicate paths.</td></tr>
+<tr><td>archive contains a file that is too large</td><td>A single file over 50 MB by default.</td></tr>
+<tr><td>archive expands beyond the allowed size</td><td>More than 500 MB uncompressed by default.</td></tr>
+<tr><td>archive compression ratio is suspiciously high</td><td>Guard against decompression bombs (default ratio 200 to 1).</td></tr>
+<tr><td>archive paths are nested too deeply</td><td>Directory depth over 64.</td></tr>
+<tr><td>archive processing exceeded the time limit</td><td>Validation has a wall-clock cap.</td></tr>
+<tr><td>archive is empty</td><td>Nothing to analyse.</td></tr>
+</tbody></table></div>
+<p>Separately, the engine's <strong>ingest</strong> step decides what is actually analysed. It skips symlinks, binaries, files over 1 MB and vendor or build directories (<code>.git</code>, <code>node_modules</code>, <code>vendor</code>, <code>build</code>, <code>dist</code>, <code>target</code>, virtualenvs). Credential files such as <code>.env</code>, <code>*.pem</code>, <code>id_rsa</code> and <code>.npmrc</code> are <strong>withheld entirely</strong>, and secrets found inside other files are replaced with <code>[REDACTED:&lt;kind&gt;]</code> before anything reaches a prompt. Redaction is pattern based, so an unusual secret format can slip through; do not rely on it as your only control. Skipped files appear as blind spots, not as findings.</p>
+<div class="cli"><span class="t">CLI equivalent</span>
+<div class="pw"><pre><code>migration-agent init ./legacy-orders                    # directory, .zip, tarball or git URL
+migration-agent init https://example.com/team/orders.git --project ./orders.migration --name "Orders service"
+migration-agent ingest legacy-orders.migration           # prints what was copied and skipped; see ingest_report.json</code></pre></div></div>
+</section>
+
+<!-- ============================================================ 6 -->
+<section id="estimate">
+<h2><span class="n">06</span>Cost estimate, budget cap and model profiles</h2>
+<p>Nothing is spent until you press <span class="ui">Start run</span>. The <span class="ui">Estimate before you start</span> box updates as you change the profile, run type or the <span class="ui">Incremental</span> checkbox. It comes from a real dry run of the engine's chunk planner on your source.</p>
+
+<h3>Reading the estimate</h3>
+<ul>
+<li><strong>estimated</strong>: predicted model spend in USD. It is a planning figure computed from token counts and the configured model prices, not a quote.</li>
+<li><strong>chunks to read</strong>: how many token-bounded pieces of code the model will read. More chunks means more time and cost.</li>
+<li><span class="badge ok">Allowed on your plan</span> or <span class="badge bad">Not allowed</span>, with a reason underneath when not allowed. The reason comes from your workspace limits, for example "requested budget exceeds the per-run limit of the plan" or "monthly spend limit would be exceeded (spent plus budget reserved by runs in progress)". <span class="ui">Start run</span> stays disabled until the run is allowed.</li>
+<li>If your cap is lower than the estimate you get a warning: "The run will stop early and give a partial result."</li>
+</ul>
+<div class="call warn"><span class="t">Know the estimate's limits</span><p>The estimate is the analysis chunk plan. For <em>Verify</em> and <em>Re-analyze</em> runs it is only a rough guide. In the first measurements the whole pipeline ran as one chunk per small repository, so how well the estimate tracks reality on large repositories has not been measured yet.</p></div>
+
+<h3>Budget cap (USD)</h3>
+<p>A hard ceiling for <em>this run</em>. When spend reaches it the run <strong>stops gracefully</strong> (status <span class="badge warn">Stopped at budget</span>), keeps what it has and publishes the partial result. Starting another run later reuses cached model responses and checkpoints, so finished work is not paid for twice. The page pre-fills 1.00.</p>
+<ul>
+<li>The field hint says "Empty means no cap beyond your plan." In practice, the server then applies its <strong>default per-run budget</strong> (5 USD in the standard configuration), not "unlimited". Always type a number.</li>
+<li>The cap must be above zero and at most the server's hard ceiling (200 USD by default). Your plan can set a lower per-run cap.</li>
+<li>The full cap is <em>reserved</em> against your workspace's monthly budget while the run is queued or running, even if it ends up spending less.</li>
+</ul>
+
+<h3>Model profile: Fast, Balanced, Best</h3>
+<p>You choose a profile; the server maps it to specific models and injects its own API key. You never see or choose raw model names. The profile decides which <em>tier</em> each task uses:</p>
+<div class="tw"><table>
+<caption>Which model tier each engine task uses, per profile</caption>
+<thead><tr><th>Engine task</th><th>What it does</th><th>Fast</th><th>Balanced</th><th>Best</th></tr></thead>
+<tbody>
+<tr><td><code>chunk_extract</code></td><td>Reads each code chunk and proposes nodes and edges</td><td>fast tier</td><td>fast tier</td><td>balanced tier</td></tr>
+<tr><td><code>cross_ref</code></td><td>Resolves references that span chunks</td><td>fast</td><td>balanced</td><td>best</td></tr>
+<tr><td><code>business_rules</code></td><td>Extracts decisions and calculations</td><td>fast</td><td>balanced</td><td>best</td></tr>
+<tr><td><code>gap_fill</code></td><td>Revisits inventory items nothing mapped</td><td>fast</td><td>balanced</td><td>best</td></tr>
+<tr><td><code>verifier</code></td><td>Compares the document with your docs</td><td>fast</td><td>balanced</td><td>best</td></tr>
+</tbody></table></div>
+<ul>
+<li><strong>Fast</strong>: cheapest, "good for a first look". Use it to see whether the pipeline handles your language and layout at all.</li>
+<li><strong>Balanced</strong>: "recommended for most services". Cheap model for bulk reading, stronger model for the reasoning-heavy steps.</li>
+<li><strong>Best</strong>: "highest quality, highest cost". Stronger models everywhere.</li>
+</ul>
+<div class="call warn"><span class="t">No quality benchmark yet</span><p>The profile names describe intent. There is no published comparison of accuracy between profiles, and the first measurements used different models per repository, so they cannot be compared. Choose by budget; if a result looks thin, try a stronger profile on the same project and compare the two graph versions in the <span class="ui">Versions</span> tab. Operators choose the actual models, so the same profile can mean different models on different deployments.</p></div>
+<p>Measured so far (small repositories, one chunk each, Gemini Flash-class models): roughly a few cents per run. That does not extrapolate to large codebases, where chunking, rate limits and parallelism are untested.</p>
+
+<div class="cli"><span class="t">CLI equivalent</span>
+<div class="pw"><pre><code>migration-agent analyze petclinic.migration --dry-run                          # prints: plan: N chunk(s), estimated cost $X
+migration-agent analyze petclinic.migration --config gemini-lite.config.json --max-usd 3
+# models are chosen in the config file (tasks: chunk_extract, cross_ref, business_rules, gap_fill, verifier)</code></pre></div></div>
+</section>
+
+<!-- ============================================================ 7 -->
+<section id="runs">
+<h2><span class="n">07</span>Start a run, watch it live, cancel it</h2>
+<h3>Starting</h3>
+<p>On the <span class="ui">Overview</span> tab, <span class="ui">Start a run</span> offers:</p>
+<div class="tw"><table>
+<caption>Run types in the Run type menu</caption>
+<thead><tr><th>Menu text</th><th>Type</th><th>Stages</th><th>Needs</th></tr></thead>
+<tbody>
+<tr><td>Analyze: read the code</td><td><code>analyze</code></td><td>ingest, extract, analyze</td><td>A source. Produces the document and a new graph version.</td></tr>
+<tr><td>Verify: compare with your docs</td><td><code>verify</code></td><td>verify</td><td>A finished analysis (otherwise "run an analysis first") and your uploaded docs.</td></tr>
+<tr><td>Re-analyze: refresh after review</td><td><code>reanalyze</code></td><td>resolve</td><td>A graph (the option is greyed out until one exists). Re-reads code around the nodes your review touched.</td></tr>
+</tbody></table></div>
+<p>Then choose <span class="ui">Model profile</span>, set <span class="ui">Budget cap (USD)</span>, optionally tick <span class="ui">Incremental</span> ("Only re-read code that changed since the last run. Unchanged code makes no model calls."), check the estimate and press <span class="ui">Start run</span>. The server answers immediately and queues the job; a worker picks it up.</p>
+<p>Limits that can refuse a start (shown as a red message): another run of the same type is already queued or running ("a analyze run is already queued or running for this project"), the workspace's or your account's concurrent, monthly-run or monthly-spend ceilings, or no source yet ("upload a source archive or connect a git url first").</p>
+
+<h3>Watching</h3>
+<p>The panel changes to <span class="ui">Run in progress</span> with a status pill:</p>
+<ul>
+<li><strong>Progress bar</strong>: overall percentage across the stages seen so far. Stages not started yet are unknown, so the bar can look slow at first and then jump; treat it as a floor.</li>
+<li><strong>Spend / cap</strong>, <strong>Elapsed</strong>, and <strong>Stream</strong> ("Live", "Reconnecting" or "Closed"). Spend is the sum of model usage events streamed from the worker.</li>
+<li><strong>Stages</strong>: one row per stage with a done/total counter. "Waiting for the worker to pick this up." means the run is queued.</li>
+<li><strong>Log (n)</strong>: expandable list of engine messages. Warnings about skipped chunks appear here.</li>
+</ul>
+<p>The connection is a server-sent event stream. If it drops, the page retries up to five times with growing pauses and replays missed events, then falls back to one status read. You can leave the page: the run continues on the server, and reopening the project's Overview shows the active run again.</p>
+
+<figure>
+<div class="dia">
+<svg viewBox="0 0 900 190" width="100%" style="min-width:700px" role="img" aria-labelledby="st-t st-d">
+  <title id="st-t">Run status lifecycle</title>
+  <desc id="st-d">A run starts Queued, becomes Running, and ends as Succeeded, Failed, Stopped at budget or Cancelled. A running run can show a retrying marker and go back to waiting for a worker. Cancelling a queued run cancels immediately; cancelling a running run first shows cancel requested.</desc>
+  <defs><marker id="ah2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" class="ar"/></marker></defs>
+  <rect class="b" x="14" y="60" width="110" height="52" rx="12"/><text x="69" y="91" text-anchor="middle" class="tt">Queued</text>
+  <rect class="bt" x="200" y="60" width="110" height="52" rx="12"/><text x="255" y="91" text-anchor="middle" class="tt">Running</text>
+  <rect class="bt" x="440" y="14" width="150" height="40" rx="12"/><text x="515" y="39" text-anchor="middle" class="tt">Succeeded</text>
+  <rect class="bw" x="440" y="66" width="150" height="40" rx="12"/><text x="515" y="91" text-anchor="middle" class="tt">Stopped at budget</text>
+  <rect class="b" x="440" y="118" width="150" height="40" rx="12"/><text x="515" y="143" text-anchor="middle" class="tt">Failed</text>
+  <rect class="b" x="660" y="66" width="130" height="40" rx="12"/><text x="725" y="91" text-anchor="middle" class="tt">Cancelled</text>
+  <path class="ln" d="M124 86H196" marker-end="url(#ah2)"/>
+  <path class="ln" d="M310 74L436 40" marker-end="url(#ah2)"/><path class="ln" d="M310 86H436" marker-end="url(#ah2)"/><path class="ln" d="M310 98L436 136" marker-end="url(#ah2)"/>
+  <path class="ld" d="M255 112V170Q255 180 245 180H85Q69 180 69 164V116" marker-end="url(#ah2)"/>
+  <text x="165" y="172" text-anchor="middle" class="sm">retrying (transient error)</text>
+  <path class="ld" d="M310 80Q380 80 380 28Q380 8 600 8Q690 8 725 62" marker-end="url(#ah2)"/>
+  <text x="640" y="125" class="sm">cancel while queued: at once</text>
+  <text x="640" y="142" class="sm">cancel while running: "cancel requested", then Cancelled</text>
+</svg>
+</div>
+<figcaption>Transient provider errors (timeouts, 429, 503) make the worker retry the run, three attempts by default, resuming from stages already completed.</figcaption>
+</figure>
+
+<h3>Cancelling</h3>
+<p>Press <span class="ui">Cancel run</span> in the panel (members and above). A queued run is cancelled immediately. A running run is marked "cancel requested" and stops at its next checkpoint, so the pill may say Running for a short while. What to expect:</p>
+<ul>
+<li>Spend up to the cancellation is still metered and counts toward your limits.</li>
+<li>A cancelled run does <strong>not</strong> publish its results. Stages that finished are remembered, and cached model responses are reused, so a later run does not pay for them again.</li>
+<li>A <em>budget stop</em> is different: partial results are published.</li>
+</ul>
+
+<h3>When it ends</h3>
+<p>The panel becomes <span class="ui">Latest run</span> with a <span class="ui">Start another run</span> button. The <span class="ui">Run history</span> table below lists every run (started, type with profile and "incremental", status, duration, cost). A failed run shows its error in a red notice; a budget stop shows it in amber. The error text is scrubbed so it never contains the server's API key.</p>
+<div class="cli"><span class="t">CLI equivalent</span>
+<div class="pw"><pre><code>migration-agent analyze petclinic.migration --max-usd 2          # runs in your terminal; Ctrl-C to stop. Re-run to resume.
+migration-agent analyze petclinic.migration --workers 4          # parallel chunk calls
+migration-agent verify  petclinic.migration --max-usd 1
+migration-agent audit   petclinic.migration                      # per-call tokens and USD</code></pre></div></div>
+</section>
+
+<!-- ============================================================ 8 -->
+<section id="document">
+<h2><span class="n">08</span>Read the understanding document</h2>
+<p>Open the project's <span class="ui">Document</span> tab (or <span class="ui">Read the document</span> on the Overview). Before the first successful run you see "No document yet".</p>
+<ul>
+<li>The left column, <span class="ui">Contents</span>, lists the document's sections; clicking jumps to one. On the footer of that column, "graph vN" tells you which graph version the text was rendered from.</li>
+<li>Each item looks like a short card: ID, name, responsibility, evidence (<code>path:lines</code> and symbol), confidence, module and relations.</li>
+<li><strong>Bold node IDs</strong> such as <code>COMP-0004</code> or <code>RULE-0003</code> are links: click one to open that node in the graph explorer with its quotes. (IDs of <code>job</code>, <code>integration</code> and <code>dead_code</code> nodes are not turned into links; search for them in the explorer instead.)</li>
+<li>Tables scroll sideways on narrow screens. Raw HTML in the document is never rendered.</li>
+<li>Items tagged <strong>preserved quirk</strong> or <strong>suspected bug</strong> are the engine's own flags. Treat them as leads for your migration plan, not verdicts.</li>
+</ul>
+<p>Suggested reading order: Purpose and Capabilities for orientation, then Endpoints, Data Model and Business Rules for the parts you will rebuild, then sections 12 to 15 (Quirks, Blind Spots, Open Questions, Coverage Matrix) for what to distrust.</p>
+<div class="cli"><span class="t">CLI equivalent</span>
+<div class="pw"><pre><code>less petclinic.migration/docs/understanding.latest.md       # the same document
+open petclinic.migration/docs/graph.html                      # standalone interactive graph
+migration-agent render petclinic.migration                     # facts-only version, no model (for checking extraction)</code></pre></div></div>
+</section>
+
+<!-- ============================================================ 9 -->
+<section id="graph">
+<h2><span class="n">09</span>The graph explorer</h2>
+<p>Open the <span class="ui">Graph</span> tab. On the left is a searchable list of nodes; on the right three views: <span class="ui">Graph</span>, <span class="ui">Node detail</span> and <span class="ui">Versions</span>.</p>
+
+<h3>Finding nodes</h3>
+<ul>
+<li><strong>Search</strong> (the box with placeholder "Search name, id, file, behaviour"): the server does a case-insensitive text match across everything stored on the node (name, ID, module, responsibility, evidence file paths and quotes). It starts about a quarter of a second after you stop typing. It is substring matching, not semantic search: search for <code>discount</code>, a class name, a file path or an ID such as <code>RULE-0003</code>.</li>
+<li><strong>Type chips</strong> (group "Filter by type"): <span class="ui">All</span>, component, endpoint, data entity, business rule, external dependency, config. One at a time. Node types without a chip are still found by search.</li>
+<li><strong>Version</strong> menu: appears once there are two or more versions. <span class="ui">Latest</span> or a specific <code>vN</code>; list, graph and detail then all show that version.</li>
+<li>The caption reports "N nodes · M loaded". The list loads 200 at a time and fetches more as you scroll to the end.</li>
+</ul>
+<p>The list is a keyboard-friendly listbox: <kbd>&uarr;</kbd> <kbd>&darr;</kbd> move, <kbd>Home</kbd> <kbd>End</kbd> <kbd>PageUp</kbd> <kbd>PageDown</kbd> jump, <kbd>Enter</kbd> selects. Each row shows the type glyph, name, ID, file and a confidence meter.</p>
+
+<h3>Node detail</h3>
+<p>Selecting a node opens <span class="ui">Node detail</span> (and puts <code>?node=ID</code> in the address, so you can share a deep link). It has:</p>
+<ul>
+<li><strong>Header</strong>: type tag, ID, optional <em>quirk</em> and <em>suspected bug</em> flags, name, module and responsibility.</li>
+<li><span class="ui">Confidence</span>: the derived level and how many quotes back it (see <a href="#concepts">how confidence is derived</a>). The explanatory sentence in the app is a short paraphrase; the table in this guide is the engine's exact rule.</li>
+<li><span class="ui">Evidence</span>: one block per quote with <code>file:start-end</code> and symbol, then the verbatim code. "No quote is attached to this node." means confidence is none. <strong>This is the most important panel: open the file and check the quote.</strong></li>
+<li><span class="ui">Relationships</span>: outgoing and incoming edges with edge type, a clickable neighbour and the edge's own confidence.</li>
+<li><span class="ui">Findings that mention this node</span>: links to the Findings tab.</li>
+<li><span class="ui">Comments</span>: see <a href="#comments">Comments</a>.</li>
+</ul>
+
+<h3>The Graph view</h3>
+<p>A canvas drawing, coloured and shaped by node type. It is a <strong>visual aid</strong>; the list and detail views are the accessible path. It shows at most 400 nodes (the most connected ones) and says so: "Capped at 400 to stay responsive; narrow the filters to see others." Once a node is selected, <span class="ui">Focus on selected neighbourhood</span> (on by default) draws just that node's two-hop neighbourhood, up to 150 nodes. Drag to pan, scroll to zoom, click a node to select it, use the three buttons (Zoom in, Zoom out, Reset view). Labels appear for all nodes only when few are shown or when zoomed in.</p>
+
+<h3>Comparing versions</h3>
+<p>Open <span class="ui">Versions</span>. With only one version you see "Only one version so far". Otherwise pick <span class="ui">From</span> and <span class="ui">To</span> and press <span class="ui">Compare</span>. You get three columns, <strong>Added</strong>, <strong>Removed</strong> and <strong>Changed</strong> nodes, each with type, name and ID (clicking opens the node in the version you are looking at; removed nodes are not clickable). Use this after a re-analysis or after switching model profile to see exactly what moved.</p>
+<div class="call"><span class="t">Tip</span><p>Because IDs are stable, a node that appears under "Changed" is the same thing re-described, not a new thing. A node that vanishes and a similar one that appears usually means its symbol or module changed in the code.</p></div>
+<div class="cli"><span class="t">CLI equivalent</span>
+<div class="pw"><pre><code>migration-agent review petclinic.migration --no-browser       # local UI on 127.0.0.1 with document, graph versions, diffs
+ls petclinic.migration/graph/snapshots/                         # v001.json, v002.json ... immutable
+open petclinic.migration/docs/graph.html                        # standalone interactive graph</code></pre></div></div>
+</section>
+
+<!-- ============================================================ 10 -->
+<section id="userdocs">
+<h2><span class="n">10</span>Add your own documentation for the Verifier</h2>
+<div class="call na"><span class="t">Not in the web app yet</span><p>The server has endpoints for user docs, but <strong>no page in the web app uploads them</strong>. Until it does, upload through the API (below) or use the CLI. Without docs, a Verify run has nothing to compare and the <span class="ui">Findings</span> tab stays at "Nothing to check".</p></div>
+<h3>What to upload</h3>
+<ul>
+<li>Requirements, design docs, API descriptions, runbooks, wiki exports. The more concrete the statements ("discount is 25% from 10 items"), the better the comparison.</li>
+<li>Extensions accepted: <code>.md .markdown .txt .rst .adoc .html .htm .pdf .docx .json .yaml .yml</code>. Other types get "unsupported document type".</li>
+<li>Up to 10 MB per file and 200 files per project by default. Empty files and a second file with the same name are refused ("empty file", "a document with this name already exists"). Roles member and above can add or delete.</li>
+<li>PDF text extraction depends on an optional library on the server; if a PDF seems ignored, convert it to text or Markdown.</li>
+<li>Secrets are redacted from docs before they reach a prompt, but do not upload documents containing credentials.</li>
+</ul>
+<h3>Upload through the API</h3>
+<div class="pw"><pre><code># 1. get a token (the web app keeps the same token in memory)
+TOKEN=$(curl -s -X POST "$API/v1/auth/login" -H 'Content-Type: application/json' \
+  -d '{"email":"you@company.com","password":"..."}' | jq -r .access_token)
+
+# 2. find your project id in the browser address: /projects/&lt;PID&gt;
+curl -X POST "$API/v1/projects/$PID/user-docs" -H "Authorization: Bearer $TOKEN" -F "file=@requirements.md"
+curl "$API/v1/projects/$PID/user-docs" -H "Authorization: Bearer $TOKEN"                   # list
+curl -X DELETE "$API/v1/projects/$PID/user-docs/$DOC_ID" -H "Authorization: Bearer $TOKEN"  # remove</code></pre></div>
+<p>Then run <span class="ui">Verify: compare with your docs</span>. Documents are copied into the worker's scratch area per run; only the Verifier ever reads them. Uploading docs after a verify run does not change old findings; start a new Verify run.</p>
+<div class="cli"><span class="t">CLI equivalent</span>
+<div class="pw"><pre><code>cp requirements.md runbook.docx petclinic.migration/user_docs/
+migration-agent verify petclinic.migration --max-usd 1          # writes feedback/findings.json, prints one line per finding</code></pre></div>
+<p>The Verifier requires an existing understanding document. If <code>verify</code> reports nothing, <code>user_docs/</code> is empty or the formats are unsupported (<code>.pdf</code> needs <code>pypdf</code>, not installed by default).</p></div>
+</section>
+
+<!-- ============================================================ 11 -->
+<section id="findings">
+<h2><span class="n">11</span>Review findings</h2>
+<p>Open the <span class="ui">Findings</span> tab. A red counter on the tab shows how many are still open. The header reads "N of M open", with an <span class="ui">Open</span> / <span class="ui">All</span> switch. Findings are sorted high severity first.</p>
+<h3>Anatomy of a finding</h3>
+<ul>
+<li><strong>Title and severity</strong> (high, medium, low), and the detail text explaining the disagreement.</li>
+<li><strong>Quotes</strong>, side by side: each shows its source (a code location or a document name) and the verbatim text. Findings whose quotes cannot be string-matched in their source are dropped before you ever see them.</li>
+<li><strong>Related</strong> node IDs: click to open the node.</li>
+</ul>
+<div class="tw"><table>
+<caption>Finding kinds the Verifier can raise</caption>
+<thead><tr><th>Kind</th><th>Meaning</th></tr></thead>
+<tbody>
+<tr><td><code>contradiction</code></td><td>Your docs and the code-derived document disagree.</td></tr>
+<tr><td><code>doc_only</code></td><td>Documented, but not found in the code.</td></tr>
+<tr><td><code>code_only</code></td><td>In the code, but undocumented.</td></tr>
+<tr><td><code>doc_vs_doc</code></td><td>Two of your own documents disagree with each other.</td></tr>
+</tbody></table></div>
+
+<h3>Answering: the four resolutions</h3>
+<p>Under <span class="ui">Your answer</span> pick one of four options, optionally write a <span class="ui">Note (optional)</span> ("Why? This is recorded with your name."), and press <span class="ui">Save answer</span>. You can change an answer later (<span class="ui">Change the answer</span>). Roles member and above can answer.</p>
+<div class="tw"><table>
+<caption>Exactly what each answer does</caption>
+<thead><tr><th>Button text</th><th>Status</th><th>Meaning</th><th>What it triggers</th></tr></thead>
+<tbody>
+<tr><td><span class="ui">The document is right</span></td><td><code>accepted_doc</code></td><td>Your documentation is correct and the code-derived claim is wrong or incomplete.</td><td>Saves the answer <strong>and queues a re-analysis run</strong> (type <code>reanalyze</code>, incremental). The note is given to the model as untrusted data; every new claim still needs verbatim code evidence.</td></tr>
+<tr><td><span class="ui">The code is right</span></td><td><code>accepted_code</code></td><td>The code is the truth; your documentation is out of date.</td><td>Saves the answer only. No re-analysis. "Records that the doc text needs fixing": fixing your documentation is up to you.</td></tr>
+<tr><td><span class="ui">Not a real problem</span></td><td><code>dismissed</code></td><td>False alarm.</td><td>Saves the answer and closes the finding. No re-analysis.</td></tr>
+<tr><td><span class="ui">Look again</span></td><td><code>needs_reanalysis</code></td><td>You are not sure; re-check this area.</td><td>Saves the answer <strong>and queues a re-analysis run</strong>.</td></tr>
+</tbody></table></div>
+<figure>
+<div class="dia">
+<svg viewBox="0 0 960 300" width="100%" style="min-width:760px" role="img" aria-labelledby="rv-t rv-d">
+  <title id="rv-t">The review loop</title>
+  <desc id="rv-d">A Verify run produces findings. You answer each one. The document is right and Look again queue a re-analysis run, which writes a new graph version with a changelog; The code is right and Not a real problem only record your answer. A new Verify run can then confirm the result.</desc>
+  <defs><marker id="ah3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" class="ar"/></marker></defs>
+  <rect class="bt" x="14" y="110" width="130" height="64" rx="12"/><text x="79" y="138" text-anchor="middle" class="tt">Verify run</text><text x="79" y="157" text-anchor="middle" class="sm">needs your docs</text>
+  <rect class="bw" x="196" y="110" width="130" height="64" rx="12"/><text x="261" y="138" text-anchor="middle" class="tt">Findings</text><text x="261" y="157" text-anchor="middle" class="sm">open, by severity</text>
+  <rect class="b" x="378" y="110" width="130" height="64" rx="12"/><text x="443" y="138" text-anchor="middle" class="tt">You answer</text><text x="443" y="157" text-anchor="middle" class="sm">plus optional note</text>
+  <path class="ln" d="M144 142H192" marker-end="url(#ah3)"/><path class="ln" d="M326 142H374" marker-end="url(#ah3)"/>
+  <rect class="bi" x="580" y="20" width="190" height="52" rx="12"/><text x="675" y="42" text-anchor="middle" class="tt">The document is right</text><text x="675" y="60" text-anchor="middle" class="sm">accepted_doc</text>
+  <rect class="bi" x="580" y="84" width="190" height="52" rx="12"/><text x="675" y="106" text-anchor="middle" class="tt">Look again</text><text x="675" y="124" text-anchor="middle" class="sm">needs_reanalysis</text>
+  <rect class="b" x="580" y="170" width="190" height="52" rx="12"/><text x="675" y="192" text-anchor="middle" class="tt">The code is right</text><text x="675" y="210" text-anchor="middle" class="sm">accepted_code (record only)</text>
+  <rect class="b" x="580" y="234" width="190" height="52" rx="12"/><text x="675" y="256" text-anchor="middle" class="tt">Not a real problem</text><text x="675" y="274" text-anchor="middle" class="sm">dismissed (record only)</text>
+  <path class="ln" d="M508 130L576 50" marker-end="url(#ah3)"/><path class="ln" d="M508 136L576 108" marker-end="url(#ah3)"/><path class="ln" d="M508 150L576 192" marker-end="url(#ah3)"/><path class="ln" d="M508 158L576 252" marker-end="url(#ah3)"/>
+  <rect class="bt" x="810" y="52" width="140" height="84" rx="12"/><text x="880" y="80" text-anchor="middle" class="tt">Re-analysis run</text><text x="880" y="99" text-anchor="middle" class="sm">new graph version</text><text x="880" y="116" text-anchor="middle" class="sm">+ changelog</text>
+  <path class="ln" d="M770 46Q790 46 806 76" marker-end="url(#ah3)"/><path class="ln" d="M770 110Q790 110 806 100" marker-end="url(#ah3)"/>
+  <path class="ld" d="M880 136V292Q880 298 870 298H79Q69 298 69 288V178" marker-end="url(#ah3)"/>
+  <text x="330" y="290" text-anchor="middle" class="sm">run Verify again to see whether the disagreement is gone</text>
+</svg>
+</div>
+<figcaption>Two of the four answers start paid work. Record-only answers are still stored and passed to the engine at the start of the next run.</figcaption>
+</figure>
+
+<div class="call warn"><span class="t">Check that the re-analysis really started</span><p>After <span class="ui">The document is right</span> or <span class="ui">Look again</span> the app shows "Saved. A re-analysis run was queued; follow it on the Overview tab." That message is shown whenever you pick those answers. If your workspace limits refuse the new run (for example a spend limit), the server saves your answer, creates no run and explains why in its reply, but <strong>the page does not display that reason</strong>. Open <span class="ui">Overview</span> and look at <span class="ui">Run history</span> to confirm a <code>reanalyze</code> run exists. If another re-analysis is already queued or running, none is added; the queued one will pick up your answer. If a re-analysis is stopped by its budget, nothing is written.</p></div>
+<p>When a finding is answered, a green label with your answer appears on the card, "Resolved: ..." with your note, name and time. Answered findings disappear from <span class="ui">Open</span> and stay visible under <span class="ui">All</span>. When none are open: "All done. You answered every finding. Start a re-analysis from the Overview tab to refresh the document."</p>
+<div class="cli"><span class="t">CLI equivalent</span>
+<div class="pw"><pre><code>migration-agent resolve orders.migration F-0001 --status accepted_doc --note "Discount is 25% from 10 items"
+migration-agent resolve orders.migration F-0004 --status dismissed --no-reanalyze
+migration-agent resolve orders.migration F-0007 --status needs_reanalysis --max-usd 1</code></pre></div>
+<p>Statuses: <code>accepted_doc</code>, <code>accepted_code</code>, <code>dismissed</code>, <code>needs_reanalysis</code>. In the CLI, re-analysis runs right away unless you pass <code>--no-reanalyze</code>.</p></div>
+</section>
+
+<!-- ============================================================ 12 -->
+<section id="comments">
+<h2><span class="n">12</span>Comments</h2>
+<p>Comments are short notes (up to 5,000 characters) attached to something specific, and are visible to everyone in the workspace with access to the project.</p>
+<ul>
+<li><strong>On a graph node</strong>: in <span class="ui">Node detail</span>, section <span class="ui">Comments</span>, type in "Add context for reviewers" and press <span class="ui">Comment</span>. Good uses: "the VIP exception lives in pricing.py, please re-check", or "confirmed with the owning team on 3 March".</li>
+<li><strong>On a finding</strong>: expand <span class="ui">Discussion (n)</span> on the finding card and press <span class="ui">Comment</span>. This is a conversation thread for your team, separate from the formal answer.</li>
+</ul>
+<p>Comments are stored with your name and time. They are also queued for the engine: at the start of the next run, unapplied comments and answers are replayed into the project, where the re-analysis can use them as untrusted hints (never as evidence). A comment on its own does <strong>not</strong> start a run in the web app; in the CLI, <code>resolve --comment</code> does. Viewers can read but not write comments. Comments cannot be edited or deleted in the app.</p>
+<div class="cli"><span class="t">CLI equivalent</span>
+<div class="pw"><pre><code>migration-agent resolve orders.migration --comment RULE-0003 --note "Check the VIP exception in pricing.py"</code></pre></div></div>
+</section>
+
+<!-- ============================================================ 13 -->
+<section id="reanalysis">
+<h2><span class="n">13</span>Re-analysis and incremental runs after code changes</h2>
+<h3>Re-analysis after review</h3>
+<p>Triggered by <span class="ui">The document is right</span> and <span class="ui">Look again</span>, or by choosing <span class="ui">Re-analyze: refresh after review</span> yourself. It re-reads only the code around the nodes your review touched, merges a new graph version (IDs unchanged) and writes a changelog entry that cites the comment or answer that caused each change. The automatic run uses the Balanced profile and the server's default budget; start one by hand if you want a different profile or cap.</p>
+
+<h3>Incremental runs when the code has changed</h3>
+<p>The <span class="ui">Incremental</span> checkbox tells the analysis to re-read only chunks whose files changed (by file hash) and their dependents; unchanged code makes no model calls and IDs stay stable. It needs a previous analysis. But the engine can only see new code if the project has a new source:</p>
+<div class="call warn"><span class="t">There is no "replace source" button yet</span><p>A project analyses the source snapshot it already has. For a git project that snapshot was frozen at the first estimate or run. The web app only attaches a source when you create the project. To analyse newer code, call the API to attach a new source (below), which replaces the old one and clears the stored estimate, then start an <span class="ui">Analyze</span> run with <span class="ui">Incremental</span> ticked. Or create a fresh project (this loses review history).</p></div>
+<div class="pw"><pre><code># new git snapshot (replaces the previous source; the clone happens at the next estimate or run)
+curl -X POST "$API/v1/projects/$PID/source" -H "Authorization: Bearer $TOKEN" \
+  -H 'Content-Type: application/json' -d '{"git_url":"https://github.com/org/repo"}'
+
+# or a new archive
+curl -X POST "$API/v1/projects/$PID/source" -H "Authorization: Bearer $TOKEN" -F "file=@repo.tar.gz"</code></pre></div>
+<p>After the run, open <span class="ui">Versions</span> and compare the last two versions to see what changed in the service. Run Verify again if you also changed your docs.</p>
+<div class="cli"><span class="t">CLI equivalent</span>
+<div class="pw"><pre><code>migration-agent ingest   orders.migration --refresh      # re-copy the updated source into code/
+migration-agent analyze  orders.migration --incremental --max-usd 2
+migration-agent changelog orders.migration               # regenerate docs/changelog.md from snapshot diffs</code></pre></div></div>
+</section>
+
+<!-- ============================================================ 14 -->
+<section id="exports">
+<h2><span class="n">14</span>Exports and the changelog</h2>
+<p>On the <span class="ui">Document</span> tab the left column has three buttons in the group "Export":</p>
+<div class="tw"><table>
+<thead><tr><th>Button</th><th>You get</th></tr></thead>
+<tbody>
+<tr><td><span class="ui">Export .md</span></td><td><code>understanding.md</code>: the document as Markdown.</td></tr>
+<tr><td><span class="ui">Export .json</span></td><td>Project name and ID, the latest graph (nodes and edges with evidence), the list of graph versions, and findings. Use it for your own tooling.</td></tr>
+<tr><td><span class="ui">Export .html</span></td><td><code>graph.html</code>: a self-contained interactive graph page that opens offline. It is served with a strict content-security policy. If no HTML artifact exists for the project, the export fails with a not-found message.</td></tr>
+</tbody></table></div>
+<p>The file is saved as <code>&lt;project-name&gt;-understanding.&lt;ext&gt;</code>. Exports contain excerpts of your code (the evidence quotes): treat them as sensitive.</p>
+<h3>Changelog</h3>
+<p>Each re-analysis produces a changelog (<code>docs/changelog.md</code>) describing what changed between consecutive graph versions and which comment or answer caused it.</p>
+<div class="call na"><span class="t">Not in the web app yet</span><p>The changelog endpoint exists but no page shows it. Fetch it with <code>curl "$API/v1/projects/$PID/changelog" -H "Authorization: Bearer $TOKEN"</code>, or use the <span class="ui">Versions</span> diff in the app for the node-level picture.</p></div>
+<div class="cli"><span class="t">CLI equivalent</span>
+<div class="pw"><pre><code>migration-agent changelog orders.migration && less orders.migration/docs/changelog.md</code></pre></div></div>
+</section>
+
+<!-- ============================================================ 15 -->
+<section id="usage">
+<h2><span class="n">15</span>Usage and plan</h2>
+<div class="call warn"><span class="t">Billing is not enabled</span><p>There is nothing to pay, no card is stored, no invoices are issued and no prices are shown in the app. The page says <span class="badge warn">Billing not enabled yet</span>. Usage is <em>metered</em> so you can see what runs cost and so limits can be enforced. If paid plans launch, the app states you will be told before any limit changes and nothing is charged without an explicit opt-in.</p></div>
+<p>Open <span class="ui">Usage and plan</span> in the left bar.</p>
+<ul>
+<li><span class="ui">Current plan</span>: the name of your workspace's plan, for example <code>free</code> (the default for self-service workspaces) or <code>internal</code> (assigned explicitly by an operator). The plan is just a set of ceilings.</li>
+<li><span class="ui">Entitlements</span>: one meter per ceiling, "used / limit". Meters turn amber above 60% and red above 85%. See <a href="#limits">Limits and quotas</a> for the list.</li>
+<li><span class="ui">Usage</span>, with a <span class="ui">Period</span> menu (Last 7, 30, 90 days): totals for Spend, Runs, Input tokens, Output tokens; a bar chart of spend per day; and a table of cost per run (when, project, type, tokens in/out, cost). Costs are the metered model spend of your runs, in USD.</li>
+</ul>
+<div class="call"><span class="t">Two display quirks</span><p>The project dashboard's tile "Spend, last 30 days" reads a figure the server names differently and may show $0.00 even when you have spent money. Trust the totals on <span class="ui">Usage and plan</span>. And the plan card's blurb ("Generous limits for internal and design-partner use") is generic text; the meters below it are the real limits for your workspace.</p></div>
+</section>
+
+<!-- ============================================================ 16 -->
+<section id="members">
+<h2><span class="n">16</span>Members, invitations and roles</h2>
+<p>Open <span class="ui">Members</span>. The table lists each person, role and join date. Owners and admins see a <span class="ui">Remove</span> button on other people's rows; confirming <span class="ui">Remove member?</span> takes away their access to every project in the workspace immediately. You cannot remove yourself in the app, and the last owner can never be removed.</p>
+<h3>Roles</h3>
+<p>The server enforces these; the UI hides some buttons but the server is the authority. Anything outside your workspace answers "not found", never "forbidden".</p>
+<div class="tw"><table class="perm">
+<caption>What each role can do</caption>
+<thead><tr><th>Action</th><th>viewer</th><th>member</th><th>admin</th><th>owner</th></tr></thead>
+<tbody>
+<tr><td>Read projects, document, graph, findings, comments, runs, members, usage, entitlements</td><td class="yes">yes</td><td class="yes">yes</td><td class="yes">yes</td><td class="yes">yes</td></tr>
+<tr><td>Create a project, attach or replace its source</td><td class="no">no</td><td class="yes">yes</td><td class="yes">yes</td><td class="yes">yes</td></tr>
+<tr><td>Estimate; start and cancel runs</td><td class="no">no</td><td class="yes">yes</td><td class="yes">yes</td><td class="yes">yes</td></tr>
+<tr><td>Upload or delete user docs</td><td class="no">no</td><td class="yes">yes</td><td class="yes">yes</td><td class="yes">yes</td></tr>
+<tr><td>Answer findings, write comments</td><td class="no">no</td><td class="yes">yes</td><td class="yes">yes</td><td class="yes">yes</td></tr>
+<tr><td>Rename a project</td><td class="no">no</td><td class="no">no</td><td class="yes">yes</td><td class="yes">yes</td></tr>
+<tr><td>Delete a project</td><td class="no">no</td><td class="no">no</td><td class="yes">yes</td><td class="yes">yes</td></tr>
+<tr><td>Invite members (roles viewer or member), revoke invitations, remove members below admin</td><td class="no">no</td><td class="no">no</td><td class="yes">yes</td><td class="yes">yes</td></tr>
+<tr><td>Invite as admin or owner, remove an admin or owner</td><td class="no">no</td><td class="no">no</td><td class="no">no</td><td class="yes">yes</td></tr>
+<tr><td>See the audit log</td><td class="no">no</td><td class="no">no</td><td class="yes">yes</td><td class="yes">yes</td></tr>
+</tbody></table></div>
+<p>Note that <span class="ui">Save name</span> on the Settings tab is enabled for members, but the server requires admin, so a member gets "requires role admin or higher". There is no screen to change someone's role: remove and re-invite them.</p>
+
+<h3>Invite someone</h3>
+<ol class="steps">
+<li><b>They need an account first.</b> The invitee signs up (or you ask your operator to create one). The invitation is tied to their email address.</li>
+<li><b>Create the invitation.</b> Under <span class="ui">Invite a member</span> enter their <span class="ui">Email</span>, choose a <span class="ui">Role</span> and press <span class="ui">Invite</span>. The app shows a one-time code. <strong>This is the only time it is shown.</strong> The reply is identical whether or not that email has an account, so the app cannot be used to find out who is registered.</li>
+<li><b>Send them the code yourself</b> (chat, password manager, anything). The invitation expires after 72 hours by default and at most 50 can be pending.</li>
+<li><b>They accept.</b> Signed in with the invited email, they open <span class="ui">Members</span>, paste the code into <span class="ui">Invitation code</span> under <span class="ui">Join a workspace</span> and press <span class="ui">Join</span>. The page reloads and the workspace appears in their <span class="ui">Workspace</span> selector. A wrong, expired, used or other-account code all give the same "invitation not found".</li>
+</ol>
+<div class="call na"><span class="t">Not available yet</span><p>E-mail delivery of invitations, an accept-by-link page, and a list of pending invitations with revoke buttons in the app. (Endpoints for listing and revoking exist: <code>GET</code> and <code>DELETE /v1/workspaces/{wid}/invitations</code>.) Creating additional workspaces from the UI is also missing; the API allows up to 3 per account.</p></div>
+</section>
+
+<!-- ============================================================ 17 -->
+<section id="audit">
+<h2><span class="n">17</span>Audit log</h2>
+<p>Owners and admins see an <span class="ui">Audit log</span> at the bottom of <span class="ui">Members</span>: time, action, target, actor (identifiers rather than names). It records security- and cost-relevant events:</p>
+<div class="tw"><table>
+<thead><tr><th>Action</th><th>When</th></tr></thead>
+<tbody>
+<tr><td><code>project.create</code>, <code>project.update</code>, <code>project.delete</code></td><td>Project lifecycle (delete records counts of what was removed).</td></tr>
+<tr><td><code>source.git</code>, <code>source.upload</code></td><td>A source was attached or replaced.</td></tr>
+<tr><td><code>user_doc.add</code>, <code>user_doc.delete</code></td><td>Verifier documents changed.</td></tr>
+<tr><td><code>run.create</code>, <code>run.cancel</code>, <code>run.finish</code></td><td>Run lifecycle, with type, profile and budget.</td></tr>
+<tr><td><code>finding.resolve</code></td><td>A finding was answered, with the status.</td></tr>
+<tr><td><code>member.invite</code>, <code>member.invite_revoke</code>, <code>member.add</code>, <code>member.remove</code></td><td>Membership changes (invited emails are stored hashed).</td></tr>
+<tr><td><code>storage.purge</code></td><td>A project's stored files were confirmed deleted.</td></tr>
+<tr><td><code>workspace.create</code></td><td>A workspace was created.</td></tr>
+</tbody></table></div>
+<p>Your own sign-in events (<code>auth.login</code>, <code>auth.login_failed</code>, <code>auth.signup</code>) are kept per account and are not part of the workspace log shown here. Audit entries survive project deletion; they contain identifiers, not code. The CLI keeps its own log in <code>audit/audit.jsonl</code> (every model call with tokens and USD): <code>migration-agent audit PROJECT</code>.</p>
+</section>
+
+<!-- ============================================================ 18 -->
+<section id="delete">
+<h2><span class="n">18</span>Deleting a project and what that guarantees</h2>
+<p>Open the project's <span class="ui">Settings</span> tab. Under <span class="ui">Delete project and all data</span> press <span class="ui">Delete this project</span> (owners and admins only), type the project name exactly into the dialog <span class="ui">Delete this project?</span> and press <span class="ui">Delete forever</span>. You return to <span class="ui">Projects</span>. This cannot be undone.</p>
+<h3>What is removed</h3>
+<ul>
+<li>The stored source copy and any uploaded archive.</li>
+<li>The knowledge graph and all its versions, the understanding document, changelog and exports.</li>
+<li>Every run, run event and artifact; findings, answers and comments; your uploaded user docs.</li>
+<li>The project's saved engine state, which includes cached model responses.</li>
+</ul>
+<h3>How the guarantee works</h3>
+<p>The database rows are deleted in one transaction together with a "deletion task" that lists the project's file prefix. The server then deletes the files immediately. If the file store fails at that moment, the task stays and a background reaper retries with backoff until the store confirms, then writes a <code>storage.purge</code> audit record. A periodic sweep also removes any leftover files that no project owns. A run that was in flight when you deleted discards its results instead of recreating them.</p>
+<h3>What is not covered</h3>
+<ul>
+<li><strong>The audit record</strong> of the deletion remains (identifiers and counts, no content).</li>
+<li><strong>Usage metering</strong> is kept for the workspace, detached from the project, so your spend history stays accurate. It contains no code.</li>
+<li><strong>Backups</strong> that the operator takes persist until they expire. Retention periods are proposed in a draft policy and are not a commitment.</li>
+<li><strong>The model provider.</strong> Excerpts of your code were sent to the configured model provider during analysis. Their retention terms apply and no zero-retention agreement is in place yet. Deleting a project cannot recall that data.</li>
+</ul>
+<div class="call warn"><span class="t">Status of verification</span><p>The deletion path is implemented and tested, but some end-to-end checks listed in the data-handling draft (against a real backend, backup expiry) are not done yet. Account deletion is <span class="badge na">not available yet</span> as a feature.</p></div>
+</section>
+
+<!-- ============================================================ 19 -->
+<section id="a11y">
+<h2><span class="n">19</span>Keyboard shortcuts and accessibility</h2>
+<p>The web app has no global shortcut keys; everything is reachable with standard keyboard navigation. The first <kbd>Tab</kbd> on any page focuses <span class="ui">Skip to content</span>.</p>
+<div class="tw"><table>
+<caption>Keys that do something special</caption>
+<thead><tr><th>Where</th><th>Keys</th><th>Effect</th></tr></thead>
+<tbody>
+<tr><td>Graph node list</td><td><kbd>&uarr;</kbd> <kbd>&darr;</kbd> <kbd>PageUp</kbd> <kbd>PageDown</kbd> <kbd>Home</kbd> <kbd>End</kbd> <kbd>Enter</kbd></td><td>Move the highlight; <kbd>Enter</kbd> selects the node. Loads more rows near the end.</td></tr>
+<tr><td>Explorer tabs (Graph, Node detail, Versions)</td><td><kbd>&larr;</kbd> <kbd>&rarr;</kbd></td><td>Switch tabs; the active tab is the only one in the tab order.</td></tr>
+<tr><td>Graph canvas (when focused)</td><td><kbd>+</kbd> / <kbd>=</kbd>, <kbd>-</kbd>, <kbd>0</kbd>, arrow keys</td><td>Zoom in, zoom out, reset view, pan.</td></tr>
+<tr><td>Dialogs (delete project, remove member)</td><td><kbd>Esc</kbd></td><td>Close without acting. Focus stays inside the dialog while it is open.</td></tr>
+<tr><td>Type filters, Open/All switch</td><td><kbd>Space</kbd> / <kbd>Enter</kbd></td><td>Toggle (buttons expose their pressed state).</td></tr>
+</tbody></table></div>
+<ul>
+<li><strong>Screen readers</strong>: landmarks and labelled regions; progress and meters have text alternatives; the estimate box and the node count are polite live regions, and loading states have text labels. The relationship canvas is declared an image with instructions; <strong>use the node list and Node detail</strong>, which carry the same information accessibly.</li>
+<li><strong>Colour</strong>: status, severity and confidence always carry a text label as well as a colour. Light and dark themes follow your system, with a toggle (<span class="ui">Switch to dark theme</span>) in the sidebar and on the sign-in pages.</li>
+<li><strong>Motion</strong>: animations respect the "reduce motion" system setting.</li>
+<li><strong>Small screens</strong>: the left bar becomes a menu button (<span class="ui">Open menu</span>); project tabs and tables scroll sideways.</li>
+</ul>
+<p>The app has not had a formal accessibility audit. If something blocks you, tell your operator.</p>
+</section>
+
+<!-- ============================================================ 20 -->
+<section id="cli">
+<h2><span class="n">20</span>CLI equivalents at a glance</h2>
+<div class="tw"><table>
+<caption>Every web step and its command-line counterpart</caption>
+<thead><tr><th>Web app</th><th>CLI</th></tr></thead>
+<tbody>
+<tr><td>Sign up / log in</td><td>None. Provide <code>ANTHROPIC_API_KEY</code>, <code>GEMINI_API_KEY</code> or <code>OPENAI_API_KEY</code> via environment or <code>.env</code>.</td></tr>
+<tr><td>New project (git URL or archive)</td><td><code>init SOURCE [--project PATH] [--name TEXT]</code> then <code>ingest PROJECT</code></td></tr>
+<tr><td>Static extraction (part of Analyze)</td><td><code>extract PROJECT</code></td></tr>
+<tr><td>Estimate</td><td><code>analyze PROJECT --dry-run</code></td></tr>
+<tr><td>Budget cap</td><td><code>--max-usd N</code> on <code>analyze</code>, <code>verify</code>, <code>resolve</code></td></tr>
+<tr><td>Model profile</td><td><code>--config FILE</code> (models per task); <code>MA_LLM_MODEL_&lt;TASK&gt;</code> environment variables</td></tr>
+<tr><td>Run type Analyze</td><td><code>analyze PROJECT [--workers N]</code></td></tr>
+<tr><td>Incremental</td><td><code>ingest PROJECT --refresh</code> then <code>analyze PROJECT --incremental</code></td></tr>
+<tr><td>Run type Verify; user docs</td><td>Copy files into <code>PROJECT/user_docs/</code>, then <code>verify PROJECT</code></td></tr>
+<tr><td>Run type Re-analyze; answer a finding</td><td><code>resolve PROJECT FINDING_ID --status accepted_doc|accepted_code|dismissed|needs_reanalysis [--note T] [--no-reanalyze]</code></td></tr>
+<tr><td>Comment on a node</td><td><code>resolve PROJECT --comment ITEM_ID --note TEXT</code></td></tr>
+<tr><td>Document</td><td><code>PROJECT/docs/understanding.latest.md</code></td></tr>
+<tr><td>Graph explorer, versions, diff</td><td><code>review PROJECT</code> (local UI); <code>PROJECT/graph/snapshots/vNNN.json</code>; <code>PROJECT/docs/graph.html</code></td></tr>
+<tr><td>Export</td><td>The files above are the export; copy them. Do not share <code>llm_cache/</code>.</td></tr>
+<tr><td>Changelog</td><td><code>changelog PROJECT</code></td></tr>
+<tr><td>Usage and cost</td><td><code>audit PROJECT [--format table|json]</code></td></tr>
+<tr><td>Facts-only check, no model</td><td><code>render PROJECT</code>; <code>analyze PROJECT --offline</code> (stand-in model, not a real analysis)</td></tr>
+<tr><td>Members, roles, audit log, delete project</td><td>No equivalent. The project is a folder: you own it. Delete it with your file manager.</td></tr>
+</tbody></table></div>
+<p>The CLI's local review UI binds to <code>127.0.0.1</code> only, requires an unguessable token in the URL, checks the <code>Host</code> and <code>Origin</code> headers and cannot run inside a container. Do not forward its port.</p>
+</section>
+
+<!-- ============================================================ 21 -->
+<section id="honest">
+<h2><span class="n">21</span>Reading the results honestly</h2>
+<p>This tool is a fast, cited <em>first read</em> of a codebase. It is not an oracle. These points come from the project's own measurements and documented limits.</p>
+
+<h3>What has and has not been measured</h3>
+<ul>
+<li>The pipeline has run end to end on three small open-source repositories (a Java/Spring app and two Python and Node demo apps) at a cost of cents each. <strong>Nothing has been hand-scored.</strong> There is currently no measured precision or recall for the claims it makes.</li>
+<li>Those runs used different models and one hit a provider quota, so they are <strong>not comparable</strong> with each other, and say nothing about which profile is better.</li>
+<li>Everything ran as a single chunk. Behaviour on 50,000 to 500,000 lines, many languages, chunk boundaries, cross-chunk references, parallelism and provider rate limits is <strong>untested</strong>. Expect those to be where trouble starts.</li>
+<li>The Verifier has not yet been measured with real documentation.</li>
+</ul>
+
+<h3>What the graph counts do not mean</h3>
+<p>In the Spring example, 688 of 823 nodes were configuration keys found by static extraction, not by the model. A large node count is not a large understanding. The valuable layer, business rules and flows, is the thinnest part and the part to check hardest. In the same runs, no node reached high confidence and one language showed zero endpoints until its routing style was added to the static extractor (Django URL configuration; cross-file prefix handling has since been added for Django and Flask-RESTful but you should still check route paths).</p>
+
+<h3>What static analysis plus an LLM cannot see</h3>
+<div class="tw"><table>
+<thead><tr><th>Blind spot</th><th>Why</th><th>What to do</th></tr></thead>
+<tbody>
+<tr><td>Behaviour that exists only at runtime</td><td>Reflection, dynamic dispatch, generated code, plugins loaded by name. The code is never executed.</td><td>Expect these as blind spots or missing edges; confirm by running the system or reading logs.</td></tr>
+<tr><td>Data that lives in databases</td><td>Only code and config in the repo are read: not table contents, stored procedures that are not in the repo, feature-flag values, or reference data.</td><td>Check with the data owners.</td></tr>
+<tr><td>Configuration injected at deploy time</td><td>Environment variables, secrets, orchestration manifests outside the repo.</td><td>Compare against the real environment.</td></tr>
+<tr><td>Files the pipeline skips</td><td>Binaries, files over 1 MB, vendor and build directories, symlinks, withheld credential files, unparsable files (marked <code>parse_status: fallback</code>).</td><td>Read <code>ingest_report.json</code> (CLI) or the Coverage Matrix and Blind Spots sections.</td></tr>
+<tr><td>Languages the parser does not cover</td><td>Static extraction supports the languages that the bundled tree-sitter pack covers. Others fall back to model-only reading of text.</td><td>Treat claims about such files as low confidence even if the label says otherwise.</td></tr>
+<tr><td>Whether code is actually used</td><td>It can see that an endpoint exists, not whether any client calls it in production.</td><td>Check traffic and logs before dropping or preserving behaviour.</td></tr>
+<tr><td>Other services' behaviour</td><td>A call to another system is an edge; what that system does is outside the repo.</td><td>Analyse that service too.</td></tr>
+<tr><td>Non-functional behaviour</td><td>Performance, concurrency, timing and ordering bugs are mostly invisible to reading.</td><td>Use tests and profiling.</td></tr>
+<tr><td>Anything that needs judgment about intent</td><td>"Quirk" and "suspected bug" flags are heuristics.</td><td>Ask the people who know the history.</td></tr>
+</tbody></table></div>
+
+<h3>How to use it well</h3>
+<ol>
+<li><strong>Verify the quotes, not the prose.</strong> The citations are the product. A claim with a matching quote at a line range is checkable in seconds. A claim in the document without a nearby citation deserves suspicion.</li>
+<li><strong>Read confidence as "how well evidenced", not "how likely true".</strong> Low means a thin trail; high means two pinpointed quotes. Neither says the behaviour is correct in production.</li>
+<li><strong>Read the blind-spot and coverage sections first.</strong> They tell you what the tool knows it did not map.</li>
+<li><strong>Treat Verifier findings as questions.</strong> It sees only text on both sides and cannot tell who is right; that is why a human answers. Absence of findings is not proof of agreement: the Verifier may simply not have matched the statements.</li>
+<li><strong>Expect run-to-run differences.</strong> Models are not deterministic. Identical re-runs reuse a cache and return the same answers; a different profile or changed code can change descriptions. Use the version diff to see what moved.</li>
+<li><strong>Mind your data.</strong> Code excerpts go to the model provider. Redaction of secrets is best effort. Use the CLI with a self-hosted gateway if that matters.</li>
+</ol>
+</section>
+
+<!-- ============================================================ 22 -->
+<section id="limits">
+<h2><span class="n">22</span>Limits and quotas</h2>
+<p>Every limit below is a <strong>ceiling, not a price</strong>. Values are the shipped defaults; an operator can change them, and the meters on <span class="ui">Usage and plan</span> show what applies to your workspace. They are checked in one place when you start a run, create a project or accept an invitation.</p>
+<div class="tw"><table>
+<caption>Workspace plan ceilings (default "free" plan; "internal" is far higher and assigned only by an operator)</caption>
+<thead><tr><th>Limit (meter label)</th><th>Default free plan</th><th>What happens at the limit</th></tr></thead>
+<tbody>
+<tr><td>Projects</td><td>5</td><td>Creating a project: 403 "plan limit reached (max_projects)".</td></tr>
+<tr><td>Members</td><td>5</td><td>Accepting an invitation: 403 "plan limit reached (max_members)".</td></tr>
+<tr><td>Runs this month</td><td>20</td><td>"monthly run limit reached".</td></tr>
+<tr><td>Concurrent runs</td><td>2</td><td>"too many runs in progress for this workspace".</td></tr>
+<tr><td>Spend cap per run</td><td>5 USD</td><td>"requested budget exceeds the per-run limit of the plan".</td></tr>
+<tr><td>Monthly model spend</td><td>20 USD</td><td>"monthly spend limit would be exceeded (spent plus budget reserved by runs in progress)". Reserved budgets count.</td></tr>
+<tr><td>Source size (MB)</td><td>100</td><td>Upload refused: "file exceeds N MB".</td></tr>
+</tbody></table></div>
+<div class="tw"><table>
+<caption>Per-account and server-wide limits (defaults)</caption>
+<thead><tr><th>Limit</th><th>Default</th><th>Message</th></tr></thead>
+<tbody>
+<tr><td>Workspaces you can create</td><td>3 per account</td><td>"workspace limit reached (3 per account)"</td></tr>
+<tr><td>Your active runs, across all workspaces</td><td>4</td><td>"too many runs in progress for this account"</td></tr>
+<tr><td>Your runs per month, across workspaces</td><td>100</td><td>"monthly run limit for this account reached"</td></tr>
+<tr><td>Your spend per month (spent plus reserved)</td><td>50 USD</td><td>"monthly spend limit for this account would be exceeded"</td></tr>
+<tr><td>Per-run budget: default / hard maximum</td><td>5 / 200 USD</td><td>422 "max_usd must be &gt; 0 and &lt;= 200.0"</td></tr>
+<tr><td>Upload / extracted / single file</td><td>100 MB / 500 MB / 50 MB</td><td>see archive table</td></tr>
+<tr><td>Files / entries / nesting depth in an archive</td><td>50,000 / 100,000 / 64</td><td>see archive table</td></tr>
+<tr><td>Git clone: size, time</td><td>300 MB, 120 s</td><td>"repository exceeds the size limit", "git clone timed out"</td></tr>
+<tr><td>User docs: size, count</td><td>10 MB, 200 per project</td><td>"file exceeds 10 MB", "too many documents"</td></tr>
+<tr><td>Comment / note length</td><td>5,000 characters</td><td>422 invalid_request</td></tr>
+<tr><td>Pending invitations</td><td>50 per workspace; valid 72 h</td><td>429 "too many pending invitations"</td></tr>
+<tr><td>Live run streams</td><td>5 per user, 20 per run, 1 h each</td><td>429 "too many open event streams"; reconnect resumes</td></tr>
+<tr><td>Requests per minute</td><td>300 general, 20 for sign-in and sign-up</td><td>429 "too many requests" with a wait time</td></tr>
+</tbody></table></div>
+</section>
+
+<!-- ============================================================ 23 -->
+<section id="trouble">
+<h2><span class="n">23</span>Troubleshooting</h2>
+<p>The app shows the server's message in a red notice or toast. Every API error has the shape <code>{"error":{"code":"...","message":"..."}}</code>; the code is stable, the wording can change.</p>
+<div class="tw"><table>
+<caption>Errors you may meet, by area</caption>
+<thead><tr><th>Where</th><th>Status / code</th><th>Message</th><th>What it means and what to do</th></tr></thead>
+<tbody>
+<tr><td>Sign in</td><td>401 <code>unauthorized</code></td><td>invalid email or password</td><td>Wrong credentials or disabled account.</td></tr>
+<tr><td>Sign in</td><td>429 <code>rate_limited</code></td><td>too many failed sign-in attempts, try again later</td><td>Wait; the delay grows with each failure.</td></tr>
+<tr><td>Sign up</td><td>409 <code>conflict</code></td><td>an account with this email already exists</td><td>Log in instead.</td></tr>
+<tr><td>Sign up</td><td>403 <code>signup_disabled</code></td><td>sign up is disabled</td><td>Closed deployment. Ask your operator for an account.</td></tr>
+<tr><td>Sign up</td><td>422 <code>invalid_request</code></td><td>password: ... at least 10 characters</td><td>Choose a longer password.</td></tr>
+<tr><td>Anywhere</td><td>401 <code>unauthorized</code></td><td>invalid or expired token / missing or invalid credentials</td><td>Session over. The app signs you out; log in again.</td></tr>
+<tr><td>Anywhere</td><td>0 <code>network_error</code></td><td>Could not reach the server. Check your connection and try again.</td><td>Backend down, wrong address or CORS not allowing this web origin. Tell your operator.</td></tr>
+<tr><td>Anywhere</td><td>403 <code>forbidden</code></td><td>requires role member (or admin) or higher</td><td>Your role is too low. See the role table.</td></tr>
+<tr><td>Anywhere</td><td>404 <code>not_found</code></td><td>project not found, run not found ...</td><td>Wrong ID, deleted, or it belongs to another workspace (the server never says which). Check the Workspace selector.</td></tr>
+<tr><td>Anywhere</td><td>429 <code>rate_limited</code></td><td>too many requests</td><td>Slow down; retry after the indicated wait.</td></tr>
+<tr><td>Anywhere</td><td>500 <code>internal_error</code></td><td>internal server error</td><td>Not your fault. Retry; if it persists, report the time to your operator.</td></tr>
+<tr><td>New project</td><td>403 <code>entitlement_denied</code></td><td>plan limit reached (max_projects)</td><td>Delete an unused project or ask for a higher limit.</td></tr>
+<tr><td>Source</td><td>422 <code>invalid_source</code></td><td>only https git urls are allowed; credentials in url are not allowed; only port 443 is allowed; query strings and fragments are not allowed in git urls; invalid git url</td><td>Fix the URL.</td></tr>
+<tr><td>Source</td><td>422 <code>invalid_source</code></td><td>host is not allowed; numeric host names are not allowed; host is not reachable or not allowed; host is not on the allowlist</td><td>Only public hosts (and, if configured, allowlisted ones) can be cloned. Private or internal hosts are refused on purpose. Use an archive.</td></tr>
+<tr><td>Source</td><td>422 <code>invalid_source</code></td><td>archive ... (see archive table)</td><td>Rebuild the archive: no links, no absolute or <code>..</code> paths, within the size and file ceilings.</td></tr>
+<tr><td>Source</td><td>413 <code>payload_too_large</code></td><td>file exceeds N MB</td><td>Strip build output, tests data and vendored dependencies, or split the project.</td></tr>
+<tr><td>Source</td><td>422 <code>invalid_request</code></td><td>send multipart/form-data (file) or JSON {git_url}</td><td>API misuse; use the form or the documented request.</td></tr>
+<tr><td>Estimate / run</td><td>409 <code>no_source</code></td><td>upload a source archive or connect a git url first</td><td>The project has no source yet.</td></tr>
+<tr><td>Estimate / run</td><td>422 <code>invalid_source</code> or run fails</td><td>git clone failed (repository not found or not public); repository exceeds the size limit; repository is empty; repository contains too many files; git clone timed out</td><td>Cloning happens now, not at project creation. Private or huge repositories cannot be cloned; upload an archive.</td></tr>
+<tr><td>Estimate</td><td>429 <code>rate_limited</code></td><td>too many estimates in progress, retry shortly</td><td>The estimate slots are busy. Retry in a few seconds.</td></tr>
+<tr><td>Estimate</td><td>502 <code>engine_error</code></td><td>estimate failed (ErrorName)</td><td>The planner crashed on this source. Retry; if it repeats, report the error name.</td></tr>
+<tr><td>Start run</td><td>409 <code>run_in_progress</code></td><td>a analyze run is already queued or running for this project</td><td>Wait for it or cancel it. One run per type per project.</td></tr>
+<tr><td>Start run</td><td>409 <code>no_analysis</code></td><td>run an analysis first</td><td>Verify and Re-analyze need a finished Analyze run.</td></tr>
+<tr><td>Start run</td><td>403 <code>entitlement_denied</code></td><td>requested budget exceeds the per-run limit of the plan</td><td>Lower the Budget cap.</td></tr>
+<tr><td>Start run</td><td>403 <code>entitlement_denied</code></td><td>too many runs in progress for this workspace / this account</td><td>Wait for a run to finish.</td></tr>
+<tr><td>Start run</td><td>403 <code>entitlement_denied</code></td><td>monthly run limit reached / monthly spend limit would be exceeded ...</td><td>Reserved budgets of running jobs count against the month. Lower your cap, wait, or ask for a higher limit.</td></tr>
+<tr><td>Start run</td><td>422 <code>invalid_request</code></td><td>max_usd must be &gt; 0 and &lt;= 200.0</td><td>Enter a valid cap.</td></tr>
+<tr><td>Cancel</td><td>409 <code>conflict</code></td><td>run already succeeded (or failed, cancelled ...)</td><td>Too late; it already ended.</td></tr>
+<tr><td>Live panel</td><td>429 <code>rate_limited</code></td><td>too many open event streams</td><td>Too many tabs watching runs. Close some. Progress is not lost.</td></tr>
+<tr><td>Run result</td><td>status <span class="badge bad">Failed</span></td><td>"&lt;stage&gt; failed" or the engine's error</td><td>Read the Log. Transient provider errors (timeouts, 429, 503) are retried first; failure means retries ran out or the error was permanent. Start again: finished stages and cached calls are reused.</td></tr>
+<tr><td>Run result</td><td>status <span class="badge warn">Stopped at budget</span></td><td>budget exhausted</td><td>Partial result published. Raise the cap and run again.</td></tr>
+<tr><td>Run result</td><td>stays Queued</td><td>Waiting for the worker to pick this up.</td><td>No worker is available or others are ahead. If it stays so for long, tell your operator.</td></tr>
+<tr><td>Results</td><td>404 <code>not_found</code></td><td>document not found / html export not found</td><td>No successful run has produced it yet.</td></tr>
+<tr><td>Findings</td><td>empty</td><td>Nothing to check</td><td>No Verify run has produced findings: upload docs and run Verify.</td></tr>
+<tr><td>Answer</td><td>404 <code>not_found</code></td><td>finding not found / item not found</td><td>The finding or node no longer exists in the latest state. Refresh.</td></tr>
+<tr><td>User docs</td><td>422 <code>invalid_request</code></td><td>unsupported document type / empty file</td><td>See accepted extensions.</td></tr>
+<tr><td>User docs</td><td>409 <code>conflict</code></td><td>a document with this name already exists / too many documents</td><td>Delete the old one or rename the file.</td></tr>
+<tr><td>Members</td><td>403 <code>forbidden</code></td><td>only an owner can grant admin or owner</td><td>Ask an owner.</td></tr>
+<tr><td>Members</td><td>429 <code>rate_limited</code></td><td>too many pending invitations</td><td>Wait for some to expire (72 h) or be accepted.</td></tr>
+<tr><td>Join</td><td>404 <code>not_found</code></td><td>invitation not found</td><td>Wrong code, expired, already used, or you are signed in with a different email than the one invited. All four look identical on purpose.</td></tr>
+<tr><td>Join</td><td>409 <code>conflict</code></td><td>already a member of this workspace</td><td>Nothing to do.</td></tr>
+<tr><td>Members</td><td>409 <code>conflict</code></td><td>cannot remove the last owner</td><td>Make someone else owner first.</td></tr>
+<tr><td>Delete</td><td>403 <code>forbidden</code></td><td>requires role admin or higher</td><td>Ask an admin or owner.</td></tr>
+</tbody></table></div>
+
+<h3>Other symptoms</h3>
+<ul>
+<li><strong>"Spend" tile shows $0.00 on Projects.</strong> A display quirk; use Usage and plan.</li>
+<li><strong>Everything is low confidence.</strong> Expected today (see <a href="#honest">reading results</a>). Open a few nodes and read the quotes. Try a stronger profile and compare versions.</li>
+<li><strong>Few or no endpoints, rules or entities.</strong> The language or framework may be only partly supported by static extraction; check the Coverage Matrix and Blind Spots, and try Best on a copy of the project.</li>
+<li><strong>Graph view looks empty or capped.</strong> It shows at most 400 nodes; filter by type or search, or use the list.</li>
+<li><strong>Reload logged me out.</strong> By design; see <a href="#signin">Sign up and log in</a>.</li>
+<li><strong>My new commits are not in the results.</strong> The source is a frozen snapshot; see <a href="#reanalysis">Re-analysis and incremental</a>.</li>
+<li><strong>CLI: "No LLM API key found".</strong> Export a key or use <code>--offline</code> / <code>--dry-run</code>. <strong>429 / RESOURCE_EXHAUSTED</strong>: provider quota; the client retries with backoff; re-run later, finished chunks are cached. <strong>503 overloaded</strong>: transient; re-run. <strong>macOS "Operation not permitted"</strong>: give the terminal access to protected folders or keep projects in <code>~/work</code>.</li>
+</ul>
+</section>
+
+<!-- ============================================================ 24 -->
+<section id="notyet">
+<h2><span class="n">24</span>Not available yet</h2>
+<p>These do not exist in the product today. Do not plan around them.</p>
+<div class="tw"><table>
+<thead><tr><th>Feature</th><th>Status</th><th>Workaround</th></tr></thead>
+<tbody>
+<tr><td>Single sign-on / OIDC login in the web UI</td><td><span class="badge na">Not available yet</span></td><td>Password sign-in only.</td></tr>
+<tr><td>Password reset, e-mail verification, account deletion</td><td><span class="badge na">Not available yet</span></td><td>Ask your operator.</td></tr>
+<tr><td>Private repositories, SSH, access tokens, GitHub/GitLab app</td><td><span class="badge na">Not available yet</span></td><td>Upload an archive.</td></tr>
+<tr><td>E-mail delivery of invitations; accept-by-link; pending-invitation list and revoke in the UI</td><td><span class="badge na">Not available yet</span></td><td>Pass the one-time code yourself; revoke via API.</td></tr>
+<tr><td>Uploading Verifier docs in the web app</td><td><span class="badge na">Not available yet</span></td><td>API upload or CLI.</td></tr>
+<tr><td>Replacing a project's source in the web app</td><td><span class="badge na">Not available yet</span></td><td>API call, or a new project.</td></tr>
+<tr><td>Changelog page</td><td><span class="badge na">Not available yet</span></td><td>API, or the Versions diff.</td></tr>
+<tr><td>Changing a member's role; leaving a workspace from the UI; creating a second workspace from the UI</td><td><span class="badge na">Not available yet</span></td><td>Remove and re-invite; use the API.</td></tr>
+<tr><td>Editing or deleting comments; renaming or describing a project beyond its name</td><td><span class="badge na">Not available yet</span></td><td>None.</td></tr>
+<tr><td>Billing, invoices, paid plans, prices</td><td><span class="badge na">Not available yet</span></td><td>Usage is metered only.</td></tr>
+<tr><td>Token refresh; staying signed in across reloads by default</td><td><span class="badge na">Not available yet</span></td><td>Log in again.</td></tr>
+<tr><td>Graph view for more than 400 nodes</td><td><span class="badge na">Not available yet</span></td><td>Filter and use the list.</td></tr>
+<tr><td>Measured accuracy figures; zero-retention agreement with the model provider; SOC 2 or other certifications</td><td><span class="badge na">Not available yet</span></td><td>See <a href="#honest">reading results</a>.</td></tr>
+</tbody></table></div>
+</section>
+
+<!-- ============================================================ 25 -->
+<section id="glossary">
+<h2><span class="n">25</span>Glossary</h2>
+<dl class="gl">
+<dt>Accepted doc / code</dt><dd>Resolution statuses meaning your documentation (or the code) is the truth. Only "accepted doc" re-analyses.</dd>
+<dt>Audit log</dt><dd>Append-only record of who did what. Workspace level in the app; per-call model usage in the CLI.</dd>
+<dt>Blind Verifier</dt><dd>The comparison step that sees only the generated document and your docs.</dd>
+<dt>Blind spot</dt><dd>Something the tool knows it could not establish; listed in the document's section 13.</dd>
+<dt>Budget cap</dt><dd>Hard per-run spending ceiling in USD; the run stops gracefully when reached.</dd>
+<dt>Checkpoint</dt><dd>Per-chunk saved result that lets an interrupted run resume.</dd>
+<dt>Chunk</dt><dd>A token-bounded piece of code the model reads in one call, cut along structural boundaries.</dd>
+<dt>Coverage matrix</dt><dd>Table showing which inventory items (files, routes, config keys, dependencies) were mapped.</dd>
+<dt>Derived confidence</dt><dd>Confidence computed from evidence strength rather than stated by the model.</dd>
+<dt>Edge</dt><dd>A typed relationship between two nodes.</dd>
+<dt>Entitlement</dt><dd>A limit your workspace's plan grants, such as projects or monthly spend.</dd>
+<dt>Evidence</dt><dd>File, lines, symbol and a verbatim quote that supports a claim, validated against the source.</dd>
+<dt>Finding</dt><dd>A disagreement between your docs and the code-derived document.</dd>
+<dt>Graph version / snapshot</dt><dd>An immutable saved state of the graph; <code>v1</code>, <code>v2</code> ...</dd>
+<dt>Incremental run</dt><dd>An analysis that re-reads only changed code and its dependents.</dd>
+<dt>Ingest</dt><dd>The safe, read-only copy of your source into the working project, with secrets withheld or redacted.</dd>
+<dt>Inventory</dt><dd>The checklist of everything the analysis must account for, produced by static extraction.</dd>
+<dt>Model profile</dt><dd>Fast, Balanced or Best: a server-side mapping from task to model tier.</dd>
+<dt>Node</dt><dd>A thing found in the code, with an ID such as <code>RULE-0003</code>.</dd>
+<dt>Preserved quirk</dt><dd>Odd behaviour flagged as worth keeping on purpose during a migration.</dd>
+<dt>Reaper</dt><dd>The background process that retries file deletions until the store confirms them.</dd>
+<dt>Re-analysis</dt><dd>A targeted run that re-reads code around nodes your review touched.</dd>
+<dt>Resolution</dt><dd>Your recorded answer to a finding.</dd>
+<dt>Run</dt><dd>One background job: analyze, verify or reanalyze.</dd>
+<dt>Stopped at budget</dt><dd>Run status when the cap was reached; partial results are kept.</dd>
+<dt>Suspected bug</dt><dd>Heuristic flag for code that looks wrong; a lead, not a verdict.</dd>
+<dt>User docs</dt><dd>Your own documentation, read only by the Verifier.</dd>
+<dt>Workspace</dt><dd>The team container for projects, members, usage and limits.</dd>
+</dl>
+</section>
+
+<!-- ============================================================ 26 -->
+<section id="faq">
+<h2><span class="n">26</span>FAQ</h2>
+<details class="faq"><summary>Does it run or change my code?</summary><div><p>No. Source is copied once into a working area; nothing is executed. The model can only use read-only, path-jailed tools (read file, list directory, grep, file stat) on that copy.</p></div></details>
+<details class="faq"><summary>Where does my code go?</summary><div><p>Into the operator's object store, and excerpts of it (after best-effort secret redaction) to the configured model provider while a run is working. The provider's retention terms apply; no zero-retention agreement exists yet. If that is unacceptable, use the CLI with a self-hosted gateway or the offline mode, or do not analyse that code.</p></div></details>
+<details class="faq"><summary>Can I see or choose the model?</summary><div><p>In the web app you choose Fast, Balanced or Best; the operator maps those to models and holds the API key. In the CLI you choose models per task in a config file.</p></div></details>
+<details class="faq"><summary>Why did my run stop before finishing?</summary><div><p>Most often the Budget cap. The status is "Stopped at budget", partial results are published, and a new run reuses cached work. Otherwise check the run's Log and the troubleshooting table.</p></div></details>
+<details class="faq"><summary>Will a bigger budget make it better?</summary><div><p>Only if the run was cut short. A cap above the estimate does not buy quality; a stronger profile might, but that has not been benchmarked.</p></div></details>
+<details class="faq"><summary>How long does a run take?</summary><div><p>A small repository took under a minute in measurements. Large ones are limited by model-provider rate limits and have not been measured. Watch the progress panel.</p></div></details>
+<details class="faq"><summary>Do I pay for what I spend?</summary><div><p>Not through this product: billing is not enabled and nothing is invoiced. Your operator may pay the model provider; metered usage shows what your runs cost them, and limits cap it.</p></div></details>
+<details class="faq"><summary>Can two people review the same project?</summary><div><p>Yes. Everyone in the workspace with member role or above can answer findings and comment; viewers can read. Answers show the author and time. If two people answer the same finding, the latest answer is the current one.</p></div></details>
+<details class="faq"><summary>Why does the Verifier never see the code?</summary><div><p>So that it cannot rationalise a mismatch by reading code itself. It can only compare two texts, and the analysis never saw your docs. A disagreement is therefore independent evidence, and a human decides.</p></div></details>
+<details class="faq"><summary>Why can't I find a node in the filter chips?</summary><div><p>Chips exist for six of the nine types. Use the search box for <code>job</code>, <code>integration</code> or <code>dead_code</code> nodes, or type their ID prefix (JOB, INT, DEAD).</p></div></details>
+<details class="faq"><summary>I deleted a project by mistake.</summary><div><p>It cannot be restored from the app. Ask your operator whether a backup exists; otherwise re-create the project and run again.</p></div></details>
+<details class="faq"><summary>Can I use the web app with the CLI on the same project?</summary><div><p>Not directly. They keep separate state. You can analyse the same source in both and compare exports.</p></div></details>
+<details class="faq"><summary>Where do I report a bug or a security issue?</summary><div><p>Tell your operator. For vulnerabilities in the product itself see <code>SECURITY.md</code> in the repository.</p></div></details>
+</section>
+
+</main>
+</div>
+
+<footer>
+  Migration Agent user guide &middot; written for the hosted platform (0.3.0, in development) and the CLI. Statements here were checked against the web app, backend and engine source in this repository; where the app and the server disagree, this guide says so.
+</footer>
+
+<script>
+(function(){
+  // theme toggle (per-viewer convenience; wrapped because storage can be blocked)
+  var root=document.documentElement,btn=document.getElementById('theme');
+  try{var t=localStorage.getItem('ma-guide-theme');if(t==='light'||t==='dark')root.setAttribute('data-theme',t);}catch(e){}
+  if(btn)btn.addEventListener('click',function(){
+    var cur=root.getAttribute('data-theme');
+    if(!cur)cur=window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';
+    var next=cur==='dark'?'light':'dark';
+    root.setAttribute('data-theme',next);
+    try{localStorage.setItem('ma-guide-theme',next);}catch(e){}
+  });
+
+  // copy buttons on code blocks
+  document.querySelectorAll('.pw').forEach(function(w){
+    var pre=w.querySelector('pre');if(!pre)return;
+    var b=document.createElement('button');b.type='button';b.className='copy';b.textContent='Copy';
+    b.setAttribute('aria-label','Copy code to clipboard');
+    b.addEventListener('click',function(){
+      var txt=pre.innerText;
+      var done=function(){b.textContent='Copied';setTimeout(function(){b.textContent='Copy';},1500);};
+      if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(txt).then(done,function(){});}
+      else{try{var r=document.createRange();r.selectNodeContents(pre);var s=window.getSelection();s.removeAllRanges();s.addRange(r);document.execCommand('copy');s.removeAllRanges();done();}catch(e){}}
+    });
+    w.appendChild(b);
+  });
+  // wrap bare pre blocks (none expected) and make scrollable regions keyboard focusable
+  document.querySelectorAll('.tw,.dia').forEach(function(el){el.setAttribute('tabindex','0');el.setAttribute('role','region');if(!el.getAttribute('aria-label'))el.setAttribute('aria-label','Scrollable content');});
+
+  // scroll spy for the side nav
+  var links=[].slice.call(document.querySelectorAll('.side a'));
+  var map={};links.forEach(function(a){map[a.getAttribute('href').slice(1)]=a;});
+  if('IntersectionObserver' in window){
+    var io=new IntersectionObserver(function(es){
+      es.forEach(function(e){
+        if(e.isIntersecting){links.forEach(function(l){l.classList.remove('on');l.removeAttribute('aria-current');});
+          var a=map[e.target.id];if(a){a.classList.add('on');a.setAttribute('aria-current','true');}}
+      });
+    },{rootMargin:'-10% 0px -80% 0px'});
+    document.querySelectorAll('main section[id]').forEach(function(s){io.observe(s);});
+  }
+  // close compact menu after choosing a section
+  document.querySelectorAll('.mnav a').forEach(function(a){a.addEventListener('click',function(){document.querySelector('.mnav').removeAttribute('open');});});
+})();
+</script>
+</body>
+</html>
