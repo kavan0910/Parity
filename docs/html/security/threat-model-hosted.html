@@ -1,0 +1,125 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Threat model update: hosted product | migration-agent docs</title><style>
+:root{--bg:#fbfaf7;--panel:#fff;--ink:#1c1b22;--mute:#6b6a76;--line:#e7e4dc;--accent:#5b4bdb;--accent2:#e0568b;--tint:#efecff;--code:#15141c;--codefg:#e9e7f5}
+@media (prefers-color-scheme:dark){:root{--bg:#0f0e14;--panel:#17161f;--ink:#ecebf3;--mute:#9a98a8;--line:#2a2836;--accent:#9b8cff;--accent2:#ff7fac;--tint:#221f3a}}
+*{box-sizing:border-box}html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.7 -apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,sans-serif}
+a{color:var(--accent)}
+.top{padding:44px 24px 34px;text-align:center;border-bottom:1px solid var(--line);background:radial-gradient(900px 300px at 50% -80px,var(--tint),transparent),var(--bg)}
+.top .tag{display:inline-block;padding:3px 12px;border:1px solid var(--line);border-radius:99px;font-size:13px;color:var(--mute);background:var(--panel)}
+.top h1{font-size:clamp(28px,5vw,44px);line-height:1.15;margin:14px auto 0;max-width:900px;letter-spacing:-.02em;background:linear-gradient(90deg,var(--accent),var(--accent2));-webkit-background-clip:text;background-clip:text;color:transparent}
+.layout{display:grid;grid-template-columns:250px minmax(0,1fr) 210px;gap:36px;max-width:1360px;margin:0 auto;padding:32px 24px 90px}
+nav.docs,nav.toc{position:sticky;top:20px;align-self:start;max-height:calc(100vh - 40px);overflow:auto;font-size:14px}
+nav b{display:block;margin:14px 0 6px;color:var(--mute);font-weight:600;text-transform:uppercase;letter-spacing:.08em;font-size:11.5px}
+nav b:first-child{margin-top:0}
+nav a{display:block;padding:4px 10px;border-left:2px solid var(--line);color:var(--mute);text-decoration:none}
+nav a:hover,nav a.on{color:var(--accent);border-color:var(--accent)}
+nav a.on{font-weight:600}
+nav.toc a.l3{padding-left:22px;font-size:13px}
+main{min-width:0}main h2{font-size:27px;margin:44px 0 12px;letter-spacing:-.01em;padding-top:6px;border-top:1px solid var(--line)}
+main h1{display:none}main h3{font-size:20px;margin:30px 0 8px}main h4{font-size:16px;margin:22px 0 6px}
+main p,main li{max-width:78ch}p{margin:0 0 14px}ul,ol{padding-left:24px;margin:0 0 16px}li{margin:4px 0}
+code{font:13.5px ui-monospace,SFMono-Regular,Menlo,monospace;background:var(--tint);padding:2px 6px;border-radius:6px}
+.cb{position:relative;margin:14px 0 20px}
+pre{background:var(--code);color:var(--codefg);padding:16px 18px;border-radius:14px;overflow:auto;margin:0;line-height:1.55;box-shadow:0 8px 24px -14px #0008}
+pre code{background:none;padding:0;color:inherit;font-size:13px}
+.cb button{position:absolute;top:8px;right:8px;font:12px inherit;padding:3px 9px;border-radius:8px;border:1px solid #fff3;background:#ffffff14;color:#e9e7f5;cursor:pointer}
+.cb button:hover{background:#ffffff2a}
+.cb .lbl{position:absolute;top:8px;left:14px;font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:#b9b5d6}
+.cb.mm pre{padding-top:34px}
+.tw{overflow-x:auto;margin:14px 0 22px;border:1px solid var(--line);border-radius:14px;background:var(--panel)}
+table{border-collapse:collapse;width:100%;font-size:14.5px}th,td{text-align:left;padding:9px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--mute);background:var(--tint)}tr:last-child td{border-bottom:0}
+blockquote{margin:16px 0;padding:10px 18px;border-left:4px solid var(--accent);background:var(--tint);border-radius:0 12px 12px 0}blockquote p{margin:6px 0}
+hr{border:0;border-top:1px solid var(--line);margin:30px 0}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;margin:18px 0}
+.card{display:block;padding:16px 18px;border:1px solid var(--line);border-radius:14px;background:var(--panel);text-decoration:none;color:var(--ink)}
+.card:hover{border-color:var(--accent)}.card b{display:block;color:var(--accent);margin-bottom:2px}.card span{color:var(--mute);font-size:14px}
+.pager{display:flex;justify-content:space-between;gap:12px;margin-top:56px;padding-top:20px;border-top:1px solid var(--line);font-size:14px}
+footer{text-align:center;color:var(--mute);font-size:13px;padding:28px;border-top:1px solid var(--line)}
+details.mob{display:none;margin:0 24px 16px;border:1px solid var(--line);border-radius:12px;background:var(--panel);padding:8px 14px}
+@media(max-width:1100px){.layout{grid-template-columns:230px minmax(0,1fr)}nav.toc{display:none}}
+@media(max-width:820px){.layout{grid-template-columns:1fr;padding-top:16px}nav.docs{display:none}details.mob{display:block}}
+</style></head><body>
+<header class="top"><span class="tag">migration-agent docs</span><h1>Threat model update: hosted product</h1></header>
+<details class="mob"><summary>All docs</summary><a href="../index.html">Overview</a><b>Start here</b><a href="../README.html">migration-agent documentation</a><a href="../user-guide.html">User guide</a><a href="../architecture.html">Architecture</a><a href="../api-reference.html">API reference</a><a href="../deployment.html">Deployment guide</a><a href="../threat-model.html">Threat model (D-06)</a><b>Product and platform</b><a href="../product-architecture.html">Product architecture and roadmap: from CLI engine to hosted service</a><a href="../platform-contract.html">Platform contract (hosted product)</a><a href="../phase0-results.html">Phase 0 interim results (2026-11-09)</a><a href="../operations-runbook.html">Operations runbook</a><b>Security</b><a href="security-overview-draft.html">Security overview (customer-facing DRAFT)</a><a class="on" href="threat-model-hosted.html">Threat model update: hosted product</a><a href="data-handling-and-retention.html">Data handling and retention policy (draft)</a><a href="pentest-2026-11-09.html">Hostile security review, 2026-11-09: findings and status</a><a href="incident-response.html">Incident response outline</a><a href="secure-sdlc.html">Secure development lifecycle</a><a href="soc2-readiness.html">SOC 2 readiness checklist</a><a href="subprocessors.html">Subprocessor list (TEMPLATE)</a><b>Hand-built guides</b><a href="../../developer-handbook.html">Developer handbook</a><a href="../../user-guide-app.html">Product user guide</a><a href="../../tutorial.html">CLI tutorial</a></details>
+<div class="layout"><nav class="docs" aria-label="Documentation"><a href="../index.html">Overview</a><b>Start here</b><a href="../README.html">migration-agent documentation</a><a href="../user-guide.html">User guide</a><a href="../architecture.html">Architecture</a><a href="../api-reference.html">API reference</a><a href="../deployment.html">Deployment guide</a><a href="../threat-model.html">Threat model (D-06)</a><b>Product and platform</b><a href="../product-architecture.html">Product architecture and roadmap: from CLI engine to hosted service</a><a href="../platform-contract.html">Platform contract (hosted product)</a><a href="../phase0-results.html">Phase 0 interim results (2026-11-09)</a><a href="../operations-runbook.html">Operations runbook</a><b>Security</b><a href="security-overview-draft.html">Security overview (customer-facing DRAFT)</a><a class="on" href="threat-model-hosted.html">Threat model update: hosted product</a><a href="data-handling-and-retention.html">Data handling and retention policy (draft)</a><a href="pentest-2026-11-09.html">Hostile security review, 2026-11-09: findings and status</a><a href="incident-response.html">Incident response outline</a><a href="secure-sdlc.html">Secure development lifecycle</a><a href="soc2-readiness.html">SOC 2 readiness checklist</a><a href="subprocessors.html">Subprocessor list (TEMPLATE)</a><b>Hand-built guides</b><a href="../../developer-handbook.html">Developer handbook</a><a href="../../user-guide-app.html">Product user guide</a><a href="../../tutorial.html">CLI tutorial</a></nav>
+<main><h1 id="threat-model-update-hosted-product">Threat model update: hosted product</h1>
+<p>Extends <code>docs/threat-model.md</code> (engine, single user) to the multi-tenant platform in <code>docs/platform-contract.md</code>.
+Status: design-level analysis plus the fixes from the 2026-11-09 hostile review (<code>pentest-2026-11-09.md</code>, which lists what is
+fixed with tests, UNVERIFIED and OPEN). Controls are marked <strong>designed</strong> (in contract/compose), <strong>verify</strong> (confirm in code)
+or <strong>missing</strong>. There has been no independent penetration test.</p>
+<h2 id="new-assets">New assets</h2>
+<p>Other tenants' source and results; the shared database; object store; model provider API key; JWT signing secret;
+audit log; the egress allowlist.</p>
+<h2 id="new-actors">New actors</h2>
+<p>Malicious authenticated tenant; a tenant uploading hostile repositories; a curious operator; an attacker with only
+network access to the API; a compromised dependency.</p>
+<h2 id="trust-boundaries">Trust boundaries</h2>
+<p>Browser -&gt; web -&gt; API (JWT) -&gt; Postgres / object store; API -&gt; queue -&gt; worker; worker -&gt; egress proxy -&gt; model host;
+API -&gt; internet (git clone). The worker processes hostile bytes and is the highest-risk component.</p>
+<h2 id="threats">Threats</h2>
+<h3 id="t-h1-tenant-isolation-sec-1">T-H1 Tenant isolation (SEC-1)</h3>
+<ul>
+<li>Threat: IDOR, missing filter on one route, shared cache or object key collisions leak data across workspaces.</li>
+<li>Controls: one shared membership dependency for every project-scoped query (contract s4) <strong>verify</strong>; 404 not 403 for foreign resources <strong>verify</strong>; Postgres RLS keyed on <code>workspace_id</code> <strong>verify</strong>; object keys prefixed <code>{workspace}/{project}/</code> <strong>verify</strong>; LLM cache per workspace (identical code in two tenants must not share responses) <strong>verify</strong>; smoke test checks foreign project returns 404 (<code>deploy/smoke.sh</code>).</li>
+<li>Update 2026-11-09: tenancy tests exist for every route. Compose now connects as a non-superuser <code>ma_app</code> and RLS is FORCED (migration 0004), but this is <strong>UNVERIFIED</strong> (never run on Postgres). Still missing: RLS on memberships/audit_log/entitlements, composite (project, workspace) foreign keys.</li>
+</ul>
+<h3 id="t-h2-worker-sandbox-sec-2">T-H2 Worker sandbox (SEC-2)</h3>
+<ul>
+<li>Threat: hostile repo content exploits a parser (tree-sitter, pypdf, XML) or the engine to escape, reach the database, or exfiltrate.</li>
+<li>Controls: non-root, read-only rootfs, all capabilities dropped, no-new-privileges, pids and memory limits, noexec tmpfs scratch, no direct route out (internal network; only the allowlist proxy reaches <code>MODEL_ENDPOINT_HOST:443</code>) <strong>designed in compose</strong>; code is never executed (engine property); scratch cleaned per job.</li>
+<li>Gaps (stated plainly, pentest F5 <strong>OPEN</strong>): the compose worker is long-lived and handles many runs and <strong>has database credentials</strong> (needed for the queue). SEC-2 asks for one ephemeral container per run with no DB credentials; that is <strong>not built</strong>. Mitigation path: a supervisor that launches a fresh container per run and passes artifacts through object storage with a scoped token. Containers share a kernel; stronger isolation (gVisor/Firecracker) is <strong>not built</strong>. Proxy filters by domain; DNS and the model host itself are covert channels (threat-model residual 5).</li>
+</ul>
+<h3 id="t-h3-ssrf-and-hostile-archives-sec-4">T-H3 SSRF and hostile archives (SEC-4)</h3>
+<ul>
+<li>Threat: <code>git_url</code> pointed at internal addresses or metadata endpoints; redirects to private IPs; DNS rebinding; zip/tar bombs and path traversal.</li>
+<li>Controls: https only, public hosts only, block private/link-local/loopback <strong>verify in backend</strong>; archive size and member caps; <code>unpack_project</code> validates paths <strong>verify in engine</strong>; clones use hardened flags (no hooks, no LFS filters).</li>
+<li>Update: archive entries (directories included), depth and time are capped; cloned trees are capped; the URL given to git is rebuilt from validated components; IPv6-embedded IPv4 forms are blocked; the worker clones through an allowlisting proxy (<code>GIT_ALLOWED_HOSTS</code>). Gaps: the API container has general outbound access (it clones for /estimate). Resolve-then-connect pinning against DNS rebinding and revalidating redirects must be implemented and tested <strong>verify</strong>. Better: perform clones in the sandboxed worker through a dedicated git-only egress proxy <strong>not built</strong>.</li>
+</ul>
+<h3 id="t-h4-prompt-injection-sec-6">T-H4 Prompt injection (SEC-6)</h3>
+<ul>
+<li>Threat: repo content steers the model to emit misleading claims or try tool abuse.</li>
+<li>Controls: untrusted-data delimiters, neutralisation, path-jailed read-only tools, deterministic evidence verification of every claim (output gate), canary tests in eval. Residual: true-but-misleading claims remain possible (engine threat model residual 2). In the hosted product the model has no network or write tools, and one tenant's prompt can never include another tenant's data because jobs are per project.</li>
+</ul>
+<h3 id="t-h5-llm-provider-data-exposure-sec-3">T-H5 LLM provider data exposure (SEC-3)</h3>
+<ul>
+<li>Threat: provider retains or trains on code; provider breach.</li>
+<li>Controls: redaction at ingest; per-workspace cache; budget limits. Gaps: <strong>no zero-retention agreement exists</strong>; subprocessor not chosen (<code>subprocessors.md</code>); BYO-key/self-hosted endpoint tier (<code>MA_LLM_API_BASE</code>) not built as a product feature. Customer-facing text must say code excerpts are sent to a third party.</li>
+</ul>
+<h3 id="t-h6-secrets-sec-5-sec-7">T-H6 Secrets (SEC-5, SEC-7)</h3>
+<ul>
+<li>Threat: provider key or JWT secret leakage; secrets in customer repos reaching the model or logs.</li>
+<li>Controls: key injected into the worker only (api and web get none); <code>.env</code> git-ignored; gitleaks in CI; secret scrubbing in audit/log paths (engine); logs must not contain source. Gaps: secrets are plain environment variables in compose; production secret manager <strong>not chosen</strong>; no key rotation automation (manual runbook). <code>AUTH_MODE=dev</code> signs JWTs with one shared secret and must never be exposed publicly. MFA/SSO depends on the future OIDC provider <strong>not chosen</strong>.</li>
+</ul>
+<h3 id="t-h7-authentication-and-sessions">T-H7 Authentication and sessions</h3>
+<p>Dev mode is for local use only. OIDC mode: validate issuer, audience, signature (JWKS), expiry; reject <code>alg=none</code>. Rate limiting: per-IP (with a trusted-proxy count) and per-account exponential backoff exist, in-process only. Production refuses weak/placeholder <code>JWT_SECRET</code>; signup is closed by default in production; members join by hashed, expiring invitation. CSRF is limited because auth is a bearer header, not a cookie; if the web stores tokens, XSS impact must be reviewed <strong>open</strong>.</p>
+<h3 id="t-h8-availability-and-cost-abuse">T-H8 Availability and cost abuse</h3>
+<p>Per-run <code>max_usd</code>, entitlement check <code>can_start_run</code>, upload caps, pids/memory limits. Added: restrictive <code>free</code> default plan, per-user workspace and spend/run ceilings, atomic run admission with budget reservation, per-workspace estimate slots and SSE caps. Missing: fair scheduling (SCL-1), shared (multi-replica) limits, global spend alarms, a provider-side spend cap, e-mail verification (many accounts = many budgets).</p>
+<h3 id="t-h9-auditability-sec-8">T-H9 Auditability (SEC-8)</h3>
+<p><code>audit_log</code> table exists in the data model. Append-only enforcement: Postgres trigger and role revoke (migration 0004, <strong>UNVERIFIED</strong>); auth events are now audited (<code>/v1/me/audit</code>). Export <strong>missing</strong>. Deletion leaves a durable tombstone retried by the worker reaper and audited as <code>storage.purge</code>. Operator access to data is not itself audited today.</p>
+<h3 id="t-h10-supply-chain-and-infrastructure">T-H10 Supply chain and infrastructure</h3>
+<p>Dependencies scanned in CI (not yet run); base images unpinned by default (ARG for digest); <code>minio</code> image uses <code>latest</code> and must be pinned before use. Compose publishes ports on loopback only; TLS termination and a reverse proxy for production are <strong>not built</strong> (see NOTES).</p>
+<h2 id="prioritised-actions">Prioritised actions</h2>
+<ol>
+<li>Cross-tenant negative tests on every route plus RLS under a non-owner role.</li>
+<li>Run the Postgres test (<code>TEST_DATABASE_URL</code>) and finish RLS (memberships/audit_log/entitlements, composite FKs).</li>
+<li>Per-run ephemeral worker without DB credentials.</li>
+<li>Sign zero-retention terms with the model provider, or disclose plainly.</li>
+<li>Production secret store and TLS ingress.</li>
+<li>Independent penetration test before accepting real customer code.</li>
+</ol><div class="pager"><a href="security-overview-draft.html">&larr; Security overview (customer-facing DRAFT)</a><a href="data-handling-and-retention.html">Data handling and retention policy (draft) &rarr;</a></div></main>
+<nav class="toc" aria-label="On this page"><b>On this page</b><a class="l2" href="#new-assets">New assets</a><a class="l2" href="#new-actors">New actors</a><a class="l2" href="#trust-boundaries">Trust boundaries</a><a class="l2" href="#threats">Threats</a><a class="l3" href="#t-h1-tenant-isolation-sec-1">T-H1 Tenant isolation (SEC-1)</a><a class="l3" href="#t-h2-worker-sandbox-sec-2">T-H2 Worker sandbox (SEC-2)</a><a class="l3" href="#t-h3-ssrf-and-hostile-archives-sec-4">T-H3 SSRF and hostile archives (SEC-4)</a><a class="l3" href="#t-h4-prompt-injection-sec-6">T-H4 Prompt injection (SEC-6)</a><a class="l3" href="#t-h5-llm-provider-data-exposure-sec-3">T-H5 LLM provider data exposure (SEC-3)</a><a class="l3" href="#t-h6-secrets-sec-5-sec-7">T-H6 Secrets (SEC-5, SEC-7)</a><a class="l3" href="#t-h7-authentication-and-sessions">T-H7 Authentication and sessions</a><a class="l3" href="#t-h8-availability-and-cost-abuse">T-H8 Availability and cost abuse</a><a class="l3" href="#t-h9-auditability-sec-8">T-H9 Auditability (SEC-8)</a><a class="l3" href="#t-h10-supply-chain-and-infrastructure">T-H10 Supply chain and infrastructure</a><a class="l2" href="#prioritised-actions">Prioritised actions</a></nav></div>
+<footer>Generated from <code>docs/security/threat-model-hosted.md</code> by <code>scripts/build_docs_html.py</code>. Edit the Markdown, not this file.</footer>
+<script>
+(function(){
+ document.querySelectorAll('.cb').forEach(function(b){var btn=document.createElement('button');btn.textContent='Copy';
+  btn.addEventListener('click',function(){var t=b.querySelector('code').innerText;
+   (navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(function(){btn.textContent='Copied';setTimeout(function(){btn.textContent='Copy'},1400)},function(){btn.textContent='Press Ctrl/Cmd+C'});});
+  b.appendChild(btn);});
+ var links=[].slice.call(document.querySelectorAll('nav.toc a'));if(!links.length||!('IntersectionObserver' in window))return;
+ var map={};links.forEach(function(a){map[a.getAttribute('href').slice(1)]=a});
+ var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){links.forEach(function(a){a.classList.remove('on')});var a=map[e.target.id];if(a)a.classList.add('on');}})},{rootMargin:'0px 0px -75% 0px'});
+ document.querySelectorAll('main h2[id],main h3[id]').forEach(function(h){io.observe(h)});
+})();
+</script></body></html>

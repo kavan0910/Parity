@@ -1,0 +1,341 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>User guide | migration-agent docs</title><style>
+:root{--bg:#fbfaf7;--panel:#fff;--ink:#1c1b22;--mute:#6b6a76;--line:#e7e4dc;--accent:#5b4bdb;--accent2:#e0568b;--tint:#efecff;--code:#15141c;--codefg:#e9e7f5}
+@media (prefers-color-scheme:dark){:root{--bg:#0f0e14;--panel:#17161f;--ink:#ecebf3;--mute:#9a98a8;--line:#2a2836;--accent:#9b8cff;--accent2:#ff7fac;--tint:#221f3a}}
+*{box-sizing:border-box}html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.7 -apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,sans-serif}
+a{color:var(--accent)}
+.top{padding:44px 24px 34px;text-align:center;border-bottom:1px solid var(--line);background:radial-gradient(900px 300px at 50% -80px,var(--tint),transparent),var(--bg)}
+.top .tag{display:inline-block;padding:3px 12px;border:1px solid var(--line);border-radius:99px;font-size:13px;color:var(--mute);background:var(--panel)}
+.top h1{font-size:clamp(28px,5vw,44px);line-height:1.15;margin:14px auto 0;max-width:900px;letter-spacing:-.02em;background:linear-gradient(90deg,var(--accent),var(--accent2));-webkit-background-clip:text;background-clip:text;color:transparent}
+.layout{display:grid;grid-template-columns:250px minmax(0,1fr) 210px;gap:36px;max-width:1360px;margin:0 auto;padding:32px 24px 90px}
+nav.docs,nav.toc{position:sticky;top:20px;align-self:start;max-height:calc(100vh - 40px);overflow:auto;font-size:14px}
+nav b{display:block;margin:14px 0 6px;color:var(--mute);font-weight:600;text-transform:uppercase;letter-spacing:.08em;font-size:11.5px}
+nav b:first-child{margin-top:0}
+nav a{display:block;padding:4px 10px;border-left:2px solid var(--line);color:var(--mute);text-decoration:none}
+nav a:hover,nav a.on{color:var(--accent);border-color:var(--accent)}
+nav a.on{font-weight:600}
+nav.toc a.l3{padding-left:22px;font-size:13px}
+main{min-width:0}main h2{font-size:27px;margin:44px 0 12px;letter-spacing:-.01em;padding-top:6px;border-top:1px solid var(--line)}
+main h1{display:none}main h3{font-size:20px;margin:30px 0 8px}main h4{font-size:16px;margin:22px 0 6px}
+main p,main li{max-width:78ch}p{margin:0 0 14px}ul,ol{padding-left:24px;margin:0 0 16px}li{margin:4px 0}
+code{font:13.5px ui-monospace,SFMono-Regular,Menlo,monospace;background:var(--tint);padding:2px 6px;border-radius:6px}
+.cb{position:relative;margin:14px 0 20px}
+pre{background:var(--code);color:var(--codefg);padding:16px 18px;border-radius:14px;overflow:auto;margin:0;line-height:1.55;box-shadow:0 8px 24px -14px #0008}
+pre code{background:none;padding:0;color:inherit;font-size:13px}
+.cb button{position:absolute;top:8px;right:8px;font:12px inherit;padding:3px 9px;border-radius:8px;border:1px solid #fff3;background:#ffffff14;color:#e9e7f5;cursor:pointer}
+.cb button:hover{background:#ffffff2a}
+.cb .lbl{position:absolute;top:8px;left:14px;font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:#b9b5d6}
+.cb.mm pre{padding-top:34px}
+.tw{overflow-x:auto;margin:14px 0 22px;border:1px solid var(--line);border-radius:14px;background:var(--panel)}
+table{border-collapse:collapse;width:100%;font-size:14.5px}th,td{text-align:left;padding:9px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--mute);background:var(--tint)}tr:last-child td{border-bottom:0}
+blockquote{margin:16px 0;padding:10px 18px;border-left:4px solid var(--accent);background:var(--tint);border-radius:0 12px 12px 0}blockquote p{margin:6px 0}
+hr{border:0;border-top:1px solid var(--line);margin:30px 0}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;margin:18px 0}
+.card{display:block;padding:16px 18px;border:1px solid var(--line);border-radius:14px;background:var(--panel);text-decoration:none;color:var(--ink)}
+.card:hover{border-color:var(--accent)}.card b{display:block;color:var(--accent);margin-bottom:2px}.card span{color:var(--mute);font-size:14px}
+.pager{display:flex;justify-content:space-between;gap:12px;margin-top:56px;padding-top:20px;border-top:1px solid var(--line);font-size:14px}
+footer{text-align:center;color:var(--mute);font-size:13px;padding:28px;border-top:1px solid var(--line)}
+details.mob{display:none;margin:0 24px 16px;border:1px solid var(--line);border-radius:12px;background:var(--panel);padding:8px 14px}
+@media(max-width:1100px){.layout{grid-template-columns:230px minmax(0,1fr)}nav.toc{display:none}}
+@media(max-width:820px){.layout{grid-template-columns:1fr;padding-top:16px}nav.docs{display:none}details.mob{display:block}}
+</style></head><body>
+<header class="top"><span class="tag">migration-agent docs</span><h1>User guide</h1></header>
+<details class="mob"><summary>All docs</summary><a href="index.html">Overview</a><b>Start here</b><a href="README.html">migration-agent documentation</a><a class="on" href="user-guide.html">User guide</a><a href="architecture.html">Architecture</a><a href="api-reference.html">API reference</a><a href="deployment.html">Deployment guide</a><a href="threat-model.html">Threat model (D-06)</a><b>Product and platform</b><a href="product-architecture.html">Product architecture and roadmap: from CLI engine to hosted service</a><a href="platform-contract.html">Platform contract (hosted product)</a><a href="phase0-results.html">Phase 0 interim results (2026-11-09)</a><a href="operations-runbook.html">Operations runbook</a><b>Security</b><a href="security/security-overview-draft.html">Security overview (customer-facing DRAFT)</a><a href="security/threat-model-hosted.html">Threat model update: hosted product</a><a href="security/data-handling-and-retention.html">Data handling and retention policy (draft)</a><a href="security/pentest-2026-11-09.html">Hostile security review, 2026-11-09: findings and status</a><a href="security/incident-response.html">Incident response outline</a><a href="security/secure-sdlc.html">Secure development lifecycle</a><a href="security/soc2-readiness.html">SOC 2 readiness checklist</a><a href="security/subprocessors.html">Subprocessor list (TEMPLATE)</a><b>Hand-built guides</b><a href="../developer-handbook.html">Developer handbook</a><a href="../user-guide-app.html">Product user guide</a><a href="../tutorial.html">CLI tutorial</a></details>
+<div class="layout"><nav class="docs" aria-label="Documentation"><a href="index.html">Overview</a><b>Start here</b><a href="README.html">migration-agent documentation</a><a class="on" href="user-guide.html">User guide</a><a href="architecture.html">Architecture</a><a href="api-reference.html">API reference</a><a href="deployment.html">Deployment guide</a><a href="threat-model.html">Threat model (D-06)</a><b>Product and platform</b><a href="product-architecture.html">Product architecture and roadmap: from CLI engine to hosted service</a><a href="platform-contract.html">Platform contract (hosted product)</a><a href="phase0-results.html">Phase 0 interim results (2026-11-09)</a><a href="operations-runbook.html">Operations runbook</a><b>Security</b><a href="security/security-overview-draft.html">Security overview (customer-facing DRAFT)</a><a href="security/threat-model-hosted.html">Threat model update: hosted product</a><a href="security/data-handling-and-retention.html">Data handling and retention policy (draft)</a><a href="security/pentest-2026-11-09.html">Hostile security review, 2026-11-09: findings and status</a><a href="security/incident-response.html">Incident response outline</a><a href="security/secure-sdlc.html">Secure development lifecycle</a><a href="security/soc2-readiness.html">SOC 2 readiness checklist</a><a href="security/subprocessors.html">Subprocessor list (TEMPLATE)</a><b>Hand-built guides</b><a href="../developer-handbook.html">Developer handbook</a><a href="../user-guide-app.html">Product user guide</a><a href="../tutorial.html">CLI tutorial</a></nav>
+<main><h1 id="user-guide">User guide</h1>
+<p>migration-agent reads a legacy service's source code and produces an <strong>evidence-backed understanding document</strong>
+(<code>docs/understanding.latest.md</code>) plus a <strong>knowledge graph</strong> (components, endpoints, data entities, business rules,
+...). Every claim cites file and line range with a verbatim quote. A <strong>blind Verifier</strong> then compares the document
+with the documentation your team already has and reports contradictions, so humans can resolve them.</p>
+<p>The tool never executes the code it analyses and never modifies the source.</p>
+<h2 id="1-install">1. Install</h2>
+<p>Requires Python 3.11 or newer.</p>
+<div class="cb"><pre><code language-bash>python -m venv .venv &amp;&amp; . .venv/bin/activate
+pip install &quot;.[llm]&quot;          # from a checkout; &quot;[llm]&quot; adds LiteLLM, needed for real model calls
+migration-agent --help
+</code></pre></div>
+<p>Without the <code>llm</code> extra everything works except real model calls (<code>analyze --offline</code>, <code>extract</code>, <code>render</code>,
+<code>ingest</code>, <code>audit</code>, <code>changelog</code> and <code>review</code> need no model). Add <code>pytest</code> with <code>pip install -e ".[dev,llm]"</code> for development.
+For containers see <a href="deployment.html">deployment.md</a>.</p>
+<h3 id="api-keys-and-env">API keys and <code>.env</code></h3>
+<p>Model access is configured through environment variables understood by LiteLLM:
+<code>ANTHROPIC_API_KEY</code>, <code>GEMINI_API_KEY</code> (or <code>GOOGLE_API_KEY</code>), <code>OPENAI_API_KEY</code>. The CLI refuses to start a real
+analysis if none of them is set.</p>
+<p>On start-up the CLI loads a <code>.env</code> file (copy <code>.env.example</code>): from the checkout root (the directory containing
+<code>pyproject.toml</code>) or, when installed elsewhere, from the current directory. Rules: <code>KEY=VALUE</code> lines, optional <code>export</code>, quotes
+stripped, <code>#</code> comments; <strong>variables already in the environment are never overridden</strong>. <code>.env</code> is git-ignored;
+never commit it.</p>
+<h2 id="2-the-project-folder">2. The project folder</h2>
+<p>All state lives in one folder, <code>&lt;source-name&gt;.migration/</code> by default. It is safe to copy, back up or commit
+(except <code>llm_cache/</code>, see below).</p>
+<div class="cb"><pre><code>svc.migration/
+  project.json          name, source, created, schema_version
+  code/                 normalised copy of the service (secrets redacted)   &lt;- ingest
+  ingest_report.json    what was copied/skipped, secret findings (no values) &lt;- ingest
+  facts/                ast.json, manifests.json, config.json               &lt;- extract
+  inventory.json        coverage inventory (INV-nnnnn items)                &lt;- extract
+  graph/                snapshots/vNNN.json, latest.json, registry.json     &lt;- analyze/resolve
+  checkpoint/           per-chunk analysis patches (lets analyze resume)
+  llm_cache/            cached model responses keyed by prompt hash
+  docs/                 understanding.latest.md, graph.html, changelog.md
+  user_docs/            YOUR existing docs (.md .txt .html .docx .pdf), for the Verifier only
+  feedback/             findings.json, resolutions.json, comments.json, reanalysis_log.json
+  audit/                audit.jsonl (append-only)
+</code></pre></div>
+<p><code>graph/registry.json</code> keeps IDs (<code>COMP-0001</code>, <code>RULE-0003</code>...) stable across re-analyses so references in your
+reviews and docs do not break. <code>llm_cache/</code> contains prompts' responses derived from your code: treat it as
+sensitive and exclude it from sharing.</p>
+<h2 id="3-quick-start">3. Quick start</h2>
+<div class="cb"><pre><code language-bash>migration-agent init ./legacy-orders                 # creates ./legacy-orders.migration
+migration-agent ingest legacy-orders.migration
+migration-agent extract legacy-orders.migration
+cp requirements.md legacy-orders.migration/user_docs/   # optional: docs for the Verifier
+migration-agent analyze legacy-orders.migration --dry-run          # plan + cost estimate
+migration-agent analyze legacy-orders.migration --max-usd 5
+migration-agent verify  legacy-orders.migration
+migration-agent review  legacy-orders.migration      # opens the local review UI
+</code></pre></div>
+<p>Try the pipeline without any model: <code>migration-agent analyze PROJECT --offline</code> (deterministic stand-in; produces
+the facts-level graph and documents, not a real analysis).</p>
+<h2 id="4-commands">4. Commands</h2>
+<p>All commands take the project folder as the first argument. Every command appends to <code>audit/audit.jsonl</code>.
+Run <code>migration-agent COMMAND --help</code> for the authoritative option list.</p>
+<h3 id="init-source-project-path-name-text"><code>init SOURCE [--project PATH] [--name TEXT]</code></h3>
+<p>Creates the project folder. <code>SOURCE</code> is a directory, <code>.zip</code>, tarball or git URL. Nothing is copied yet.</p>
+<div class="cb"><pre><code language-bash>migration-agent init https://example.com/team/orders.git --project ./orders.migration --name &quot;Orders service&quot;
+</code></pre></div>
+<h3 id="ingest-project"><code>ingest PROJECT</code></h3>
+<p>Copies the source into <code>code/</code>. Safe by construction: archive entries with absolute paths, <code>..</code>, NUL bytes are
+rejected; size limits (500 MB, 200,000 files, compression ratio 100) apply; git clones run with hooks disabled;
+symlinks, binaries, files over 1 MB and vendor/build directories (<code>.git</code>, <code>node_modules</code>, <code>vendor</code>, <code>build</code>,
+<code>dist</code>, <code>target</code>, virtualenvs) are skipped. Credential files (<code>.env</code>, <code>*.pem</code>, <code>id_rsa</code>, <code>.npmrc</code>, ...) are
+<strong>withheld entirely</strong>; secrets found in other files are replaced with <code>[REDACTED:&lt;kind&gt;]</code> in <code>code/</code>. Writes
+<code>ingest_report.json</code>.</p>
+<h3 id="extract-project"><code>extract PROJECT</code></h3>
+<p>Static extraction with tree-sitter: AST facts, dependency manifests, configuration keys, routes, import
+edges. Writes <code>facts/</code> and <code>inventory.json</code>, the list of everything the analysis must account for.
+Prints inventory counts by kind (source_file, route, config_key, dependency).</p>
+<h3 id="analyze-project-offline-dry-run-config-path-max-usd-float"><code>analyze PROJECT [--offline] [--dry-run] [--config PATH] [--max-usd FLOAT]</code></h3>
+<p>Runs (and, if needed, first runs <code>extract</code>) the full pipeline: chunk plan, per-chunk model extraction, merge,
+cross-reference resolution, evidence verification, business-rules pass, gap fill for unmapped inventory items,
+then renders <code>docs/understanding.latest.md</code> and <code>docs/graph.html</code> and saves a new graph snapshot.</p>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>Option</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>--dry-run</code></td>
+<td>Print <code>plan: N chunk(s), estimated cost $X</code> and exit. No key needed.</td>
+</tr>
+<tr>
+<td><code>--max-usd 5</code></td>
+<td>Hard budget. The run <strong>stops gracefully</strong> and keeps what it has; re-run to continue (cache and checkpoints avoid paying twice).</td>
+</tr>
+<tr>
+<td><code>--config FILE</code></td>
+<td>LLM configuration (section 5). Default: built-in Anthropic tiers.</td>
+</tr>
+<tr>
+<td><code>--offline</code></td>
+<td>No model; deterministic stand-in.</td>
+</tr>
+</tbody>
+</table></div>
+<div class="cb"><pre><code language-bash>migration-agent analyze orders.migration --config gemini-lite.config.json --dry-run
+migration-agent analyze orders.migration --config gemini.config.json --max-usd 3
+</code></pre></div>
+<h3 id="render-project"><code>render PROJECT</code></h3>
+<p>Builds a <strong>facts-only</strong> graph from the inventory (no model) and renders the document. Useful to check
+extraction. Note it creates a new snapshot from facts only; run <code>analyze</code> for the real result.</p>
+<h3 id="verify-project-config-path-max-usd-float"><code>verify PROJECT [--config PATH] [--max-usd FLOAT]</code></h3>
+<p>The blind Verifier compares <code>docs/understanding.latest.md</code> with the files in <code>user_docs/</code> and writes
+<code>feedback/findings.json</code>. Requires an existing understanding doc. It sees only those two inputs, never the code.
+Each finding quotes both sides verbatim; findings whose quotes cannot be string-matched in the source text are
+dropped (<code>dropped_unverifiable</code>). Kinds: <code>contradiction</code>, <code>doc_only</code> (documented but not in code), <code>code_only</code>
+(in code but undocumented), <code>doc_vs_doc</code>. Prints one line per finding.</p>
+<h3 id="review-project-port-n-no-browser"><code>review PROJECT [--port N] [--no-browser]</code></h3>
+<p>Starts the local review UI (section 6). Prints a URL containing a one-time token.</p>
+<h3 id="resolve-project-finding_id-status-s-note-text-comment-item_id-reanalyze-no-reanalyze-config-path-max-usd-float"><code>resolve PROJECT [FINDING_ID] [--status S] [--note TEXT] [--comment ITEM_ID] [--reanalyze/--no-reanalyze] [--config PATH] [--max-usd FLOAT]</code></h3>
+<p>Records a decision, then runs <strong>targeted re-analysis</strong> of only the affected nodes and regenerates the changelog.
+Statuses: <code>accepted_doc</code> (the document is right, the code differs: re-analyse), <code>accepted_code</code> (code is the truth),
+<code>dismissed</code>, <code>needs_reanalysis</code>.</p>
+<div class="cb"><pre><code language-bash>migration-agent resolve orders.migration F-0001 --status accepted_doc --note &quot;Discount is 25% from 10 items&quot;
+migration-agent resolve orders.migration --comment RULE-0003 --note &quot;Check the VIP exception in pricing.py&quot;
+migration-agent resolve orders.migration F-0004 --status dismissed --no-reanalyze
+</code></pre></div>
+<p>Your note is passed to the model as untrusted <em>data</em>; every resulting claim still needs verbatim code evidence.
+If the budget stops a re-analysis, nothing is written.</p>
+<h3 id="changelog-project"><code>changelog PROJECT</code></h3>
+<p>Regenerates <code>docs/changelog.md</code> from consecutive graph snapshots, annotated with the comment or resolution that
+caused each change.</p>
+<h3 id="audit-project-format-tablejson"><code>audit PROJECT [--format table|json]</code></h3>
+<p>Prints the audit log with totals (calls, tokens, USD).</p>
+<div class="cb"><pre><code language-bash>migration-agent audit orders.migration --format json | jq '.[] | select(.status==&quot;error&quot;)'
+</code></pre></div>
+<h2 id="5-llm-configuration">5. LLM configuration</h2>
+<p><code>--config FILE</code> takes a JSON file; the settings may sit under a top-level <code>"llm"</code> key. Two ready-made files
+ship in the repository root:</p>
+<ul>
+<li><code>gemini.config.json</code>: all tasks use <code>gemini/gemini-3.5-flash</code>.</li>
+<li><code>gemini-lite.config.json</code>: all tasks use <code>gemini/gemini-3.1-flash-lite</code> (cheapest, lowest quotas).</li>
+</ul>
+<p>Fields (<code>LLMConfig</code>):</p>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Default</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>models</code></td>
+<td>haiku for <code>chunk_extract</code>, sonnet for the rest</td>
+<td>model per task tier: <code>chunk_extract</code>, <code>cross_ref</code>, <code>business_rules</code>, <code>gap_fill</code>, <code>verifier</code></td>
+</tr>
+<tr>
+<td><code>default_model</code></td>
+<td><code>claude-sonnet-5-5</code></td>
+<td>used for tasks missing from <code>models</code></td>
+</tr>
+<tr>
+<td><code>pricing</code> / <code>default_pricing</code></td>
+<td>per-model table / <code>[3.0, 15.0]</code></td>
+<td>USD per 1M tokens <code>[input, output]</code>, used for budget and estimates. Set it for any non-default model, else costs are mis-estimated</td>
+</tr>
+<tr>
+<td><code>max_retries</code></td>
+<td>4</td>
+<td>retries on 429 / 5xx / timeouts, exponential backoff with jitter</td>
+</tr>
+<tr>
+<td><code>backoff_base</code>, <code>backoff_max</code></td>
+<td>1.0, 30.0 s</td>
+<td></td>
+</tr>
+<tr>
+<td><code>timeout</code></td>
+<td>120 s</td>
+<td>per call</td>
+</tr>
+<tr>
+<td><code>max_output_tokens</code></td>
+<td>4096</td>
+<td></td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>Anthropic</strong> (default; just set <code>ANTHROPIC_API_KEY</code>): cheap tier for bulk chunk extraction, stronger model for
+reasoning tasks:</p>
+<div class="cb"><pre><code language-json>{&quot;llm&quot;: {&quot;models&quot;: {&quot;chunk_extract&quot;: &quot;claude-haiku-5-5&quot;, &quot;cross_ref&quot;: &quot;claude-sonnet-5-5&quot;,
+                    &quot;business_rules&quot;: &quot;claude-sonnet-5-5&quot;, &quot;gap_fill&quot;: &quot;claude-sonnet-5-5&quot;,
+                    &quot;verifier&quot;: &quot;claude-sonnet-5-5&quot;},
+         &quot;pricing&quot;: {&quot;claude-haiku-5-5&quot;: [1.0, 5.0], &quot;claude-sonnet-5-5&quot;: [3.0, 15.0]}}}
+</code></pre></div>
+<p><strong>Gemini</strong>: set <code>GEMINI_API_KEY</code> and use <code>--config gemini.config.json</code>. Those files raise <code>max_retries</code> to 8
+and backoff to 5 to 90 s because free-tier limits are tight.</p>
+<p>Equivalent environment-variable configuration for containers (<code>MA_LLM_MODEL_&lt;TASK&gt;</code>, <code>MA_LLM_API_BASE</code>, ...) is
+described in <a href="deployment.html">deployment.md</a>. Responses are cached in <code>llm_cache/</code>; identical re-runs cost nothing.</p>
+<h2 id="6-the-review-loop-and-server">6. The review loop and server</h2>
+<ol>
+<li><code>verify</code> produces findings. 2. <code>review</code> shows the document (with coverage and confidence), findings, graph
+versions and diffs, and lets you comment on any graph item and resolve findings. 3. <code>resolve</code> (or the UI)
+triggers targeted re-analysis -&gt; new graph version -&gt; <code>docs/changelog.md</code>.</li>
+</ol>
+<p>Review server security: it binds <strong>127.0.0.1 only</strong> (refuses anything else), picks a random port unless
+<code>--port</code> is given, and every request needs an unguessable token (URL path or <code>HttpOnly; SameSite=Strict</code>
+cookie, constant-time compare). It validates the <code>Host</code> header (DNS-rebinding defence), rejects cross-origin POSTs,
+requires <code>application/json</code>, caps bodies at 64 KB and texts at 5,000 characters, and exposes only comments and
+resolutions for writing. Do not forward the port. It cannot be used from inside a container; run it on the host.</p>
+<h2 id="7-security-model">7. Security model</h2>
+<ul>
+<li><strong>Read-only on the source.</strong> <code>ingest</code> copies; analysis reads only <code>code/</code>. Nothing from the source is executed.</li>
+<li><strong>Tool sandbox.</strong> The model only gets <code>read_file</code>, <code>list_dir</code>, <code>grep</code>, <code>file_stat</code>, jailed to <code>code/</code> (symlinks resolved,
+  <code>..</code> and NUL rejected, size caps, no write/exec/network capability exists).</li>
+<li><strong>Process guard.</strong> An optional audit-hook tripwire blocks writes outside scratch space, process spawn and
+  non-allowlisted sockets. It is defence in depth, not a boundary (see <code>src/migration_agent/sandbox/README.md</code>).</li>
+<li><strong>Container boundary.</strong> The Docker image runs non-root with a read-only root filesystem, all capabilities
+  dropped, and either no network or egress only through an allowlisting proxy to the model host.</li>
+<li><strong>Secrets.</strong> Credential files are withheld at ingest and secret values are redacted from <code>code/</code>, reports, and user docs before they reach a prompt or <code>findings.json</code>.
+  Findings contain kinds and redacted previews, never values. API keys are read from the environment and never written to the project folder or image.</li>
+<li><strong>Untrusted text.</strong> Source code, user docs and reviewer notes are wrapped in delimiters that they cannot forge and
+  are treated as data. A hand-built fixture in <code>eval/</code> checks prompt-injection canaries do not reach the graph.</li>
+<li><strong>User docs only to the Verifier.</strong> The analysis never reads <code>user_docs/</code>, so the doc is derived from code alone; the Verifier
+  never sees code. That separation is what makes disagreements meaningful.</li>
+<li><strong>Evidence.</strong> A node without verifiable file/line/quote evidence has confidence <code>none</code>/<code>low</code> and is flagged in
+  the document's blind-spots section.</li>
+<li><strong>Data leaves your machine only to the configured model endpoint.</strong> Chunks of code go to that provider; use
+  <code>--offline</code>, a self-hosted gateway (<code>MA_LLM_API_BASE</code>) or a no-retention provider plan if that matters.</li>
+</ul>
+<h2 id="8-troubleshooting">8. Troubleshooting</h2>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>Symptom</th>
+<th>Cause and fix</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>No LLM API key found</code></td>
+<td>Export the key or put it in <code>.env</code> (section 1); or use <code>--offline</code>/<code>--dry-run</code>.</td>
+</tr>
+<tr>
+<td>macOS <code>Operation not permitted</code></td>
+<td>The terminal lacks access to protected folders (Downloads, Desktop, Documents, external volumes). Grant the terminal app access in System Settings -&gt; Privacy &amp; Security (Files and Folders, or Full Disk Access), or keep the project and source elsewhere, e.g. <code>~/work</code>. Also appears when <code>.env</code> or the source lives in such a folder.</td>
+</tr>
+<tr>
+<td><code>429</code> / quota / <code>RESOURCE_EXHAUSTED</code></td>
+<td>Free tiers have per-minute and per-day limits that differ by model (lite models usually have the highest limits; larger "flash" models the lowest). The client retries with backoff up to <code>max_retries</code>; for free tiers use <code>gemini-lite.config.json</code>, raise <code>backoff_max</code>, or just re-run later: cache and checkpoints mean finished chunks are not repeated.</td>
+</tr>
+<tr>
+<td><code>503</code> / "model is overloaded"</td>
+<td>Transient provider overload; retried automatically (5xx). If it persists after <code>max_retries</code>, the chunk is skipped (named in the log) and a re-run picks it up. Raise <code>MA_LLM_MAX_RETRIES</code> or switch model.</td>
+</tr>
+<tr>
+<td>Run stopped on budget</td>
+<td><code>--max-usd</code> reached. Raise it and re-run; completed work is reused.</td>
+</tr>
+<tr>
+<td>Many <code>unmapped</code> inventory items</td>
+<td>Check <code>docs/understanding.latest.md</code> section 15 and <code>ingest_report.json</code> exclusions (large/binary/vendor files).</td>
+</tr>
+<tr>
+<td>Low confidence / "blind spots"</td>
+<td>Evidence quotes did not verify against <code>code/</code>; re-run, use a stronger <code>models.*</code> for that task, or comment on the item and <code>resolve</code>.</td>
+</tr>
+<tr>
+<td><code>not a project folder</code></td>
+<td>The folder lacks <code>project.json</code>; run <code>init</code> first.</td>
+</tr>
+<tr>
+<td><code>verify</code> reports nothing</td>
+<td><code>user_docs/</code> is empty or the formats are unsupported (<code>.pdf</code> needs <code>pypdf</code>, which is not installed by default).</td>
+</tr>
+<tr>
+<td><code>review</code> cannot be reached from a container</td>
+<td>By design it binds to loopback; run it on the host.</td>
+</tr>
+</tbody>
+</table></div><div class="pager"><a href="README.html">&larr; migration-agent documentation</a><a href="architecture.html">Architecture &rarr;</a></div></main>
+<nav class="toc" aria-label="On this page"><b>On this page</b><a class="l2" href="#1-install">1. Install</a><a class="l3" href="#api-keys-and-env">API keys and .env</a><a class="l2" href="#2-the-project-folder">2. The project folder</a><a class="l2" href="#3-quick-start">3. Quick start</a><a class="l2" href="#4-commands">4. Commands</a><a class="l3" href="#init-source-project-path-name-text">init SOURCE [--project PATH] [--name TEXT]</a><a class="l3" href="#ingest-project">ingest PROJECT</a><a class="l3" href="#extract-project">extract PROJECT</a><a class="l3" href="#analyze-project-offline-dry-run-config-path-max-usd-float">analyze PROJECT [--offline] [--dry-run] [--config PATH] [--max-usd FLOAT]</a><a class="l3" href="#render-project">render PROJECT</a><a class="l3" href="#verify-project-config-path-max-usd-float">verify PROJECT [--config PATH] [--max-usd FLOAT]</a><a class="l3" href="#review-project-port-n-no-browser">review PROJECT [--port N] [--no-browser]</a><a class="l3" href="#resolve-project-finding_id-status-s-note-text-comment-item_id-reanalyze-no-reanalyze-config-path-max-usd-float">resolve PROJECT [FINDING_ID] [--status S] [--note TEXT] [--comment ITEM_ID] [--reanalyze/--no-reanalyze] [--config PATH] [--max-usd FLOAT]</a><a class="l3" href="#changelog-project">changelog PROJECT</a><a class="l3" href="#audit-project-format-tablejson">audit PROJECT [--format table|json]</a><a class="l2" href="#5-llm-configuration">5. LLM configuration</a><a class="l2" href="#6-the-review-loop-and-server">6. The review loop and server</a><a class="l2" href="#7-security-model">7. Security model</a><a class="l2" href="#8-troubleshooting">8. Troubleshooting</a></nav></div>
+<footer>Generated from <code>docs/user-guide.md</code> by <code>scripts/build_docs_html.py</code>. Edit the Markdown, not this file.</footer>
+<script>
+(function(){
+ document.querySelectorAll('.cb').forEach(function(b){var btn=document.createElement('button');btn.textContent='Copy';
+  btn.addEventListener('click',function(){var t=b.querySelector('code').innerText;
+   (navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(function(){btn.textContent='Copied';setTimeout(function(){btn.textContent='Copy'},1400)},function(){btn.textContent='Press Ctrl/Cmd+C'});});
+  b.appendChild(btn);});
+ var links=[].slice.call(document.querySelectorAll('nav.toc a'));if(!links.length||!('IntersectionObserver' in window))return;
+ var map={};links.forEach(function(a){map[a.getAttribute('href').slice(1)]=a});
+ var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){links.forEach(function(a){a.classList.remove('on')});var a=map[e.target.id];if(a)a.classList.add('on');}})},{rootMargin:'0px 0px -75% 0px'});
+ document.querySelectorAll('main h2[id],main h3[id]').forEach(function(h){io.observe(h)});
+})();
+</script></body></html>

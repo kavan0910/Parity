@@ -1,0 +1,438 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Threat model (D-06) | migration-agent docs</title><style>
+:root{--bg:#fbfaf7;--panel:#fff;--ink:#1c1b22;--mute:#6b6a76;--line:#e7e4dc;--accent:#5b4bdb;--accent2:#e0568b;--tint:#efecff;--code:#15141c;--codefg:#e9e7f5}
+@media (prefers-color-scheme:dark){:root{--bg:#0f0e14;--panel:#17161f;--ink:#ecebf3;--mute:#9a98a8;--line:#2a2836;--accent:#9b8cff;--accent2:#ff7fac;--tint:#221f3a}}
+*{box-sizing:border-box}html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.7 -apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,sans-serif}
+a{color:var(--accent)}
+.top{padding:44px 24px 34px;text-align:center;border-bottom:1px solid var(--line);background:radial-gradient(900px 300px at 50% -80px,var(--tint),transparent),var(--bg)}
+.top .tag{display:inline-block;padding:3px 12px;border:1px solid var(--line);border-radius:99px;font-size:13px;color:var(--mute);background:var(--panel)}
+.top h1{font-size:clamp(28px,5vw,44px);line-height:1.15;margin:14px auto 0;max-width:900px;letter-spacing:-.02em;background:linear-gradient(90deg,var(--accent),var(--accent2));-webkit-background-clip:text;background-clip:text;color:transparent}
+.layout{display:grid;grid-template-columns:250px minmax(0,1fr) 210px;gap:36px;max-width:1360px;margin:0 auto;padding:32px 24px 90px}
+nav.docs,nav.toc{position:sticky;top:20px;align-self:start;max-height:calc(100vh - 40px);overflow:auto;font-size:14px}
+nav b{display:block;margin:14px 0 6px;color:var(--mute);font-weight:600;text-transform:uppercase;letter-spacing:.08em;font-size:11.5px}
+nav b:first-child{margin-top:0}
+nav a{display:block;padding:4px 10px;border-left:2px solid var(--line);color:var(--mute);text-decoration:none}
+nav a:hover,nav a.on{color:var(--accent);border-color:var(--accent)}
+nav a.on{font-weight:600}
+nav.toc a.l3{padding-left:22px;font-size:13px}
+main{min-width:0}main h2{font-size:27px;margin:44px 0 12px;letter-spacing:-.01em;padding-top:6px;border-top:1px solid var(--line)}
+main h1{display:none}main h3{font-size:20px;margin:30px 0 8px}main h4{font-size:16px;margin:22px 0 6px}
+main p,main li{max-width:78ch}p{margin:0 0 14px}ul,ol{padding-left:24px;margin:0 0 16px}li{margin:4px 0}
+code{font:13.5px ui-monospace,SFMono-Regular,Menlo,monospace;background:var(--tint);padding:2px 6px;border-radius:6px}
+.cb{position:relative;margin:14px 0 20px}
+pre{background:var(--code);color:var(--codefg);padding:16px 18px;border-radius:14px;overflow:auto;margin:0;line-height:1.55;box-shadow:0 8px 24px -14px #0008}
+pre code{background:none;padding:0;color:inherit;font-size:13px}
+.cb button{position:absolute;top:8px;right:8px;font:12px inherit;padding:3px 9px;border-radius:8px;border:1px solid #fff3;background:#ffffff14;color:#e9e7f5;cursor:pointer}
+.cb button:hover{background:#ffffff2a}
+.cb .lbl{position:absolute;top:8px;left:14px;font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:#b9b5d6}
+.cb.mm pre{padding-top:34px}
+.tw{overflow-x:auto;margin:14px 0 22px;border:1px solid var(--line);border-radius:14px;background:var(--panel)}
+table{border-collapse:collapse;width:100%;font-size:14.5px}th,td{text-align:left;padding:9px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--mute);background:var(--tint)}tr:last-child td{border-bottom:0}
+blockquote{margin:16px 0;padding:10px 18px;border-left:4px solid var(--accent);background:var(--tint);border-radius:0 12px 12px 0}blockquote p{margin:6px 0}
+hr{border:0;border-top:1px solid var(--line);margin:30px 0}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;margin:18px 0}
+.card{display:block;padding:16px 18px;border:1px solid var(--line);border-radius:14px;background:var(--panel);text-decoration:none;color:var(--ink)}
+.card:hover{border-color:var(--accent)}.card b{display:block;color:var(--accent);margin-bottom:2px}.card span{color:var(--mute);font-size:14px}
+.pager{display:flex;justify-content:space-between;gap:12px;margin-top:56px;padding-top:20px;border-top:1px solid var(--line);font-size:14px}
+footer{text-align:center;color:var(--mute);font-size:13px;padding:28px;border-top:1px solid var(--line)}
+details.mob{display:none;margin:0 24px 16px;border:1px solid var(--line);border-radius:12px;background:var(--panel);padding:8px 14px}
+@media(max-width:1100px){.layout{grid-template-columns:230px minmax(0,1fr)}nav.toc{display:none}}
+@media(max-width:820px){.layout{grid-template-columns:1fr;padding-top:16px}nav.docs{display:none}details.mob{display:block}}
+</style></head><body>
+<header class="top"><span class="tag">migration-agent docs</span><h1>Threat model (D-06)</h1></header>
+<details class="mob"><summary>All docs</summary><a href="index.html">Overview</a><b>Start here</b><a href="README.html">migration-agent documentation</a><a href="user-guide.html">User guide</a><a href="architecture.html">Architecture</a><a href="api-reference.html">API reference</a><a href="deployment.html">Deployment guide</a><a class="on" href="threat-model.html">Threat model (D-06)</a><b>Product and platform</b><a href="product-architecture.html">Product architecture and roadmap: from CLI engine to hosted service</a><a href="platform-contract.html">Platform contract (hosted product)</a><a href="phase0-results.html">Phase 0 interim results (2026-11-09)</a><a href="operations-runbook.html">Operations runbook</a><b>Security</b><a href="security/security-overview-draft.html">Security overview (customer-facing DRAFT)</a><a href="security/threat-model-hosted.html">Threat model update: hosted product</a><a href="security/data-handling-and-retention.html">Data handling and retention policy (draft)</a><a href="security/pentest-2026-11-09.html">Hostile security review, 2026-11-09: findings and status</a><a href="security/incident-response.html">Incident response outline</a><a href="security/secure-sdlc.html">Secure development lifecycle</a><a href="security/soc2-readiness.html">SOC 2 readiness checklist</a><a href="security/subprocessors.html">Subprocessor list (TEMPLATE)</a><b>Hand-built guides</b><a href="../developer-handbook.html">Developer handbook</a><a href="../user-guide-app.html">Product user guide</a><a href="../tutorial.html">CLI tutorial</a></details>
+<div class="layout"><nav class="docs" aria-label="Documentation"><a href="index.html">Overview</a><b>Start here</b><a href="README.html">migration-agent documentation</a><a href="user-guide.html">User guide</a><a href="architecture.html">Architecture</a><a href="api-reference.html">API reference</a><a href="deployment.html">Deployment guide</a><a class="on" href="threat-model.html">Threat model (D-06)</a><b>Product and platform</b><a href="product-architecture.html">Product architecture and roadmap: from CLI engine to hosted service</a><a href="platform-contract.html">Platform contract (hosted product)</a><a href="phase0-results.html">Phase 0 interim results (2026-11-09)</a><a href="operations-runbook.html">Operations runbook</a><b>Security</b><a href="security/security-overview-draft.html">Security overview (customer-facing DRAFT)</a><a href="security/threat-model-hosted.html">Threat model update: hosted product</a><a href="security/data-handling-and-retention.html">Data handling and retention policy (draft)</a><a href="security/pentest-2026-11-09.html">Hostile security review, 2026-11-09: findings and status</a><a href="security/incident-response.html">Incident response outline</a><a href="security/secure-sdlc.html">Secure development lifecycle</a><a href="security/soc2-readiness.html">SOC 2 readiness checklist</a><a href="security/subprocessors.html">Subprocessor list (TEMPLATE)</a><b>Hand-built guides</b><a href="../developer-handbook.html">Developer handbook</a><a href="../user-guide-app.html">Product user guide</a><a href="../tutorial.html">CLI tutorial</a></nav>
+<main><h1 id="threat-model-d-06">Threat model (D-06)</h1>
+<p>Scope: the <code>migration-agent</code> CLI, its project folder, the ingestion engine, the analysis/verification
+pipeline, the local review server, and the container sandbox. Verified by the red-team suite in
+<code>tests/redteam/</code> (fixtures built at test time by <code>scripts/make_redteam.py</code>; inert payloads in
+<code>eval/redteam/payloads.json</code>). Run: <code>PYTHONPATH=src .venv/bin/python -m pytest -q tests/redteam</code>.</p>
+<h2 id="1-assets">1. Assets</h2>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>Asset</th>
+<th>Why it matters</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Customer source code and its history</td>
+<td>Proprietary IP; must only leave the machine as redacted prompt text to the one model endpoint.</td>
+</tr>
+<tr>
+<td>Credentials embedded in the customer repo (cloud keys, tokens, DB passwords, private keys)</td>
+<td>Highest-impact leak: must never reach a prompt, trace, cache, checkpoint, graph, doc or review UI.</td>
+</tr>
+<tr>
+<td>Operator credentials (<code>ANTHROPIC_API_KEY</code> in env/<code>.env</code>)</td>
+<td>Spend and account abuse. Never written to disk by the tool; scrubbed from audit free text if echoed.</td>
+</tr>
+<tr>
+<td>Integrity of the knowledge graph / understanding doc</td>
+<td>Wrong or attacker-authored "facts" mislead a migration. Every claim must carry verifiable evidence.</td>
+</tr>
+<tr>
+<td>Host filesystem and network of the analyst's machine</td>
+<td>Must not be readable/writable/reachable through repo content.</td>
+</tr>
+<tr>
+<td>Review state (<code>feedback/*.json</code>, token)</td>
+<td>Reviewer decisions drive re-analysis; token grants write access to the UI.</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="2-actors">2. Actors</h2>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>Actor</th>
+<th>Capability</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>A1 Malicious repo author</td>
+<td>Controls every byte of the source (files, names, comments, archives, git metadata). Primary adversary.</td>
+</tr>
+<tr>
+<td>A2 Hostile model output / prompt-injected model</td>
+<td>Returns arbitrary JSON; may try to cite files outside the repo or invent graph items.</td>
+</tr>
+<tr>
+<td>A3 Malicious web page in the reviewer's browser</td>
+<td>Can make cross-origin requests to <code>127.0.0.1</code>, attempt DNS rebinding and CSRF.</td>
+</tr>
+<tr>
+<td>A4 Malicious or careless user-doc author</td>
+<td>Pastes credentials or injection text into <code>user_docs/</code> or review comments.</td>
+</tr>
+<tr>
+<td>A5 Network observer / compromised dependency</td>
+<td>Watches or redirects egress. Partly out of scope (see residual risks).</td>
+</tr>
+<tr>
+<td>A6 Co-resident local user</td>
+<td>Reads project folders or the review port. Out of scope beyond loopback binding and a per-run token.</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="3-trust-boundaries">3. Trust boundaries</h2>
+<div class="cb mm"><span class="lbl">diagram source (mermaid)</span><pre><code>flowchart LR
+  subgraph UNTRUSTED[&quot;Untrusted input&quot;]
+    SRC[&quot;Source: dir / zip / tar / git URL&quot;]
+    UDOC[&quot;user_docs/ and reviewer comments&quot;]
+  end
+  subgraph HOST[&quot;Analyst machine (container: read-only root, no caps, tmpfs scratch)&quot;]
+    ING[&quot;ingest/ : validate, exclude, REDACT&quot;]
+    CODE[(&quot;project/code (redacted copy)&quot;)]
+    EXT[&quot;extract/ (tree-sitter, no execution)&quot;]
+    ANA[&quot;analyze/ : prompts + delimiters&quot;]
+    TOOLS[&quot;sandbox/tools.py : path-jailed read-only&quot;]
+    EV[&quot;analyze/evidence.py : deterministic gate&quot;]
+    VER[&quot;verify/ : blind verifier&quot;]
+    STORE[(&quot;graph, docs, checkpoint, llm_cache, audit.jsonl&quot;)]
+    UI[&quot;review_ui/ : 127.0.0.1 + token&quot;]
+  end
+  subgraph NET[&quot;Network&quot;]
+    PROXY[&quot;Squid allowlist proxy&quot;]
+    MODEL[&quot;Model endpoint (single host)&quot;]
+    GITREM[&quot;Git remote (ingest time only)&quot;]
+  end
+  SRC -- &quot;git clone (hooks off, protocol allowlist)&quot; --&gt; GITREM
+  GITREM --&gt; ING
+  SRC --&gt; ING --&gt; CODE --&gt; EXT --&gt; ANA
+  CODE --&gt; TOOLS --&gt; ANA
+  ANA -- &quot;redacted, delimited prompts&quot; --&gt; PROXY --&gt; MODEL
+  MODEL -- &quot;untrusted JSON&quot; --&gt; ANA
+  ANA --&gt; EV --&gt; STORE
+  UDOC --&gt; VER -- &quot;redacted prompts&quot; --&gt; PROXY
+  STORE --&gt; UI
+  UI -- &quot;comments (redacted)&quot; --&gt; STORE
+  BROWSER[&quot;Reviewer browser / other tabs&quot;] -. &quot;Host+Origin+token checks&quot; .-&gt; UI
+</code></pre></div>
+<p>Boundaries that carry a control: (B1) source -&gt; <code>ingest/</code>; (B2) <code>code/</code> -&gt; prompts; (B3) prompts -&gt;
+network; (B4) model output -&gt; graph; (B5) browser -&gt; review server; (B6) process -&gt; host (container).</p>
+<h2 id="4-network-egress-allowlist">4. Network egress allowlist</h2>
+<p>Exactly two destinations are permitted; everything else is denied by construction or by the container.</p>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>#</th>
+<th>Destination</th>
+<th>When</th>
+<th>Mechanism</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>E1</td>
+<td>Git remote named by the operator (<code>https</code>, <code>ssh</code>, <code>file</code> only)</td>
+<td><code>init</code>/<code>ingest</code> of a git URL, once</td>
+<td><code>ingest._git_clone</code>: <code>GIT_ALLOW_PROTOCOL=https:ssh:file</code>, <code>protocol.allow=never</code> baseline, <code>ext::</code>/<code>git://</code>/<code>http://</code>/<code>ftp://</code> rejected before any process starts. Local paths, zips and tarballs never spawn git.</td>
+</tr>
+<tr>
+<td>E2</td>
+<td>The configured model endpoint, via the allowlisting proxy</td>
+<td><code>analyze</code>, <code>verify</code>, <code>resolve --reanalyze</code> without <code>--offline</code></td>
+<td><code>LiteLLMClient</code> -&gt; <code>litellm.completion</code> only. Container <code>model</code> profile: worker on an <code>internal: true</code> network; Squid (<code>docker/squid.conf</code>) permits <code>CONNECT</code> to one <code>dstdomain</code> on 443 and <code>deny all</code>.</td>
+</tr>
+</tbody>
+</table></div>
+<p>Loopback traffic to the review server (<code>127.0.0.1</code>, random port) is local only. <code>--offline</code> analysis,
+<code>init</code>, <code>extract</code>, <code>render</code>, <code>audit</code>, <code>changelog</code> and archive/dir ingest open <strong>no</strong> sockets and spawn <strong>no</strong>
+processes (<code>test_egress.py</code>). The in-process guard (<code>sandbox/guard.py</code>) can enforce the same allowlist inside a
+worker as defense in depth.</p>
+<h2 id="5-secrets-handling">5. Secrets handling</h2>
+<ol>
+<li><strong>Redact at the choke point.</strong> <code>ingest/secrets.py::redact_text</code> runs on every copied file. Patterns: AWS
+   access keys, GitHub tokens, Slack tokens, Stripe <code>sk_/rk_</code> keys, Google API keys, JWTs, URL-embedded passwords,
+   <code>key/secret/password/token = value</code> assignments, and multi-line PEM private-key blocks. Values become
+   <code>[REDACTED:&lt;kind&gt;]</code>; surrounding code is preserved so structure and line numbers stay valid.</li>
+<li><strong>Credential files are withheld</strong>, not copied: <code>.env</code>, <code>.env.*</code> (except <code>*.example|sample|template|dist</code>),
+   <code>id_rsa/ed25519/...</code>, <code>*.pem</code>, <code>*.key</code>, <code>*.p12</code>, <code>*.jks</code>, <code>.netrc</code>, <code>.npmrc</code>, <code>.pgpass</code>, ... They appear in
+   <code>IngestReport.exclusions</code> (<code>secret_file</code>) and as findings listing the kind only.</li>
+<li><strong>Findings never contain the value</strong> (<code>SecretFinding.preview</code> is the line with placeholders). <code>ingest_report.json</code>
+   therefore is safe to share.</li>
+<li>Because <code>code/</code> is already redacted, everything derived from it (facts, inventory, prompts, <code>llm_cache/</code>,
+   <code>checkpoint/</code>, graph snapshots, <code>understanding.latest.md</code>, <code>graph.html</code>, review state) is redacted too.</li>
+<li><strong>Defense in depth</strong> at the other sinks: <code>AuditLog.record</code> redacts all string fields (error messages, commands);
+   the verifier redacts user docs and the understanding doc before prompting; the review server and
+   <code>review.comments/resolutions</code> redact comment/note/author text before it is stored or sent to re-analysis.</li>
+<li>The operator API key lives only in the process environment; it is not written to the project folder
+   (<code>test_nothing_secret_in_any_prompt_trace_cache_or_artifact</code> sets it and scans every artifact).</li>
+</ol>
+<h2 id="6-stride-threat-table">6. STRIDE threat table</h2>
+<p>Tests are in <code>tests/redteam/</code> unless noted. "Code" is under <code>src/migration_agent/</code>.</p>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>ID</th>
+<th>STRIDE</th>
+<th>Threat</th>
+<th>Mitigation (code)</th>
+<th>Tests</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>T1</td>
+<td>Tampering / EoP</td>
+<td>Path traversal or absolute paths in zip/tar entries write outside <code>code/</code></td>
+<td><code>ingest._safe_rel</code> rejects <code>..</code>, absolute, drive-letter, NUL; extraction writes only to a staging dir under a temp root</td>
+<td><code>test_zip_traversal_and_absolute_entries_rejected</code>, <code>test_tar_traversal_rejected</code></td>
+</tr>
+<tr>
+<td>T2</td>
+<td>Tampering / Info disclosure</td>
+<td>Symlink/hardlink escape in archive or directory</td>
+<td>Archive links are validated then never materialised; hardlink targets must be archive-relative; directory walk uses <code>followlinks=False</code>, symlinks recorded as excluded and never read; files are copied by value</td>
+<td><code>test_zip_symlink_escape_rejected</code>, <code>test_tar_symlink_and_hardlink_escape_rejected</code>, <code>test_tar_links_not_materialised</code>, <code>test_directory_symlinks_not_followed_and_nothing_leaks</code>, <code>test_hardlink_in_source_dir_is_copied_by_value_only</code></td>
+</tr>
+<tr>
+<td>T3</td>
+<td>DoS</td>
+<td>Symlink loops, FIFO/device files</td>
+<td><code>os.walk(followlinks=False)</code>; <code>lstat</code> + <code>S_ISREG</code> check before any open (FIFO previously <strong>hung</strong> ingest - fixed); tar special files rejected</td>
+<td><code>test_directory_fifo_does_not_hang_and_is_excluded</code>, <code>test_tar_device_files_rejected</code></td>
+</tr>
+<tr>
+<td>T4</td>
+<td>DoS</td>
+<td>Decompression bomb, huge file count, nested archives</td>
+<td>Declared-size, per-entry and overall ratio caps (100:1), streamed byte budget, file-count cap; nested archives are <code>binary</code>-excluded, never recursed</td>
+<td><code>test_zip_bomb_rejected_by_ratio_cap</code>, <code>test_zip_bomb_rejected_by_size_cap</code>, <code>test_tar_bomb_rejected</code>, <code>test_zip_file_count_cap</code>, <code>test_directory_file_count_cap</code>, <code>test_directory_total_size_cap</code>, <code>test_nested_archive_is_not_recursively_extracted</code></td>
+</tr>
+<tr>
+<td>T5</td>
+<td>EoP</td>
+<td>Git hooks / submodules / LFS smudge / user git config execute or fetch during clone</td>
+<td><code>core.hooksPath=/dev/null</code>, empty <code>GIT_TEMPLATE_DIR</code>, <code>GIT_CONFIG_GLOBAL=/dev/null</code>, <code>--no-recurse-submodules</code>, <code>filter.lfs.*</code> neutralised and <code>GIT_LFS_SKIP_SMUDGE=1</code>, protocol allowlist, <code>--</code> before URL</td>
+<td><code>test_hooks_do_not_run_and_submodules_lfs_not_fetched</code>, <code>test_clone_command_is_hardened</code>, <code>test_dangerous_transports_rejected</code>, <code>test_option_injection_in_ssh_host_does_not_execute</code></td>
+</tr>
+<tr>
+<td>T6</td>
+<td>Tampering</td>
+<td>Prompt injection via comments, strings, docstrings, file names</td>
+<td>Untrusted text is wrapped in <code>&lt;&lt;&lt;CODE_BEGIN&gt;&gt;&gt;/&lt;&lt;&lt;CODE_END&gt;&gt;&gt;</code> (also FACTS/GRAPH/NOTE/DOC/CLAIMS); system prompts declare all of it DATA and that the model has no tools; single-pass <code>render()</code> stops placeholder re-expansion</td>
+<td><code>test_code_is_wrapped_in_exactly_one_delimiter_pair</code>, <code>test_system_prompt_is_static_and_declares_data_boundary</code>, <code>test_template_placeholders_in_code_are_not_re_expanded</code>, <code>test_filename_payload_stays_on_one_header_line</code></td>
+</tr>
+<tr>
+<td>T7</td>
+<td>Spoofing</td>
+<td>Forged delimiters, fullwidth/zero-width homoglyphs, bidi/RTL "Trojan Source"</td>
+<td><code>module_analyzer.neutralize</code> strips bidi/zero-width characters and defangs <code>&lt;&lt;&lt;NAME&gt;&gt;&gt;</code> look-alikes in every substituted value; reanalysis notes and verifier docs use the same function</td>
+<td><code>test_forged_delimiters_and_homoglyphs_are_neutralised</code>, <code>test_neutralize_variants</code>, <code>test_bidi_and_invisible_characters_stripped_from_prompts</code>, <code>test_verifier_user_docs_are_delimited_and_forged_markers_neutralised</code>, <code>test_reanalysis_notes_cannot_forge_delimiters_or_inject</code></td>
+</tr>
+<tr>
+<td>T8</td>
+<td>Tampering</td>
+<td>Injected model output (extra keys, tool calls, bad types, evidence outside repo)</td>
+<td><code>sanitize_patch</code> + pydantic schema drop unknown types/keys and force <code>chunk_id</code>; <code>evidence.verify_evidence</code> rejects absolute/<code>..</code>/symlink-escaping/non-existent evidence and unquoted claims (zero unverified evidence); verifier drops unknown kinds, unverifiable quotes, malformed IDs</td>
+<td><code>test_injected_model_output_does_not_reach_the_graph</code>, <code>test_sanitize_patch_drops_unknown_types_and_forces_chunk_id</code>, <code>test_evidence_check_rejects_paths_outside_code_dir</code>, <code>test_verify_evidence_rejects_injected_node</code>, <code>test_verifier_drops_hostile_model_findings</code></td>
+</tr>
+<tr>
+<td>T9</td>
+<td>Info disclosure / EoP</td>
+<td>Agent tools read outside <code>code/</code></td>
+<td><code>ReadOnlyTools</code> resolves symlinks and requires containment; rejects <code>..</code>, NUL, absolute outside paths; lists escaping links as <code>symlink-escaping</code> without targets; skips them in grep; exposes no write/exec/network method</td>
+<td><code>test_tools_refuse_paths_outside_code_dir</code>, <code>test_list_and_grep_do_not_leak_through_symlinks</code>, <code>test_tools_expose_no_write_exec_or_network_surface</code>; existing <code>tests/test_sandbox_tools.py</code>, <code>tests/test_sandbox_guard.py</code></td>
+</tr>
+<tr>
+<td>T10</td>
+<td>Info disclosure</td>
+<td>Credentials in the repo reach prompts or persisted traces</td>
+<td>See section 5</td>
+<td><code>test_ingest_withholds_credential_files_and_redacts_the_rest</code>, <code>test_report_lists_findings_without_values</code>, <code>test_redaction_is_exact_and_keeps_surrounding_code</code>, <code>test_long_minified_line_secret_beyond_5000_chars_is_redacted</code>, <code>test_nothing_secret_in_any_prompt_trace_cache_or_artifact</code>, <code>test_audit_scrubs_credentials_in_free_text</code>, <code>test_review_server_state_never_contains_secrets</code></td>
+</tr>
+<tr>
+<td>T11</td>
+<td>Info disclosure</td>
+<td>Data leaves the allowlist</td>
+<td>See section 4</td>
+<td><code>test_offline_pipeline_opens_no_connections_and_spawns_nothing</code>, <code>test_offline_pipeline_on_hostile_sources_still_no_network</code>, <code>test_archive_ingest_opens_no_connections</code>, <code>test_review_server_only_talks_to_loopback</code>, <code>test_llm_requests_go_only_through_the_injected_transport</code>, <code>test_process_guard_blocks_non_allowlisted_destinations</code>, <code>test_squid_allowlist_documents_single_model_host</code></td>
+</tr>
+<tr>
+<td>T12</td>
+<td>Spoofing / EoP</td>
+<td>DNS rebinding against the review server</td>
+<td>Bind <code>127.0.0.1</code> only (<code>serve</code> refuses other hosts); exact <code>Host</code> allowlist <code>127.0.0.1:&lt;port&gt;</code> / <code>localhost:&lt;port&gt;</code></td>
+<td><code>test_binds_loopback_only</code>, <code>test_dns_rebinding_host_header_rejected</code>, <code>test_host_localhost_with_port_is_accepted</code></td>
+</tr>
+<tr>
+<td>T13</td>
+<td>Tampering</td>
+<td>CSRF against comment/resolution endpoints</td>
+<td>Per-run 192-bit token (constant-time compare) required in path/header/cookie; <code>Origin</code> and <code>Sec-Fetch-Site</code> checks on POST; <code>application/json</code> only (no simple-form POST); cookie <code>HttpOnly; SameSite=Strict</code>; 64 KiB body cap; no CORS headers</td>
+<td><code>test_token_required</code>, <code>test_token_in_header_or_cookie_accepted_wrong_rejected</code>, <code>test_cross_origin_post_rejected_and_nothing_written</code>, <code>test_simple_request_content_types_rejected</code>, <code>test_oversized_body_and_bad_json_rejected</code>, <code>test_unsupported_methods_and_no_cors</code>, <code>test_root_page_sets_hardened_cookie</code></td>
+</tr>
+<tr>
+<td>T14</td>
+<td>Info disclosure</td>
+<td>Token leaked via <code>Referer</code>, caches, framing</td>
+<td><code>Referrer-Policy: no-referrer</code> on every response (incl. errors), <code>Cache-Control: no-store</code>, CSP with <code>default-src 'none'</code>, no external origins, <code>frame-ancestors 'self'</code>, COOP/CORP same-origin</td>
+<td><code>test_security_headers_on_every_response</code>, <code>test_error_responses_also_carry_no_referrer</code>, <code>test_page_has_no_external_resources_or_links</code></td>
+</tr>
+<tr>
+<td>T15</td>
+<td>Tampering</td>
+<td>Stored XSS through comments, node names, findings, markdown</td>
+<td>JSON API (<code>nosniff</code>); UI builds DOM with <code>textContent</code>; the single <code>innerHTML</code> use receives server-escaped, whitelisted markdown; graph payload JSON is <code>&lt;</code>/<code>&gt;</code>/<code>&amp;</code>-escaped</td>
+<td><code>test_stored_xss_comment_is_inert</code>, <code>test_page_only_uses_innerhtml_for_server_escaped_sections</code>, <code>test_graph_page_escapes_hostile_node_names</code>, <code>test_markdown_rendering_escapes_html</code>; existing <code>tests/test_review_ui.py</code></td>
+</tr>
+<tr>
+<td>T16</td>
+<td>Repudiation</td>
+<td>Actions cannot be reconstructed</td>
+<td>Append-only <code>audit.jsonl</code> (monotonic <code>seq</code>, flock, input hash, model, tokens, cost) with secret scrubbing; graph snapshots versioned; reanalysis log</td>
+<td><code>tests/test_audit.py</code>, <code>test_audit_scrubs_credentials_in_free_text</code></td>
+</tr>
+<tr>
+<td>T17</td>
+<td>DoS / cost</td>
+<td>Runaway spend or huge prompts</td>
+<td><code>Budget</code> (USD/tokens) hard stop, chunk token planning, response and line caps in tools</td>
+<td><code>tests/test_llm_litellm.py</code>, e2e cost tests</td>
+</tr>
+<tr>
+<td>T18</td>
+<td>EoP</td>
+<td>Malicious file names (control chars, bidi) forge prompt headers</td>
+<td>Names containing control/bidi characters are withheld (<code>unsafe_name</code>)</td>
+<td><code>test_filenames_with_control_or_bidi_chars_are_withheld</code></td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="7-residual-risks-accepted-or-open">7. Residual risks (accepted or open)</h2>
+<ol>
+<li><strong>Redaction is pattern-based.</strong> A novel or low-entropy secret (a human-chosen password in a variable not named
+   <code>password/secret/token/key</code>, a bare high-entropy string) will be sent to the model. Mitigation: review
+   <code>ingest_report.json</code>, extend <code>PATTERNS</code>, consider an entropy detector. Redacted placeholders are best-effort.</li>
+<li><strong>Prompt injection is mitigated, not solved.</strong> Delimiters and instructions raise the bar; the hard guarantee
+   comes from the output gate (schema + deterministic evidence verification + path containment). An injected model can
+   still make <em>true-but-misleading</em> claims (e.g. mislabel a rule) that cite real lines, or lower quality of analysis.
+   Human review of the doc is the control.</li>
+<li><strong><code>analyze/crossref.fence</code> and <code>gapfill</code></strong> use their own <code>&lt;&lt;&lt;DATA ... DATA&gt;&gt;&gt;</code> fence that only defangs the exact
+   ASCII markers (no homoglyph/zero-width handling); <code>render()</code>-based prompts are fully neutralised. Follow-up:
+   route <code>fence()</code> through <code>neutralize</code>.</li>
+<li><strong><code>ReadOnlyTools.grep</code> accepts model-supplied regex</strong>: catastrophic backtracking (ReDoS) is bounded only by file
+   and line caps. Not currently reachable from LLM output, but a future tool-calling loop must add a timeout/<code>re2</code>.</li>
+<li><strong>No <code>api_base</code> in <code>LLMConfig</code>.</strong> Model destination is whatever LiteLLM resolves (provider default or env);
+   the hard egress guarantee is the container proxy (single <code>dstdomain</code>), not application code. The proxy allows by
+   domain name, so DNS or the model host itself is a covert channel; pin the narrowest host.</li>
+<li><strong>In-process guard is a tripwire</strong>, not a boundary (ctypes/native code bypass); the container is the boundary.
+   Docker profiles are reviewed but were not exercised in CI.</li>
+<li><strong>Local review server</strong>: a co-resident local user who can read the URL/token (shell history, process list) can
+   act as the reviewer. No TLS (loopback only).</li>
+<li><strong>Tree-sitter and document parsers</strong> (<code>pypdf</code>, docx XML) process untrusted bytes in-process; a parser bug is a
+   memory-safety/DoS risk. <code>docx</code> XML uses stdlib ElementTree (entity-expansion exposure on very old Pythons);
+   mitigated by the container's memory/pid limits.</li>
+<li><strong>Git history is not scanned</strong>: only the checked-out tree at <code>--depth 1</code>; secrets in older commits are never
+   fetched. A git remote you choose is trusted for availability, not content.</li>
+<li><strong>Already-ingested projects</strong> created before redaction hold unredacted <code>code/</code>; re-ingest to apply it.</li>
+<li><strong>Comments added by editing <code>feedback/*.json</code> by hand</strong> bypass <code>review.comments</code> redaction.</li>
+<li>The <code>.env</code> loader reads the <em>tool's</em> <code>.env</code> (operator key). Do not place the operator <code>.env</code> inside an analysed repo.</li>
+</ol>
+<h2 id="8-bugs-found-by-the-red-team-suite-fixed">8. Bugs found by the red-team suite (fixed)</h2>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>Finding</th>
+<th>Fix</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Ingest only <em>reported</em> secrets; raw values were copied to <code>code/</code> and sent to the model, cache, checkpoint, graph</td>
+<td><code>redact_text</code> at ingest, credential files withheld, new token patterns, long-line handling</td>
+</tr>
+<tr>
+<td>FIFO/device file in a directory source hung ingest (<code>open()</code> on a FIFO)</td>
+<td><code>lstat</code>/<code>S_ISREG</code> gate before opening</td>
+</tr>
+<tr>
+<td>Forged <code>&lt;&lt;&lt;CODE_END&gt;&gt;&gt;</code> and homoglyph/zero-width/bidi look-alikes were passed verbatim into chunk prompts</td>
+<td><code>neutralize()</code> + single-pass <code>render()</code></td>
+</tr>
+<tr>
+<td>File names appeared in the "trusted facts" part of the prompt</td>
+<td>Facts and graph summary wrapped in untrusted <code>FACTS</code>/<code>GRAPH</code> delimiters; system prompt updated</td>
+</tr>
+<tr>
+<td>Reanalysis notes only defanged ASCII <code>&lt;&lt;&lt;</code>, kept bidi chars, and stored pasted secrets</td>
+<td><code>_defang</code> uses <code>neutralize</code>; comments/resolutions redacted on write</td>
+</tr>
+<tr>
+<td>Audit entries could echo credentials via error text</td>
+<td><code>AuditLog.record</code> redacts all strings</td>
+</tr>
+<tr>
+<td>Verifier sent user docs with pasted secrets to the model and wrote them to findings</td>
+<td>Redact docs and understanding before prompting</td>
+</tr>
+<tr>
+<td>Git clone honoured user git config / LFS filters / submodule defaults</td>
+<td>Hardened env and flags (see T5)</td>
+</tr>
+<tr>
+<td>Review server lacked COOP/CORP</td>
+<td>Added headers (<code>Referrer-Policy: no-referrer</code> was already present)</td>
+</tr>
+</tbody>
+</table></div><div class="pager"><a href="deployment.html">&larr; Deployment guide</a><a href="product-architecture.html">Product architecture and roadmap: from CLI engine to hosted service &rarr;</a></div></main>
+<nav class="toc" aria-label="On this page"><b>On this page</b><a class="l2" href="#1-assets">1. Assets</a><a class="l2" href="#2-actors">2. Actors</a><a class="l2" href="#3-trust-boundaries">3. Trust boundaries</a><a class="l2" href="#4-network-egress-allowlist">4. Network egress allowlist</a><a class="l2" href="#5-secrets-handling">5. Secrets handling</a><a class="l2" href="#6-stride-threat-table">6. STRIDE threat table</a><a class="l2" href="#7-residual-risks-accepted-or-open">7. Residual risks (accepted or open)</a><a class="l2" href="#8-bugs-found-by-the-red-team-suite-fixed">8. Bugs found by the red-team suite (fixed)</a></nav></div>
+<footer>Generated from <code>docs/threat-model.md</code> by <code>scripts/build_docs_html.py</code>. Edit the Markdown, not this file.</footer>
+<script>
+(function(){
+ document.querySelectorAll('.cb').forEach(function(b){var btn=document.createElement('button');btn.textContent='Copy';
+  btn.addEventListener('click',function(){var t=b.querySelector('code').innerText;
+   (navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(function(){btn.textContent='Copied';setTimeout(function(){btn.textContent='Copy'},1400)},function(){btn.textContent='Press Ctrl/Cmd+C'});});
+  b.appendChild(btn);});
+ var links=[].slice.call(document.querySelectorAll('nav.toc a'));if(!links.length||!('IntersectionObserver' in window))return;
+ var map={};links.forEach(function(a){map[a.getAttribute('href').slice(1)]=a});
+ var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){links.forEach(function(a){a.classList.remove('on')});var a=map[e.target.id];if(a)a.classList.add('on');}})},{rootMargin:'0px 0px -75% 0px'});
+ document.querySelectorAll('main h2[id],main h3[id]').forEach(function(h){io.observe(h)});
+})();
+</script></body></html>

@@ -1,0 +1,231 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>API reference | migration-agent docs</title><style>
+:root{--bg:#fbfaf7;--panel:#fff;--ink:#1c1b22;--mute:#6b6a76;--line:#e7e4dc;--accent:#5b4bdb;--accent2:#e0568b;--tint:#efecff;--code:#15141c;--codefg:#e9e7f5}
+@media (prefers-color-scheme:dark){:root{--bg:#0f0e14;--panel:#17161f;--ink:#ecebf3;--mute:#9a98a8;--line:#2a2836;--accent:#9b8cff;--accent2:#ff7fac;--tint:#221f3a}}
+*{box-sizing:border-box}html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.7 -apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,sans-serif}
+a{color:var(--accent)}
+.top{padding:44px 24px 34px;text-align:center;border-bottom:1px solid var(--line);background:radial-gradient(900px 300px at 50% -80px,var(--tint),transparent),var(--bg)}
+.top .tag{display:inline-block;padding:3px 12px;border:1px solid var(--line);border-radius:99px;font-size:13px;color:var(--mute);background:var(--panel)}
+.top h1{font-size:clamp(28px,5vw,44px);line-height:1.15;margin:14px auto 0;max-width:900px;letter-spacing:-.02em;background:linear-gradient(90deg,var(--accent),var(--accent2));-webkit-background-clip:text;background-clip:text;color:transparent}
+.layout{display:grid;grid-template-columns:250px minmax(0,1fr) 210px;gap:36px;max-width:1360px;margin:0 auto;padding:32px 24px 90px}
+nav.docs,nav.toc{position:sticky;top:20px;align-self:start;max-height:calc(100vh - 40px);overflow:auto;font-size:14px}
+nav b{display:block;margin:14px 0 6px;color:var(--mute);font-weight:600;text-transform:uppercase;letter-spacing:.08em;font-size:11.5px}
+nav b:first-child{margin-top:0}
+nav a{display:block;padding:4px 10px;border-left:2px solid var(--line);color:var(--mute);text-decoration:none}
+nav a:hover,nav a.on{color:var(--accent);border-color:var(--accent)}
+nav a.on{font-weight:600}
+nav.toc a.l3{padding-left:22px;font-size:13px}
+main{min-width:0}main h2{font-size:27px;margin:44px 0 12px;letter-spacing:-.01em;padding-top:6px;border-top:1px solid var(--line)}
+main h1{display:none}main h3{font-size:20px;margin:30px 0 8px}main h4{font-size:16px;margin:22px 0 6px}
+main p,main li{max-width:78ch}p{margin:0 0 14px}ul,ol{padding-left:24px;margin:0 0 16px}li{margin:4px 0}
+code{font:13.5px ui-monospace,SFMono-Regular,Menlo,monospace;background:var(--tint);padding:2px 6px;border-radius:6px}
+.cb{position:relative;margin:14px 0 20px}
+pre{background:var(--code);color:var(--codefg);padding:16px 18px;border-radius:14px;overflow:auto;margin:0;line-height:1.55;box-shadow:0 8px 24px -14px #0008}
+pre code{background:none;padding:0;color:inherit;font-size:13px}
+.cb button{position:absolute;top:8px;right:8px;font:12px inherit;padding:3px 9px;border-radius:8px;border:1px solid #fff3;background:#ffffff14;color:#e9e7f5;cursor:pointer}
+.cb button:hover{background:#ffffff2a}
+.cb .lbl{position:absolute;top:8px;left:14px;font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:#b9b5d6}
+.cb.mm pre{padding-top:34px}
+.tw{overflow-x:auto;margin:14px 0 22px;border:1px solid var(--line);border-radius:14px;background:var(--panel)}
+table{border-collapse:collapse;width:100%;font-size:14.5px}th,td{text-align:left;padding:9px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--mute);background:var(--tint)}tr:last-child td{border-bottom:0}
+blockquote{margin:16px 0;padding:10px 18px;border-left:4px solid var(--accent);background:var(--tint);border-radius:0 12px 12px 0}blockquote p{margin:6px 0}
+hr{border:0;border-top:1px solid var(--line);margin:30px 0}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;margin:18px 0}
+.card{display:block;padding:16px 18px;border:1px solid var(--line);border-radius:14px;background:var(--panel);text-decoration:none;color:var(--ink)}
+.card:hover{border-color:var(--accent)}.card b{display:block;color:var(--accent);margin-bottom:2px}.card span{color:var(--mute);font-size:14px}
+.pager{display:flex;justify-content:space-between;gap:12px;margin-top:56px;padding-top:20px;border-top:1px solid var(--line);font-size:14px}
+footer{text-align:center;color:var(--mute);font-size:13px;padding:28px;border-top:1px solid var(--line)}
+details.mob{display:none;margin:0 24px 16px;border:1px solid var(--line);border-radius:12px;background:var(--panel);padding:8px 14px}
+@media(max-width:1100px){.layout{grid-template-columns:230px minmax(0,1fr)}nav.toc{display:none}}
+@media(max-width:820px){.layout{grid-template-columns:1fr;padding-top:16px}nav.docs{display:none}details.mob{display:block}}
+</style></head><body>
+<header class="top"><span class="tag">migration-agent docs</span><h1>API reference</h1></header>
+<details class="mob"><summary>All docs</summary><a href="index.html">Overview</a><b>Start here</b><a href="README.html">migration-agent documentation</a><a href="user-guide.html">User guide</a><a href="architecture.html">Architecture</a><a class="on" href="api-reference.html">API reference</a><a href="deployment.html">Deployment guide</a><a href="threat-model.html">Threat model (D-06)</a><b>Product and platform</b><a href="product-architecture.html">Product architecture and roadmap: from CLI engine to hosted service</a><a href="platform-contract.html">Platform contract (hosted product)</a><a href="phase0-results.html">Phase 0 interim results (2026-11-09)</a><a href="operations-runbook.html">Operations runbook</a><b>Security</b><a href="security/security-overview-draft.html">Security overview (customer-facing DRAFT)</a><a href="security/threat-model-hosted.html">Threat model update: hosted product</a><a href="security/data-handling-and-retention.html">Data handling and retention policy (draft)</a><a href="security/pentest-2026-11-09.html">Hostile security review, 2026-11-09: findings and status</a><a href="security/incident-response.html">Incident response outline</a><a href="security/secure-sdlc.html">Secure development lifecycle</a><a href="security/soc2-readiness.html">SOC 2 readiness checklist</a><a href="security/subprocessors.html">Subprocessor list (TEMPLATE)</a><b>Hand-built guides</b><a href="../developer-handbook.html">Developer handbook</a><a href="../user-guide-app.html">Product user guide</a><a href="../tutorial.html">CLI tutorial</a></details>
+<div class="layout"><nav class="docs" aria-label="Documentation"><a href="index.html">Overview</a><b>Start here</b><a href="README.html">migration-agent documentation</a><a href="user-guide.html">User guide</a><a href="architecture.html">Architecture</a><a class="on" href="api-reference.html">API reference</a><a href="deployment.html">Deployment guide</a><a href="threat-model.html">Threat model (D-06)</a><b>Product and platform</b><a href="product-architecture.html">Product architecture and roadmap: from CLI engine to hosted service</a><a href="platform-contract.html">Platform contract (hosted product)</a><a href="phase0-results.html">Phase 0 interim results (2026-11-09)</a><a href="operations-runbook.html">Operations runbook</a><b>Security</b><a href="security/security-overview-draft.html">Security overview (customer-facing DRAFT)</a><a href="security/threat-model-hosted.html">Threat model update: hosted product</a><a href="security/data-handling-and-retention.html">Data handling and retention policy (draft)</a><a href="security/pentest-2026-11-09.html">Hostile security review, 2026-11-09: findings and status</a><a href="security/incident-response.html">Incident response outline</a><a href="security/secure-sdlc.html">Secure development lifecycle</a><a href="security/soc2-readiness.html">SOC 2 readiness checklist</a><a href="security/subprocessors.html">Subprocessor list (TEMPLATE)</a><b>Hand-built guides</b><a href="../developer-handbook.html">Developer handbook</a><a href="../user-guide-app.html">Product user guide</a><a href="../tutorial.html">CLI tutorial</a></nav>
+<main><h1 id="api-reference">API reference</h1>
+<p>Covers the on-disk formats (the stable contract between components), the review server's HTTP API and the Python
+entry points meant for integrators. Schemas are defined by pydantic models; the authoritative sources are named
+in each section. Formats carry a <code>schema_version</code>; additive changes keep the version.</p>
+<h2 id="1-graph-graphmodelspy">1. Graph (<code>graph/models.py</code>)</h2>
+<p><code>graph/snapshots/vNNN.json</code> and <code>graph/latest.json</code> contain a <code>Graph</code>:</p>
+<div class="cb"><pre><code language-json>{&quot;version&quot;: 4,
+ &quot;nodes&quot;: [{&quot;id&quot;: &quot;RULE-0003&quot;, &quot;type&quot;: &quot;business_rule&quot;, &quot;name&quot;: &quot;Bulk discount&quot;,
+            &quot;module&quot;: &quot;src/services/orderService.js&quot;, &quot;qualified_symbol&quot;: &quot;applyDiscount&quot;,
+            &quot;responsibility&quot;: &quot;10% off when total &gt; 500&quot;,
+            &quot;evidence&quot;: [{&quot;file&quot;: &quot;src/services/orderService.js&quot;, &quot;line_start&quot;: 20, &quot;line_end&quot;: 24,
+                          &quot;symbol&quot;: &quot;applyDiscount&quot;, &quot;quote&quot;: &quot;if (total &gt; 500) total *= 0.9&quot;}],
+            &quot;inventory_refs&quot;: [&quot;INV-00012&quot;], &quot;quirk&quot;: false, &quot;suspected_bug&quot;: false,
+            &quot;confidence&quot;: &quot;high&quot;}],
+ &quot;edges&quot;: [{&quot;id&quot;: &quot;EDGE-0007&quot;, &quot;source&quot;: &quot;COMP-0002&quot;, &quot;target&quot;: &quot;ENT-0001&quot;, &quot;type&quot;: &quot;reads&quot;,
+            &quot;evidence&quot;: [], &quot;confidence&quot;: &quot;none&quot;}]}
+</code></pre></div>
+<p>All models forbid unknown fields. <code>confidence</code> is written for convenience but <strong>derived</strong> (never read back as input).</p>
+<p><strong>Node.</strong> <code>id</code> (<code>&lt;PREFIX&gt;-NNNN</code>, prefix must match <code>type</code>), <code>type</code>, <code>name</code> (non-empty), <code>module</code>, <code>qualified_symbol</code>
+(with <code>module</code> forms the identity), <code>responsibility</code>, <code>evidence[]</code>, <code>inventory_refs[]</code> (INV ids from
+<code>inventory.json</code>), <code>quirk</code> (behaviour deliberately preserved), <code>suspected_bug</code>.</p>
+<div class="tw"><table>
+<thead>
+<tr>
+<th><code>type</code></th>
+<th>ID prefix</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>component</td>
+<td>COMP</td>
+</tr>
+<tr>
+<td>endpoint</td>
+<td>EP</td>
+</tr>
+<tr>
+<td>data_entity</td>
+<td>ENT</td>
+</tr>
+<tr>
+<td>external_dependency</td>
+<td>EXT</td>
+</tr>
+<tr>
+<td>business_rule</td>
+<td>RULE</td>
+</tr>
+<tr>
+<td>config</td>
+<td>CFG</td>
+</tr>
+<tr>
+<td>job</td>
+<td>JOB</td>
+</tr>
+<tr>
+<td>integration</td>
+<td>INT</td>
+</tr>
+<tr>
+<td>dead_code</td>
+<td>DEAD</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>Edge.</strong> <code>id</code> (<code>EDGE-NNNN</code>), <code>source</code>, <code>target</code> (node ids that must exist), <code>type</code> in
+<code>calls, reads, writes, depends_on, publishes, consumes, implements, configures</code>, <code>evidence[]</code>.</p>
+<p><strong>Evidence.</strong> <code>file</code> (required, relative to <code>code/</code>), <code>line_start</code>, <code>line_end</code> (&gt;= start; end requires start; 1-based),
+<code>symbol</code>, <code>quote</code> (verbatim text). An evidence item is <em>strong</em> if it has a non-empty quote and a line or symbol.</p>
+<p><strong>Confidence.</strong> none (no evidence) / low / medium / high, from: 2+ strong -&gt; high; 1 strong or 2+ any -&gt; medium; else low.</p>
+<p><strong>Integrity</strong> (validated on load): unique node ids, unique edge ids, edges reference existing nodes.
+IDs are allocated by <code>graph/registry.json</code> and never reused.</p>
+<h2 id="2-inventory-pipelinepy">2. Inventory (<code>pipeline.py</code>)</h2>
+<p><code>inventory.json</code>: <code>{"items": [{"id": "INV-00001", "kind": "source_file|route|config_key|dependency", "name": "...", "file": "...", "line": 12}], "counts": {"route": 9, ...}}</code>.</p>
+<h2 id="3-findings-resolutions-comments-verifymodelspy">3. Findings, resolutions, comments (<code>verify/models.py</code>)</h2>
+<p><code>feedback/findings.json</code> (written by <code>verify</code>):</p>
+<div class="cb"><pre><code language-json>{&quot;schema_version&quot;: 1, &quot;graph_version&quot;: 4, &quot;dropped_unverifiable&quot;: 2, &quot;claims_extracted&quot;: 41,
+ &quot;findings&quot;: [{&quot;id&quot;: &quot;F-0001&quot;, &quot;kind&quot;: &quot;contradiction&quot;, &quot;severity&quot;: &quot;high&quot;,
+               &quot;title&quot;: &quot;Conflict in bulk discount logic&quot;, &quot;detail&quot;: &quot;...&quot;,
+               &quot;item_ids&quot;: [&quot;RULE-0003&quot;], &quot;area&quot;: &quot;&quot;,
+               &quot;quotes&quot;: [{&quot;source&quot;: &quot;understanding&quot;, &quot;text&quot;: &quot;...&quot;, &quot;anchor&quot;: &quot;&quot;, &quot;verified&quot;: true},
+                          {&quot;source&quot;: &quot;requirements.md&quot;, &quot;text&quot;: &quot;...&quot;, &quot;anchor&quot;: &quot;&quot;, &quot;verified&quot;: true}]}]}
+</code></pre></div>
+<p><code>kind</code>: <code>contradiction | doc_only | code_only | doc_vs_doc</code>. <code>severity</code>: <code>low | medium | high</code>. A quote's <code>source</code> is
+<code>"understanding"</code> or a path relative to <code>user_docs/</code>. <code>area</code> groups <code>code_only</code> findings by module.</p>
+<p><code>feedback/resolutions.json</code> (one entry per finding; re-recording replaces):</p>
+<div class="cb"><pre><code language-json>{&quot;schema_version&quot;: 1, &quot;resolutions&quot;: [{&quot;finding_id&quot;: &quot;F-0001&quot;, &quot;status&quot;: &quot;accepted_doc&quot;,
+   &quot;note&quot;: &quot;25% from 10 items&quot;, &quot;affected_node_ids&quot;: [&quot;RULE-0003&quot;], &quot;created&quot;: &quot;2026-11-06T23:40:00+00:00&quot;}]}
+</code></pre></div>
+<p><code>status</code>: <code>open | accepted_doc | accepted_code | dismissed | needs_reanalysis | resolved</code>. <code>accepted_doc</code> and
+<code>needs_reanalysis</code> are pending for re-analysis; the engine sets <code>resolved</code> afterwards. <code>affected_node_ids</code> is copied from the finding.</p>
+<p><code>feedback/comments.json</code>:</p>
+<div class="cb"><pre><code language-json>{&quot;schema_version&quot;: 1, &quot;comments&quot;: [{&quot;id&quot;: &quot;CM-0001&quot;, &quot;item_id&quot;: &quot;RULE-0009&quot;, &quot;text&quot;: &quot;...&quot;, &quot;author&quot;: &quot;user&quot;,
+   &quot;created&quot;: &quot;...&quot;, &quot;processed&quot;: false}]}
+</code></pre></div>
+<p><code>item_id</code> must be an existing node or edge id. <code>processed</code> becomes true once re-analysis consumed it.
+<code>feedback/reanalysis_log.json</code> records each re-analysis run.</p>
+<h2 id="4-other-files">4. Other files</h2>
+<ul>
+<li><code>docs/changelog.md</code>: one section per graph version: <code>## vN (from vM)</code>, <code>Triggered by: ...</code>, then Added / Changed / Removed with evidence and the <em>why</em>.</li>
+<li><code>audit/audit.jsonl</code>: one JSON object per line: <code>seq</code> (monotonic), <code>ts</code> (UTC ISO), <code>agent</code>, <code>action</code>, <code>command</code>,
+  <code>duration_ms</code>, <code>tool_calls</code>, <code>model</code>, <code>tokens_in</code>, <code>tokens_out</code>, <code>cost_usd</code>, <code>prompt_version</code>, <code>input_hash</code>,
+  <code>trace_ref</code>, <code>status</code> (<code>ok|error</code>), <code>error</code>. Append-only, safe across processes.</li>
+<li><code>ingest_report.json</code>: <code>source_type</code>, <code>source_hash</code> (sha256), <code>commit</code>, <code>files_copied</code>, <code>bytes_copied</code>, <code>files_skipped</code>,
+  <code>exclusions[]</code> (<code>path</code>, <code>reason</code>, <code>detail</code>), <code>secret_findings[]</code> (<code>file</code>, <code>line</code>, <code>kind</code>, redacted <code>preview</code>), <code>files_with_secrets[]</code>.</li>
+</ul>
+<h2 id="5-review-server-http-api-review_uiserverpy">5. Review server HTTP API (<code>review_ui/server.py</code>)</h2>
+<p>Base URL <code>http://127.0.0.1:&lt;port&gt;/&lt;token&gt;/</code> (printed by <code>review</code>). The token may instead be sent in the
+<code>review_token</code> cookie (set when the root page loads). Requests with a wrong <code>Host</code> get 403, as does a POST whose
+<code>Origin</code> is not the server itself. Methods other than GET/POST get 405.</p>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>Route</th>
+<th>Method</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>/</code></td>
+<td>GET</td>
+<td>HTML UI (sets the cookie)</td>
+</tr>
+<tr>
+<td><code>/api/state</code></td>
+<td>GET</td>
+<td>Project name, findings, resolutions, comments, graph <code>versions</code>, document <code>sections</code>, coverage, non-fatal <code>errors</code></td>
+</tr>
+<tr>
+<td><code>/api/diff?a=N&amp;b=M</code></td>
+<td>GET</td>
+<td>Graph diff between versions N and M (<code>added/removed/changed</code> nodes and edges)</td>
+</tr>
+<tr>
+<td><code>/graph[?v=N&amp;prev=M]</code></td>
+<td>GET</td>
+<td>Interactive graph page for a version, optionally highlighting changes since <code>prev</code></td>
+</tr>
+<tr>
+<td><code>/api/comments</code></td>
+<td>POST</td>
+<td>Body <code>{"item_id": str(1..64), "text": str(1..5000), "author": str(&lt;=64, default "user")}</code> -&gt; 201 with the comment</td>
+</tr>
+<tr>
+<td><code>/api/resolutions</code></td>
+<td>POST</td>
+<td>Body <code>{"finding_id": str, "status": &lt;status&gt;, "note": str(&lt;=5000)}</code> -&gt; 201 with the resolution</td>
+</tr>
+</tbody>
+</table></div>
+<p>POST requires <code>Content-Type: application/json</code> (415 otherwise), <code>Content-Length</code> (411), body at most 64 KB (413).
+Validation failures return 400 with a short message. The server records feedback only; re-analysis is triggered by
+<code>migration-agent resolve PROJECT</code>.</p>
+<h2 id="6-python-entry-points">6. Python entry points</h2>
+<ul>
+<li><code>migration_agent.__version__</code>: installed package version.</li>
+<li><code>migration_agent.llm.litellm_client.LLMConfig</code>, <code>LiteLLMClient</code>, <code>Budget</code>; <code>migration_agent.llm.base.LLMClient</code> (protocol:
+  <code>complete(*, task, system, prompt, json_mode=True, prompt_version="v1") -&gt; LLMResponse</code>), <code>BudgetExceeded</code>, <code>FakeLLM</code>.</li>
+<li><code>migration_agent.graph</code>: <code>Graph</code>, <code>Node</code>, <code>Edge</code>, <code>Evidence</code>, <code>Registry</code>, <code>save_snapshot</code>, <code>load_latest</code>, <code>load_snapshot</code>, <code>diff_graphs</code>.</li>
+<li><code>migration_agent.config_env</code>:</li>
+<li><code>load_llm_config_from_env(env=None) -&gt; LLMConfig</code>: defaults, then the <code>MA_LLM_CONFIG</code> file, then <code>MA_LLM_*</code> overrides. Raises <code>EnvConfigError</code> (a <code>ValueError</code>) naming the bad variable.</li>
+<li><code>load_settings_from_env(env=None) -&gt; EnvSettings(api_base, max_usd, log_level, config_path)</code>.</li>
+<li><code>configure_logging(env=None)</code>: applies <code>MA_LOG_LEVEL</code>.
+  Variables are listed in <a href="deployment.html#environment-variables">deployment.md</a>.</li>
+</ul>
+<div class="cb"><pre><code language-python>from migration_agent.config_env import load_llm_config_from_env, load_settings_from_env
+cfg, st = load_llm_config_from_env(), load_settings_from_env()
+</code></pre></div><div class="pager"><a href="architecture.html">&larr; Architecture</a><a href="deployment.html">Deployment guide &rarr;</a></div></main>
+<nav class="toc" aria-label="On this page"><b>On this page</b><a class="l2" href="#1-graph-graphmodelspy">1. Graph (graph/models.py)</a><a class="l2" href="#2-inventory-pipelinepy">2. Inventory (pipeline.py)</a><a class="l2" href="#3-findings-resolutions-comments-verifymodelspy">3. Findings, resolutions, comments (verify/models.py)</a><a class="l2" href="#4-other-files">4. Other files</a><a class="l2" href="#5-review-server-http-api-review_uiserverpy">5. Review server HTTP API (review_ui/server.py)</a><a class="l2" href="#6-python-entry-points">6. Python entry points</a></nav></div>
+<footer>Generated from <code>docs/api-reference.md</code> by <code>scripts/build_docs_html.py</code>. Edit the Markdown, not this file.</footer>
+<script>
+(function(){
+ document.querySelectorAll('.cb').forEach(function(b){var btn=document.createElement('button');btn.textContent='Copy';
+  btn.addEventListener('click',function(){var t=b.querySelector('code').innerText;
+   (navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(function(){btn.textContent='Copied';setTimeout(function(){btn.textContent='Copy'},1400)},function(){btn.textContent='Press Ctrl/Cmd+C'});});
+  b.appendChild(btn);});
+ var links=[].slice.call(document.querySelectorAll('nav.toc a'));if(!links.length||!('IntersectionObserver' in window))return;
+ var map={};links.forEach(function(a){map[a.getAttribute('href').slice(1)]=a});
+ var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){links.forEach(function(a){a.classList.remove('on')});var a=map[e.target.id];if(a)a.classList.add('on');}})},{rootMargin:'0px 0px -75% 0px'});
+ document.querySelectorAll('main h2[id],main h3[id]').forEach(function(h){io.observe(h)});
+})();
+</script></body></html>

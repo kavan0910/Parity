@@ -18,7 +18,7 @@ app/engine.py        adapter to migration_agent.service (lazy import, injectable
 app/profiles.py      model_profile -> engine config (the only mapping), server-side API key injection
 app/billing.py       BillingProvider, NoBilling, plans/entitlements, can_start_run
 app/storage.py       ObjectStore, LocalStore, S3Store skeleton
-migrations/          Alembic (0001 schema, 0002 Postgres RLS)
+migrations/          Alembic (0001 schema, 0002 Postgres RLS, 0003 pentest hardening, 0004 Postgres hardening)
 tests/               pytest (no network, no LLM)
 ```
 
@@ -47,7 +47,7 @@ disables /docs), `STORE_BACKEND=s3` (+ `S3_BUCKET`, needs `pip install '.[s3]'`;
 | `AUTH_MODE` | `dev` | `dev` password+JWT (argon2, HS256) or `oidc` |
 | `JWT_SECRET`, `JWT_TTL_MINUTES` | random per process (dev only), 60 | dev issuer |
 | `OIDC_ISSUER`, `OIDC_AUDIENCE`, `OIDC_JWKS_URL`, `OIDC_ALGORITHMS` | | external JWT verification (asymmetric only) |
-| `SIGNUP_ENABLED` | `true` | dev-mode signup |
+| `SIGNUP_ENABLED` | `true` in dev, `false` in production | self-serve signup |
 | `STORE_BACKEND`, `STORE_DIR`, `S3_*` | local, `./data/store` | object store |
 | `MODEL_API_KEY`, `MODEL_API_BASE` | | injected per job into the engine config, never stored |
 | `PROFILE_FAST_MODEL`, `PROFILE_BALANCED_MODEL`, `PROFILE_BEST_MODEL` | gemini 2.5 lite/flash/pro | profile -> model ids |

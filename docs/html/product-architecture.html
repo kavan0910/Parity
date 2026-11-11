@@ -1,0 +1,490 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Product architecture and roadmap: from CLI engine to hosted service | migration-agent docs</title><style>
+:root{--bg:#fbfaf7;--panel:#fff;--ink:#1c1b22;--mute:#6b6a76;--line:#e7e4dc;--accent:#5b4bdb;--accent2:#e0568b;--tint:#efecff;--code:#15141c;--codefg:#e9e7f5}
+@media (prefers-color-scheme:dark){:root{--bg:#0f0e14;--panel:#17161f;--ink:#ecebf3;--mute:#9a98a8;--line:#2a2836;--accent:#9b8cff;--accent2:#ff7fac;--tint:#221f3a}}
+*{box-sizing:border-box}html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.7 -apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,sans-serif}
+a{color:var(--accent)}
+.top{padding:44px 24px 34px;text-align:center;border-bottom:1px solid var(--line);background:radial-gradient(900px 300px at 50% -80px,var(--tint),transparent),var(--bg)}
+.top .tag{display:inline-block;padding:3px 12px;border:1px solid var(--line);border-radius:99px;font-size:13px;color:var(--mute);background:var(--panel)}
+.top h1{font-size:clamp(28px,5vw,44px);line-height:1.15;margin:14px auto 0;max-width:900px;letter-spacing:-.02em;background:linear-gradient(90deg,var(--accent),var(--accent2));-webkit-background-clip:text;background-clip:text;color:transparent}
+.layout{display:grid;grid-template-columns:250px minmax(0,1fr) 210px;gap:36px;max-width:1360px;margin:0 auto;padding:32px 24px 90px}
+nav.docs,nav.toc{position:sticky;top:20px;align-self:start;max-height:calc(100vh - 40px);overflow:auto;font-size:14px}
+nav b{display:block;margin:14px 0 6px;color:var(--mute);font-weight:600;text-transform:uppercase;letter-spacing:.08em;font-size:11.5px}
+nav b:first-child{margin-top:0}
+nav a{display:block;padding:4px 10px;border-left:2px solid var(--line);color:var(--mute);text-decoration:none}
+nav a:hover,nav a.on{color:var(--accent);border-color:var(--accent)}
+nav a.on{font-weight:600}
+nav.toc a.l3{padding-left:22px;font-size:13px}
+main{min-width:0}main h2{font-size:27px;margin:44px 0 12px;letter-spacing:-.01em;padding-top:6px;border-top:1px solid var(--line)}
+main h1{display:none}main h3{font-size:20px;margin:30px 0 8px}main h4{font-size:16px;margin:22px 0 6px}
+main p,main li{max-width:78ch}p{margin:0 0 14px}ul,ol{padding-left:24px;margin:0 0 16px}li{margin:4px 0}
+code{font:13.5px ui-monospace,SFMono-Regular,Menlo,monospace;background:var(--tint);padding:2px 6px;border-radius:6px}
+.cb{position:relative;margin:14px 0 20px}
+pre{background:var(--code);color:var(--codefg);padding:16px 18px;border-radius:14px;overflow:auto;margin:0;line-height:1.55;box-shadow:0 8px 24px -14px #0008}
+pre code{background:none;padding:0;color:inherit;font-size:13px}
+.cb button{position:absolute;top:8px;right:8px;font:12px inherit;padding:3px 9px;border-radius:8px;border:1px solid #fff3;background:#ffffff14;color:#e9e7f5;cursor:pointer}
+.cb button:hover{background:#ffffff2a}
+.cb .lbl{position:absolute;top:8px;left:14px;font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:#b9b5d6}
+.cb.mm pre{padding-top:34px}
+.tw{overflow-x:auto;margin:14px 0 22px;border:1px solid var(--line);border-radius:14px;background:var(--panel)}
+table{border-collapse:collapse;width:100%;font-size:14.5px}th,td{text-align:left;padding:9px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--mute);background:var(--tint)}tr:last-child td{border-bottom:0}
+blockquote{margin:16px 0;padding:10px 18px;border-left:4px solid var(--accent);background:var(--tint);border-radius:0 12px 12px 0}blockquote p{margin:6px 0}
+hr{border:0;border-top:1px solid var(--line);margin:30px 0}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;margin:18px 0}
+.card{display:block;padding:16px 18px;border:1px solid var(--line);border-radius:14px;background:var(--panel);text-decoration:none;color:var(--ink)}
+.card:hover{border-color:var(--accent)}.card b{display:block;color:var(--accent);margin-bottom:2px}.card span{color:var(--mute);font-size:14px}
+.pager{display:flex;justify-content:space-between;gap:12px;margin-top:56px;padding-top:20px;border-top:1px solid var(--line);font-size:14px}
+footer{text-align:center;color:var(--mute);font-size:13px;padding:28px;border-top:1px solid var(--line)}
+details.mob{display:none;margin:0 24px 16px;border:1px solid var(--line);border-radius:12px;background:var(--panel);padding:8px 14px}
+@media(max-width:1100px){.layout{grid-template-columns:230px minmax(0,1fr)}nav.toc{display:none}}
+@media(max-width:820px){.layout{grid-template-columns:1fr;padding-top:16px}nav.docs{display:none}details.mob{display:block}}
+</style></head><body>
+<header class="top"><span class="tag">migration-agent docs</span><h1>Product architecture and roadmap: from CLI engine to hosted service</h1></header>
+<details class="mob"><summary>All docs</summary><a href="index.html">Overview</a><b>Start here</b><a href="README.html">migration-agent documentation</a><a href="user-guide.html">User guide</a><a href="architecture.html">Architecture</a><a href="api-reference.html">API reference</a><a href="deployment.html">Deployment guide</a><a href="threat-model.html">Threat model (D-06)</a><b>Product and platform</b><a class="on" href="product-architecture.html">Product architecture and roadmap: from CLI engine to hosted service</a><a href="platform-contract.html">Platform contract (hosted product)</a><a href="phase0-results.html">Phase 0 interim results (2026-11-09)</a><a href="operations-runbook.html">Operations runbook</a><b>Security</b><a href="security/security-overview-draft.html">Security overview (customer-facing DRAFT)</a><a href="security/threat-model-hosted.html">Threat model update: hosted product</a><a href="security/data-handling-and-retention.html">Data handling and retention policy (draft)</a><a href="security/pentest-2026-11-09.html">Hostile security review, 2026-11-09: findings and status</a><a href="security/incident-response.html">Incident response outline</a><a href="security/secure-sdlc.html">Secure development lifecycle</a><a href="security/soc2-readiness.html">SOC 2 readiness checklist</a><a href="security/subprocessors.html">Subprocessor list (TEMPLATE)</a><b>Hand-built guides</b><a href="../developer-handbook.html">Developer handbook</a><a href="../user-guide-app.html">Product user guide</a><a href="../tutorial.html">CLI tutorial</a></details>
+<div class="layout"><nav class="docs" aria-label="Documentation"><a href="index.html">Overview</a><b>Start here</b><a href="README.html">migration-agent documentation</a><a href="user-guide.html">User guide</a><a href="architecture.html">Architecture</a><a href="api-reference.html">API reference</a><a href="deployment.html">Deployment guide</a><a href="threat-model.html">Threat model (D-06)</a><b>Product and platform</b><a class="on" href="product-architecture.html">Product architecture and roadmap: from CLI engine to hosted service</a><a href="platform-contract.html">Platform contract (hosted product)</a><a href="phase0-results.html">Phase 0 interim results (2026-11-09)</a><a href="operations-runbook.html">Operations runbook</a><b>Security</b><a href="security/security-overview-draft.html">Security overview (customer-facing DRAFT)</a><a href="security/threat-model-hosted.html">Threat model update: hosted product</a><a href="security/data-handling-and-retention.html">Data handling and retention policy (draft)</a><a href="security/pentest-2026-11-09.html">Hostile security review, 2026-11-09: findings and status</a><a href="security/incident-response.html">Incident response outline</a><a href="security/secure-sdlc.html">Secure development lifecycle</a><a href="security/soc2-readiness.html">SOC 2 readiness checklist</a><a href="security/subprocessors.html">Subprocessor list (TEMPLATE)</a><b>Hand-built guides</b><a href="../developer-handbook.html">Developer handbook</a><a href="../user-guide-app.html">Product user guide</a><a href="../tutorial.html">CLI tutorial</a></nav>
+<main><h1 id="product-architecture-and-roadmap-from-cli-engine-to-hosted-service">Product architecture and roadmap: from CLI engine to hosted service</h1>
+<p>Status: proposal, v1. Scope: architecture and plan only. No code changed, <strong>no billing provider chosen or built</strong>
+(decision deferred by the owner; this plan only leaves clean seams for it).
+Evidence is cited as <code>path:line</code> or <code>path</code>. <strong>[Inferred]</strong> = my judgement from the code, <strong>[Unknown]</strong> = needs an answer
+from the owner or from measurement.</p>
+<h2 id="1-verdict">1. Verdict</h2>
+<p>The analysis engine is real and unusually disciplined: evidence-checked claims, derived confidence, a blind Verifier,
+budget and cache controls, 576 passing tests, ~9.4k lines (<code>docs/architecture.md</code>). That is the hard, differentiated part.
+<strong>Everything around it is not a product yet.</strong> It is a single-user CLI whose only state is a local folder, whose only UI
+is a loopback server that refuses any other address, and which has no accounts, tenancy, job system, metering or
+hosted storage (<code>docs/architecture.md:Trust boundaries</code>, <code>src/migration_agent/review_ui/server.py</code>).</p>
+<p>Top risks, in order:</p>
+<ol>
+<li><strong>Unproven quality at real scale.</strong> The evaluation repos are hand-built, small stand-ins: 8, 11 and 18 files, and the
+   README says the "~100 file" and "~500 file" targets were scaled down (<code>eval/README.md</code>). Customers will bring
+   100k+ line repos. Until accuracy and cost per repo are measured on real code, every price and promise is a guess.</li>
+<li><strong>Customer source code is the crown jewel.</strong> A hosted version concentrates other companies' proprietary code. One
+   isolation failure ends the business. The current design (read-only, jailed tools, secret redaction, egress allowlist)
+   is a strong base, but it is built for one trusted operator.</li>
+<li><strong>State model does not fit multi-tenant SaaS.</strong> The folder is the state (<code>src/migration_agent/project.py</code>), writes use
+   local <code>os.replace</code> and <code>flock</code>. Fine on one disk, wrong for stateless workers.</li>
+<li><strong>Positioning.</strong> The tool is called migration-agent but what it delivers is <em>verified understanding of a legacy
+   system</em>. That is a sharper, more defensible promise than "migration", and it should drive the name, the landing page
+   and the first customer segment. <strong>[Inferred]</strong></li>
+</ol>
+<p>Recommendation: keep the engine as a library, wrap it in a conventional, boring SaaS (Next.js, FastAPI, Postgres,
+object storage, one job queue), and spend the first phase on proving quality and unit economics before building UI.</p>
+<h2 id="2-context-and-constraints">2. Context and constraints</h2>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>Item</th>
+<th>Value</th>
+<th>Source</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Owner and team</td>
+<td>One founder, income-critical, targeting Y Combinator</td>
+<td>stated by owner</td>
+</tr>
+<tr>
+<td>Stack chosen</td>
+<td>FastAPI + Postgres + Next.js</td>
+<td>stated by owner</td>
+</tr>
+<tr>
+<td>Billing</td>
+<td>Not decided; not to be built now</td>
+<td>stated by owner</td>
+</tr>
+<tr>
+<td>Target customer</td>
+<td><strong>[Unknown]</strong> engineering teams modernising or inheriting legacy services</td>
+<td>needs owner decision</td>
+</tr>
+<tr>
+<td>Scale target</td>
+<td><strong>[Unknown]</strong> assume tens of customers, repos up to ~1M lines in year one</td>
+<td>assumption</td>
+</tr>
+<tr>
+<td>Compliance</td>
+<td><strong>[Unknown]</strong> assume customers will ask for SOC 2 and a data-handling statement before purchase</td>
+<td>assumption</td>
+</tr>
+</tbody>
+</table></div>
+<p>A one-person team is the dominant constraint. Every component below is chosen to minimise the number of things that can
+page you at 3 a.m.: one database, one queue, one object store, managed hosting.</p>
+<h2 id="3-architecture-at-a-glance">3. Architecture at a glance</h2>
+<div class="cb mm"><span class="lbl">diagram source (mermaid)</span><pre><code>flowchart LR
+  subgraph Client
+    WEB[Next.js app&lt;br/&gt;dashboard, review, graph]
+  end
+  subgraph Control plane
+    API[FastAPI&lt;br/&gt;auth, tenancy, projects, jobs, usage]
+    PG[(Postgres&lt;br/&gt;metadata, graph index, usage events)]
+    Q[Job queue&lt;br/&gt;Postgres-backed]
+    OBJ[(Object storage&lt;br/&gt;source tarballs, snapshots, docs)]
+  end
+  subgraph Data plane - per job, ephemeral
+    W[Worker container&lt;br/&gt;existing hardened image&lt;br/&gt;engine as library]
+    PX[Egress proxy&lt;br/&gt;allowlist: model host only]
+  end
+  GH[GitHub App&lt;br/&gt;read-only contents]
+  LLM{{Model provider&lt;br/&gt;zero-retention terms}}
+  WEB --&gt; API --&gt; PG
+  API --&gt; Q --&gt; W
+  API &lt;--&gt; OBJ
+  GH --&gt; API
+  W &lt;--&gt; OBJ
+  W --&gt; PX --&gt; LLM
+  W --&gt;|usage events, job status| API
+</code></pre></div>
+<p>Principles:</p>
+<ul>
+<li><strong>Control plane and data plane are separate.</strong> The API never touches customer code. Workers touch code but hold no
+  database credentials, only a short-lived, job-scoped token.</li>
+<li><strong>The engine stays a pure library.</strong> <code>migration_agent</code> keeps working as the CLI (free, open-core marketing channel) and
+  becomes the worker's job body. <strong>[Inferred]</strong></li>
+<li><strong>Artifacts live in object storage; Postgres holds metadata and a queryable copy of the graph.</strong> Snapshots are already
+  immutable files (<code>docs/architecture.md:Snapshots, not mutation</code>), which maps directly to immutable objects.</li>
+</ul>
+<h2 id="4-components">4. Components</h2>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>Component</th>
+<th>Responsibility</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Web (Next.js)</td>
+<td>Marketing site, dashboard, repo connect, run status, review UI, graph viewer</td>
+<td>Replaces <code>review_ui/page.py</code> (301 lines) and <code>viz/graph_html.py</code></td>
+</tr>
+<tr>
+<td>API (FastAPI)</td>
+<td>AuthN/Z, workspaces, projects, jobs, findings, comments, resolutions, usage</td>
+<td>Re-exposes the logic behind <code>review_ui/server.py</code> <code>/api/state</code>, <code>/api/comments</code>, <code>/api/resolutions</code>, <code>/api/diff</code></td>
+</tr>
+<tr>
+<td>Postgres</td>
+<td>Tenants, users, projects, runs, findings, comments, usage events, entitlements</td>
+<td>Row-level security keyed on <code>workspace_id</code></td>
+</tr>
+<tr>
+<td>Queue</td>
+<td>Run <code>ingest -&gt; extract -&gt; analyze -&gt; verify -&gt; resolve</code> as durable jobs</td>
+<td>Start with a Postgres-backed queue; no Redis/Kafka until measured need</td>
+</tr>
+<tr>
+<td>Worker</td>
+<td>Materialise project folder in scratch, run the engine, upload artifacts, emit usage</td>
+<td>Reuses <code>docker/Dockerfile</code> (non-root, read-only rootfs, caps dropped)</td>
+</tr>
+<tr>
+<td>Egress proxy</td>
+<td>Only allows HTTPS to the model host</td>
+<td>Already designed (<code>docker/squid.conf</code>, compose <code>model</code> profile)</td>
+</tr>
+<tr>
+<td>Object storage</td>
+<td>Source archives, <code>code/</code>, snapshots, rendered docs, exports</td>
+<td>Per-tenant prefix, server-side encryption, lifecycle rules</td>
+</tr>
+<tr>
+<td>LLM gateway (thin)</td>
+<td>Model routing, per-run budget, retries, provider failover</td>
+<td><code>llm/litellm_client.py</code> plus <code>MA_*</code> config already cover most of this</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="5-data-model-entity-level">5. Data model (entity level)</h2>
+<ul>
+<li><strong>Workspace</strong> (tenant), <strong>User</strong>, <strong>Membership(role)</strong>.</li>
+<li><strong>Repository</strong> (source: GitHub App install + repo, or upload), <strong>Project</strong> (one analysable unit, optionally a subpath).</li>
+<li><strong>Run</strong> (type, status, engine version, model config, budget, started/finished) -&gt; <strong>Artifact</strong> (object key, kind, hash).</li>
+<li><strong>GraphSnapshot</strong> (immutable, version, run) -&gt; <strong>Node</strong>, <strong>Edge</strong> (type, stable ID from the registry, confidence,
+  evidence list). Indexed in Postgres for the UI; the snapshot file stays the source of truth.</li>
+<li><strong>UserDoc</strong> (uploaded documentation for the Verifier), <strong>Finding</strong>, <strong>Resolution</strong>, <strong>Comment</strong>.</li>
+<li><strong>UsageEvent</strong> (workspace, run, model, input/output tokens, provider cost, timestamp). Derived from the existing
+  per-call audit record (<code>src/migration_agent/audit.py</code>).</li>
+<li><strong>Plan</strong> and <strong>Entitlement</strong> (limits such as repos, lines analysed per month, seats). Plain tables with <strong>no provider
+  coupling</strong>; see section 9.</li>
+<li><strong>AuditLog</strong> (who did what), separate from usage.</li>
+</ul>
+<p>Consistency: strong within Postgres; artifacts are write-once and referenced by hash, so job retries are idempotent.</p>
+<h2 id="6-key-flows">6. Key flows</h2>
+<p><strong>Connect and analyse a repo</strong></p>
+<div class="cb mm"><span class="lbl">diagram source (mermaid)</span><pre><code>sequenceDiagram
+  participant U as User
+  participant W as Web
+  participant A as API
+  participant Q as Queue
+  participant K as Worker
+  participant O as Object store
+  participant M as Model
+  U-&gt;&gt;W: Connect repo, choose Analyze
+  W-&gt;&gt;A: POST /projects/{id}/runs
+  A-&gt;&gt;A: authz, entitlement + budget check
+  A-&gt;&gt;Q: enqueue run (idempotency key)
+  Q-&gt;&gt;K: start ephemeral worker (job token)
+  K-&gt;&gt;O: fetch source via short-lived URL
+  K-&gt;&gt;K: ingest, extract, dry-run estimate
+  K-&gt;&gt;M: analyze chunks (budget-capped)
+  K-&gt;&gt;O: upload snapshot, docs, graph
+  K-&gt;&gt;A: usage events + status
+  A--&gt;&gt;W: progress (SSE), results
+</code></pre></div>
+<p><strong>Review and resolve</strong>: findings and comments are API writes; "needs re-analysis" enqueues a targeted re-analysis job,
+which reuses <code>review/reanalyze.py</code>, produces a new immutable snapshot, and updates the changelog.</p>
+<p><strong>Cost guard</strong>: a run is created only after a dry-run estimate (the engine already prints one, <code>analyze --dry-run</code>),
+compared with the workspace entitlement. The engine's own <code>--max-usd</code> becomes a hard per-run ceiling.</p>
+<h2 id="7-required-engine-changes-the-seams">7. Required engine changes (the seams)</h2>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>#</th>
+<th>Change</th>
+<th>Why</th>
+<th>Effort</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>E1</td>
+<td>Introduce a <code>Storage</code> abstraction under <code>Project</code> (local folder first, then object-store-backed with a scratch copy)</td>
+<td>Stateless workers; resume after crash on another machine</td>
+<td>M</td>
+</tr>
+<tr>
+<td>E2</td>
+<td>Replace file-locking and local atomic writes with "work in scratch, publish artifacts at the end"</td>
+<td><code>flock</code> and <code>os.replace</code> assume one disk</td>
+<td>S</td>
+</tr>
+<tr>
+<td>E3</td>
+<td>Emit structured progress and usage events through a callback</td>
+<td>Live progress and metering</td>
+<td>S</td>
+</tr>
+<tr>
+<td>E4</td>
+<td>Inject credentials and budget per run, never from process env</td>
+<td>Multi-tenant keys, per-run ceilings</td>
+<td>S</td>
+</tr>
+<tr>
+<td>E5</td>
+<td>Make the review logic importable (not tied to the HTTP handler)</td>
+<td>API reuses it</td>
+<td>M</td>
+</tr>
+<tr>
+<td>E6</td>
+<td>Keep the CLI and the library API stable and versioned</td>
+<td>Open-core CLI plus hosted product share one engine</td>
+<td>S</td>
+</tr>
+</tbody>
+</table></div>
+<p>These are refactors with the existing 576 tests as the safety net. Nothing here requires rewriting the analysis.</p>
+<h2 id="8-security-and-trust-the-products-real-moat">8. Security and trust (the product's real moat)</h2>
+<p>Customers will buy on trust. Findings against the target design, most severe first:</p>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Sev</th>
+<th>Finding</th>
+<th>Recommendation</th>
+<th>Trade-off</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>SEC-1</td>
+<td>Critical</td>
+<td>Tenant data isolation does not exist yet (single-user design)</td>
+<td>RLS on every table, tenant-prefixed object keys, tests that attempt cross-tenant reads, no shared caches without tenant in the key. Note <code>llm_cache/</code> is keyed by prompt hash (<code>docs/architecture.md:Budget and cache</code>); cache must be per-tenant or two tenants with identical code would share responses</td>
+<td>Slightly lower cache hit rate</td>
+</tr>
+<tr>
+<td>SEC-2</td>
+<td>Critical</td>
+<td>Hosted worker runs on shared infrastructure with customer code</td>
+<td>One ephemeral container per run, existing hardening (non-root, read-only rootfs, caps dropped, egress allowlist), no database credentials in the worker, destroy on completion</td>
+<td>Cold-start latency and per-run overhead</td>
+</tr>
+<tr>
+<td>SEC-3</td>
+<td>High</td>
+<td>Model provider sees customer code</td>
+<td>Contractual zero-retention terms, document it plainly, offer a self-hosted/BYO-key tier later (<code>MA_LLM_API_BASE</code> already supports custom endpoints)</td>
+<td>BYO tier is more support</td>
+</tr>
+<tr>
+<td>SEC-4</td>
+<td>High</td>
+<td>User-supplied git URLs and archives (SSRF, zip bombs)</td>
+<td>Existing archive limits and no-hook clones help (<code>docs/user-guide.md</code> ingest section). Add URL allowlist and block private/link-local ranges server-side; prefer GitHub App over arbitrary URLs</td>
+<td>Fewer source types at launch</td>
+</tr>
+<tr>
+<td>SEC-5</td>
+<td>High</td>
+<td>Secrets in customer repos</td>
+<td>Existing withhold/redact at ingest is a genuine asset. Add secret-scan reporting to the customer and never log source content</td>
+<td>None</td>
+</tr>
+<tr>
+<td>SEC-6</td>
+<td>Medium</td>
+<td>Prompt injection through repo contents</td>
+<td>Already tested with canaries (<code>eval/README.md</code> gates). Keep as a release gate and grow the corpus</td>
+<td>Ongoing maintenance</td>
+</tr>
+<tr>
+<td>SEC-7</td>
+<td>Medium</td>
+<td>Account security</td>
+<td>Use a hosted identity provider (do not hand-roll auth), MFA, short sessions, SSO for team tier later</td>
+<td>Vendor dependency</td>
+</tr>
+<tr>
+<td>SEC-8</td>
+<td>Medium</td>
+<td>Auditability</td>
+<td>Append-only audit log of access to a customer's data, exportable</td>
+<td>Storage cost</td>
+</tr>
+</tbody>
+</table></div>
+<p>Deletion and retention must be a first-class feature: delete a project and every artifact, cache entry and index row is
+removed and provably gone. <strong>[Unknown]</strong> compliance path (SOC 2 Type I, then II) should start once there are paying
+customers, with the controls above built in from day one.</p>
+<h2 id="9-billing-ready-billing-agnostic">9. Billing-ready, billing-agnostic</h2>
+<p>Nothing here chooses a payment model. It only ensures the choice is cheap later:</p>
+<ul>
+<li><strong>Meter everything now.</strong> <code>UsageEvent</code> records tokens, provider cost, lines/files analysed and wall-clock per run. This is
+  needed anyway for margin analysis.</li>
+<li><strong>Entitlements as data.</strong> A <code>Plan</code> row defines limits; checks go through one <code>can_start_run(workspace, estimate)</code>
+  function. Today every workspace gets a generous internal plan.</li>
+<li><strong>Provider interface, no implementation.</strong> Define <code>BillingProvider</code> (create customer, sync plan, report usage) and ship
+  only a <code>NoBilling</code> implementation. Pricing and provider are decided after section 11, Phase 0 gives real cost data.</li>
+<li><strong>Unknown to resolve first:</strong> gross cost per 1k lines at target quality. Without it, any price is a guess.</li>
+</ul>
+<h2 id="10-scalability-performance-reliability-cost">10. Scalability, performance, reliability, cost</h2>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Sev</th>
+<th>Finding</th>
+<th>Recommendation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>SCL-1</td>
+<td>High</td>
+<td>Throughput is bounded by model rate limits, not CPU (<code>docs/user-guide.md</code> troubleshooting documents 429s and 503s). <code>--workers</code> exists (<code>analyze --help</code>)</td>
+<td>Per-provider concurrency limits and a fair scheduler so one tenant cannot starve others; multi-provider failover</td>
+</tr>
+<tr>
+<td>SCL-2</td>
+<td>High</td>
+<td>Large repos: runtime and spend are unbounded without a plan</td>
+<td>Always dry-run first; show estimate and ETA to the user; hard <code>max_usd</code>; chunked checkpoints already make runs resumable (<code>checkpoint/</code>)</td>
+</tr>
+<tr>
+<td>REL-1</td>
+<td>Medium</td>
+<td>Long jobs will be interrupted (deploys, spot loss, provider outages)</td>
+<td>Existing checkpointing is the right primitive; make jobs idempotent and resumable on a different worker (needs E1/E2)</td>
+</tr>
+<tr>
+<td>PERF-1</td>
+<td>Medium</td>
+<td>UI needs interactive graph over thousands of nodes</td>
+<td>Index nodes/edges in Postgres, paginate and cluster server-side; keep the static HTML export as a feature</td>
+</tr>
+<tr>
+<td>COST-1</td>
+<td>High</td>
+<td>Gross margin is set by LLM cost per repo. <strong>[Unknown]</strong> until measured</td>
+<td>Phase 0 measurement; model tiering per task already supported (cheap model for <code>chunk_extract</code>)</td>
+</tr>
+<tr>
+<td>OPS-1</td>
+<td>Medium</td>
+<td>Solo operator</td>
+<td>Managed Postgres, managed object store, one deploy target, error tracking, uptime checks, structured logs correlated by run ID</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="11-roadmap">11. Roadmap</h2>
+<p><strong>Phase 0: prove it (2-4 weeks). Gate for everything else.</strong>
+- Run the engine on 5-10 real open-source repos of 50k-500k lines across the supported languages.
+- Hand-score a sample: precision of claims, evidence validity (target 100%, already a gate), coverage of the inventory.
+- Record cost and wall-clock per 1k lines and per repo. Produce a one-page "accuracy and unit economics" report.
+- Success metric: a defensible, repeatable number for quality and cost that you would show an investor or customer.</p>
+<p><strong>Phase 1: tenant-safe core (4-6 weeks).</strong>
+- Engine seams E1-E6. Auth via a hosted identity provider. Workspaces and RLS. Postgres schema above. Queue and worker.
+- GitHub App (read-only). Run, progress, results in a minimal Next.js UI. Usage events recorded; <code>NoBilling</code> only.
+- Success: two design-partner teams run real repos end to end without your help.</p>
+<p><strong>Phase 2: the reviewable product (4-6 weeks).</strong>
+- Findings, comments, resolutions and targeted re-analysis in the web UI; graph explorer; exports (Markdown/PDF/JSON).
+- Delete-my-data, audit log, status page, onboarding, docs site, public landing page.
+- Success: design partners use it weekly and can name what they did with the output.</p>
+<p><strong>Phase 3: sellable (when Phase 0 numbers exist).</strong>
+- Choose pricing and billing provider with real cost data; implement <code>BillingProvider</code>; plans, limits, invoices.
+- Security page, data-processing terms, SOC 2 Type I preparation, SSO for teams.</p>
+<p><strong>Later:</strong> self-hosted/BYO-key tier, more languages, CI integration (analyse on merge, drift alerts), API/webhooks.</p>
+<h2 id="12-strengths-to-preserve">12. Strengths to preserve</h2>
+<ul>
+<li>Evidence-or-nothing: every claim carries verified file, line and quote; confidence is derived, not asserted.</li>
+<li>Blind Verifier that never sees code. This is a genuinely hard-to-copy trust story.</li>
+<li>Cost controls (<code>--max-usd</code>, cache, checkpoints) and an audit log with USD per call.</li>
+<li>Hardened container and network-isolated model egress, already designed and smoke-tested.</li>
+<li>Strong test discipline (576 tests, eval harness with regression gate, red-team fixtures).</li>
+</ul>
+<h2 id="13-a-note-on-y-combinator">13. A note on Y Combinator</h2>
+<p>An architecture does not get anyone into YC; evidence of users and a clear founder-market story does. The most useful use
+of this plan is to get to <strong>real usage fast</strong>: finish Phase 0, then put the tool in front of 5-10 teams with an actual
+legacy-modernisation problem and measure what they do with the output. Revenue and retention from a small number of
+real customers will matter more than breadth of features. <strong>[Inferred]</strong> I have not verified YC's current criteria.</p>
+<h2 id="14-risks-of-this-plan">14. Risks of this plan</h2>
+<ul>
+<li>Refactoring the engine (E1-E2) could regress determinism or stable IDs. Mitigation: the existing regression and
+  eval gates must stay green on every change.</li>
+<li>Building a polished UI before Phase 0 results risks polishing something customers will not pay for.</li>
+<li>A hosted LLM pipeline depends on third-party model availability and pricing; mitigate with multi-provider support.</li>
+<li>Solo-founder load: scope Phase 1 ruthlessly; buy rather than build auth, email, error tracking and hosting.</li>
+</ul>
+<h2 id="15-decisions-needed-from-the-owner">15. Decisions needed from the owner</h2>
+<ol>
+<li><strong>Who is the first customer?</strong> (agency doing modernisation, in-house platform team, acquirer doing diligence?)</li>
+<li><strong>Name and positioning:</strong> keep "migration-agent" or rebrand around verified understanding?</li>
+<li><strong>Open-core or closed?</strong> Is the CLI free and public, with the hosted service as the paid product?</li>
+<li><strong>Hosting preference and budget</strong> (single cloud, region, data-residency promises).</li>
+<li><strong>Data policy you are willing to promise</strong> (retention period, model provider terms, BYO key).</li>
+<li><strong>Access to real repos</strong> for Phase 0 (open source is fine to start).</li>
+</ol><div class="pager"><a href="threat-model.html">&larr; Threat model (D-06)</a><a href="platform-contract.html">Platform contract (hosted product) &rarr;</a></div></main>
+<nav class="toc" aria-label="On this page"><b>On this page</b><a class="l2" href="#1-verdict">1. Verdict</a><a class="l2" href="#2-context-and-constraints">2. Context and constraints</a><a class="l2" href="#3-architecture-at-a-glance">3. Architecture at a glance</a><a class="l2" href="#4-components">4. Components</a><a class="l2" href="#5-data-model-entity-level">5. Data model (entity level)</a><a class="l2" href="#6-key-flows">6. Key flows</a><a class="l2" href="#7-required-engine-changes-the-seams">7. Required engine changes (the seams)</a><a class="l2" href="#8-security-and-trust-the-products-real-moat">8. Security and trust (the product&#x27;s real moat)</a><a class="l2" href="#9-billing-ready-billing-agnostic">9. Billing-ready, billing-agnostic</a><a class="l2" href="#10-scalability-performance-reliability-cost">10. Scalability, performance, reliability, cost</a><a class="l2" href="#11-roadmap">11. Roadmap</a><a class="l2" href="#12-strengths-to-preserve">12. Strengths to preserve</a><a class="l2" href="#13-a-note-on-y-combinator">13. A note on Y Combinator</a><a class="l2" href="#14-risks-of-this-plan">14. Risks of this plan</a><a class="l2" href="#15-decisions-needed-from-the-owner">15. Decisions needed from the owner</a></nav></div>
+<footer>Generated from <code>docs/product-architecture.md</code> by <code>scripts/build_docs_html.py</code>. Edit the Markdown, not this file.</footer>
+<script>
+(function(){
+ document.querySelectorAll('.cb').forEach(function(b){var btn=document.createElement('button');btn.textContent='Copy';
+  btn.addEventListener('click',function(){var t=b.querySelector('code').innerText;
+   (navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(function(){btn.textContent='Copied';setTimeout(function(){btn.textContent='Copy'},1400)},function(){btn.textContent='Press Ctrl/Cmd+C'});});
+  b.appendChild(btn);});
+ var links=[].slice.call(document.querySelectorAll('nav.toc a'));if(!links.length||!('IntersectionObserver' in window))return;
+ var map={};links.forEach(function(a){map[a.getAttribute('href').slice(1)]=a});
+ var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){links.forEach(function(a){a.classList.remove('on')});var a=map[e.target.id];if(a)a.classList.add('on');}})},{rootMargin:'0px 0px -75% 0px'});
+ document.querySelectorAll('main h2[id],main h3[id]').forEach(function(h){io.observe(h)});
+})();
+</script></body></html>

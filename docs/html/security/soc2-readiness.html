@@ -1,0 +1,222 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SOC 2 readiness checklist | migration-agent docs</title><style>
+:root{--bg:#fbfaf7;--panel:#fff;--ink:#1c1b22;--mute:#6b6a76;--line:#e7e4dc;--accent:#5b4bdb;--accent2:#e0568b;--tint:#efecff;--code:#15141c;--codefg:#e9e7f5}
+@media (prefers-color-scheme:dark){:root{--bg:#0f0e14;--panel:#17161f;--ink:#ecebf3;--mute:#9a98a8;--line:#2a2836;--accent:#9b8cff;--accent2:#ff7fac;--tint:#221f3a}}
+*{box-sizing:border-box}html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.7 -apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,sans-serif}
+a{color:var(--accent)}
+.top{padding:44px 24px 34px;text-align:center;border-bottom:1px solid var(--line);background:radial-gradient(900px 300px at 50% -80px,var(--tint),transparent),var(--bg)}
+.top .tag{display:inline-block;padding:3px 12px;border:1px solid var(--line);border-radius:99px;font-size:13px;color:var(--mute);background:var(--panel)}
+.top h1{font-size:clamp(28px,5vw,44px);line-height:1.15;margin:14px auto 0;max-width:900px;letter-spacing:-.02em;background:linear-gradient(90deg,var(--accent),var(--accent2));-webkit-background-clip:text;background-clip:text;color:transparent}
+.layout{display:grid;grid-template-columns:250px minmax(0,1fr) 210px;gap:36px;max-width:1360px;margin:0 auto;padding:32px 24px 90px}
+nav.docs,nav.toc{position:sticky;top:20px;align-self:start;max-height:calc(100vh - 40px);overflow:auto;font-size:14px}
+nav b{display:block;margin:14px 0 6px;color:var(--mute);font-weight:600;text-transform:uppercase;letter-spacing:.08em;font-size:11.5px}
+nav b:first-child{margin-top:0}
+nav a{display:block;padding:4px 10px;border-left:2px solid var(--line);color:var(--mute);text-decoration:none}
+nav a:hover,nav a.on{color:var(--accent);border-color:var(--accent)}
+nav a.on{font-weight:600}
+nav.toc a.l3{padding-left:22px;font-size:13px}
+main{min-width:0}main h2{font-size:27px;margin:44px 0 12px;letter-spacing:-.01em;padding-top:6px;border-top:1px solid var(--line)}
+main h1{display:none}main h3{font-size:20px;margin:30px 0 8px}main h4{font-size:16px;margin:22px 0 6px}
+main p,main li{max-width:78ch}p{margin:0 0 14px}ul,ol{padding-left:24px;margin:0 0 16px}li{margin:4px 0}
+code{font:13.5px ui-monospace,SFMono-Regular,Menlo,monospace;background:var(--tint);padding:2px 6px;border-radius:6px}
+.cb{position:relative;margin:14px 0 20px}
+pre{background:var(--code);color:var(--codefg);padding:16px 18px;border-radius:14px;overflow:auto;margin:0;line-height:1.55;box-shadow:0 8px 24px -14px #0008}
+pre code{background:none;padding:0;color:inherit;font-size:13px}
+.cb button{position:absolute;top:8px;right:8px;font:12px inherit;padding:3px 9px;border-radius:8px;border:1px solid #fff3;background:#ffffff14;color:#e9e7f5;cursor:pointer}
+.cb button:hover{background:#ffffff2a}
+.cb .lbl{position:absolute;top:8px;left:14px;font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:#b9b5d6}
+.cb.mm pre{padding-top:34px}
+.tw{overflow-x:auto;margin:14px 0 22px;border:1px solid var(--line);border-radius:14px;background:var(--panel)}
+table{border-collapse:collapse;width:100%;font-size:14.5px}th,td{text-align:left;padding:9px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--mute);background:var(--tint)}tr:last-child td{border-bottom:0}
+blockquote{margin:16px 0;padding:10px 18px;border-left:4px solid var(--accent);background:var(--tint);border-radius:0 12px 12px 0}blockquote p{margin:6px 0}
+hr{border:0;border-top:1px solid var(--line);margin:30px 0}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;margin:18px 0}
+.card{display:block;padding:16px 18px;border:1px solid var(--line);border-radius:14px;background:var(--panel);text-decoration:none;color:var(--ink)}
+.card:hover{border-color:var(--accent)}.card b{display:block;color:var(--accent);margin-bottom:2px}.card span{color:var(--mute);font-size:14px}
+.pager{display:flex;justify-content:space-between;gap:12px;margin-top:56px;padding-top:20px;border-top:1px solid var(--line);font-size:14px}
+footer{text-align:center;color:var(--mute);font-size:13px;padding:28px;border-top:1px solid var(--line)}
+details.mob{display:none;margin:0 24px 16px;border:1px solid var(--line);border-radius:12px;background:var(--panel);padding:8px 14px}
+@media(max-width:1100px){.layout{grid-template-columns:230px minmax(0,1fr)}nav.toc{display:none}}
+@media(max-width:820px){.layout{grid-template-columns:1fr;padding-top:16px}nav.docs{display:none}details.mob{display:block}}
+</style></head><body>
+<header class="top"><span class="tag">migration-agent docs</span><h1>SOC 2 readiness checklist</h1></header>
+<details class="mob"><summary>All docs</summary><a href="../index.html">Overview</a><b>Start here</b><a href="../README.html">migration-agent documentation</a><a href="../user-guide.html">User guide</a><a href="../architecture.html">Architecture</a><a href="../api-reference.html">API reference</a><a href="../deployment.html">Deployment guide</a><a href="../threat-model.html">Threat model (D-06)</a><b>Product and platform</b><a href="../product-architecture.html">Product architecture and roadmap: from CLI engine to hosted service</a><a href="../platform-contract.html">Platform contract (hosted product)</a><a href="../phase0-results.html">Phase 0 interim results (2026-11-09)</a><a href="../operations-runbook.html">Operations runbook</a><b>Security</b><a href="security-overview-draft.html">Security overview (customer-facing DRAFT)</a><a href="threat-model-hosted.html">Threat model update: hosted product</a><a href="data-handling-and-retention.html">Data handling and retention policy (draft)</a><a href="pentest-2026-11-09.html">Hostile security review, 2026-11-09: findings and status</a><a href="incident-response.html">Incident response outline</a><a href="secure-sdlc.html">Secure development lifecycle</a><a class="on" href="soc2-readiness.html">SOC 2 readiness checklist</a><a href="subprocessors.html">Subprocessor list (TEMPLATE)</a><b>Hand-built guides</b><a href="../../developer-handbook.html">Developer handbook</a><a href="../../user-guide-app.html">Product user guide</a><a href="../../tutorial.html">CLI tutorial</a></details>
+<div class="layout"><nav class="docs" aria-label="Documentation"><a href="../index.html">Overview</a><b>Start here</b><a href="../README.html">migration-agent documentation</a><a href="../user-guide.html">User guide</a><a href="../architecture.html">Architecture</a><a href="../api-reference.html">API reference</a><a href="../deployment.html">Deployment guide</a><a href="../threat-model.html">Threat model (D-06)</a><b>Product and platform</b><a href="../product-architecture.html">Product architecture and roadmap: from CLI engine to hosted service</a><a href="../platform-contract.html">Platform contract (hosted product)</a><a href="../phase0-results.html">Phase 0 interim results (2026-11-09)</a><a href="../operations-runbook.html">Operations runbook</a><b>Security</b><a href="security-overview-draft.html">Security overview (customer-facing DRAFT)</a><a href="threat-model-hosted.html">Threat model update: hosted product</a><a href="data-handling-and-retention.html">Data handling and retention policy (draft)</a><a href="pentest-2026-11-09.html">Hostile security review, 2026-11-09: findings and status</a><a href="incident-response.html">Incident response outline</a><a href="secure-sdlc.html">Secure development lifecycle</a><a class="on" href="soc2-readiness.html">SOC 2 readiness checklist</a><a href="subprocessors.html">Subprocessor list (TEMPLATE)</a><b>Hand-built guides</b><a href="../../developer-handbook.html">Developer handbook</a><a href="../../user-guide-app.html">Product user guide</a><a href="../../tutorial.html">CLI tutorial</a></nav>
+<main><h1 id="soc-2-readiness-checklist">SOC 2 readiness checklist</h1>
+<p><strong>This project is NOT SOC 2 compliant, has NOT been audited, and no report exists.</strong> This checklist maps the AICPA
+Trust Services Criteria (Security category first) to what exists and what is missing, to plan a future Type I
+engagement. Per <code>docs/product-architecture.md</code>, start the formal path once there are customers. Legend: Exists =
+implemented in this repo; Partial; Missing.</p>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>Area (TSC ref)</th>
+<th>Control</th>
+<th>Evidence today</th>
+<th>Status</th>
+<th>Gap / next step</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Control environment (CC1)</td>
+<td>Security roles, policies approved by management</td>
+<td>Drafts in <code>docs/security/</code></td>
+<td>Partial</td>
+<td>Owner approval, signed policy set, training record</td>
+</tr>
+<tr>
+<td>Communication (CC2)</td>
+<td>Customer-facing commitments; internal reporting</td>
+<td><code>security-overview-draft.md</code>, <code>SECURITY.md</code></td>
+<td>Partial</td>
+<td>Publish after owner review; status page missing</td>
+</tr>
+<tr>
+<td>Risk assessment (CC3)</td>
+<td>Documented risk process</td>
+<td><code>threat-model.md</code>, <code>threat-model-hosted.md</code>, product-architecture s8, s14</td>
+<td>Partial</td>
+<td>Periodic risk register with owners and review dates</td>
+</tr>
+<tr>
+<td>Monitoring (CC4)</td>
+<td>Ongoing control monitoring, vulnerability scans</td>
+<td>CI workflows written (<code>security.yml</code>)</td>
+<td>Partial</td>
+<td>Not yet running (Actions startup_failure); schedule reviews</td>
+</tr>
+<tr>
+<td>Control activities (CC5)</td>
+<td>Control selection and deployment</td>
+<td>This checklist</td>
+<td>Partial</td>
+<td>Map every control to an owner</td>
+</tr>
+<tr>
+<td>Logical access (CC6.1-6.3)</td>
+<td>Auth, least privilege, role-based access</td>
+<td>Roles in contract (owner/admin/member/viewer); OIDC mode; invitation-based membership; per-account login backoff; strong-secret enforcement in production; auth events audited</td>
+<td>Partial</td>
+<td>MFA/SSO needs IdP (not chosen); access reviews missing; operator access is unmanaged; RLS not verified on Postgres</td>
+</tr>
+<tr>
+<td>Logical access (CC6.6-6.7)</td>
+<td>Boundary protection, encryption in transit</td>
+<td>Internal networks, egress allowlist proxy</td>
+<td>Partial</td>
+<td>TLS ingress not built; encryption in transit between services not configured</td>
+</tr>
+<tr>
+<td>Encryption at rest (CC6.1)</td>
+<td>DB and object store encryption</td>
+<td>None in compose</td>
+<td>Missing</td>
+<td>Depends on hosting choice; verify provider default and key management</td>
+</tr>
+<tr>
+<td>System operations (CC7.1-7.2)</td>
+<td>Detection and monitoring</td>
+<td>Structured logs (log-forging safe), audit log table (Postgres append-only trigger, UNVERIFIED)</td>
+<td>Partial</td>
+<td>No alerting, no log retention sink, no uptime check</td>
+</tr>
+<tr>
+<td>Incident response (CC7.3-7.5)</td>
+<td>IR plan, post-incident review</td>
+<td><code>incident-response.md</code></td>
+<td>Partial</td>
+<td>Never exercised; no on-call tooling</td>
+</tr>
+<tr>
+<td>Change management (CC8)</td>
+<td>Reviewed, tested, authorised changes</td>
+<td>PRs, CI tests, CHANGELOG, release script</td>
+<td>Partial</td>
+<td>No enforced review/branch protection; deploys are manual</td>
+</tr>
+<tr>
+<td>Risk mitigation (CC9)</td>
+<td>Vendor management, business continuity</td>
+<td><code>subprocessors.md</code> template</td>
+<td>Missing</td>
+<td>No vendor reviews or DPAs; no BCP/DR plan</td>
+</tr>
+<tr>
+<td>Availability (A1)</td>
+<td>Capacity, backups, recovery</td>
+<td>Backup/restore procedure in <code>docs/operations-runbook.md</code></td>
+<td>Partial</td>
+<td>Restore test not yet performed; no SLO measurement; single host</td>
+</tr>
+<tr>
+<td>Confidentiality (C1)</td>
+<td>Identify, protect, dispose confidential info</td>
+<td><code>data-handling-and-retention.md</code>; project delete with durable tombstone + retrying reaper + <code>storage.purge</code> audit record; per-workspace cache</td>
+<td>Partial</td>
+<td>Reaper tested on SQLite/fake S3 only; backups retain deleted data until expiry</td>
+</tr>
+<tr>
+<td>Processing integrity (PI1)</td>
+<td>Complete, accurate processing</td>
+<td>Evidence-or-nothing verification, budget limits, regression and eval gates, idempotent worker (contract)</td>
+<td>Partial</td>
+<td>Strong for engine output; platform-level reconciliation unverified</td>
+</tr>
+<tr>
+<td>Privacy (P)</td>
+<td>Notice, choice, retention, deletion</td>
+<td>Retention draft, deletion API</td>
+<td>Missing</td>
+<td>Privacy notice, DPA template, data subject request process</td>
+</tr>
+<tr>
+<td>HR / people</td>
+<td>Background checks, onboarding/offboarding, training</td>
+<td>n/a (solo)</td>
+<td>Missing</td>
+<td>Needed before hiring</td>
+</tr>
+<tr>
+<td>Asset inventory</td>
+<td>Systems and data inventory</td>
+<td>Compose files, data-handling table</td>
+<td>Partial</td>
+<td>Maintain inventory incl. vendors</td>
+</tr>
+<tr>
+<td>Evidence collection</td>
+<td>Automated evidence (e.g. via compliance tool)</td>
+<td>None</td>
+<td>Missing</td>
+<td>Choose tooling when engaging an auditor</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="honest-summary">Honest summary</h2>
+<p>Strong technical groundwork for Security and Confidentiality in the engine (sandboxing, redaction, evidence
+verification). The platform controls (tenant isolation, audit, deletion, monitoring) are designed but unverified. The
+organisational controls (policies approved, reviews, vendor management, training, DR) are mostly missing. A Type I
+readiness assessment is a sensible next step only after the platform is running and the items above are in place.</p>
+<h2 id="update-2026-11-09">Update 2026-11-09</h2>
+<p>A hostile review produced 15 findings and a deploy bug; see <code>pentest-2026-11-09.md</code>. Fixed with regression tests: SSE
+exhaustion, denial of wallet, tar directory bombs, deletion completeness, invitations, JWT secret strength, rate-limit
+behind proxy, SSRF gaps, headers/races. <strong>Open: F5</strong> (worker holds DB credentials and the model key) and the remainder
+of F4 (RLS on memberships/audit/entitlements, composite FKs). Postgres hardening (FORCE RLS, role split, append-only
+audit) is written but <strong>unverified</strong>. None of this changes the statement that the project is not SOC 2 compliant.</p><div class="pager"><a href="secure-sdlc.html">&larr; Secure development lifecycle</a><a href="subprocessors.html">Subprocessor list (TEMPLATE) &rarr;</a></div></main>
+<nav class="toc" aria-label="On this page"><b>On this page</b><a class="l2" href="#honest-summary">Honest summary</a><a class="l2" href="#update-2026-11-09">Update 2026-11-09</a></nav></div>
+<footer>Generated from <code>docs/security/soc2-readiness.md</code> by <code>scripts/build_docs_html.py</code>. Edit the Markdown, not this file.</footer>
+<script>
+(function(){
+ document.querySelectorAll('.cb').forEach(function(b){var btn=document.createElement('button');btn.textContent='Copy';
+  btn.addEventListener('click',function(){var t=b.querySelector('code').innerText;
+   (navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(function(){btn.textContent='Copied';setTimeout(function(){btn.textContent='Copy'},1400)},function(){btn.textContent='Press Ctrl/Cmd+C'});});
+  b.appendChild(btn);});
+ var links=[].slice.call(document.querySelectorAll('nav.toc a'));if(!links.length||!('IntersectionObserver' in window))return;
+ var map={};links.forEach(function(a){map[a.getAttribute('href').slice(1)]=a});
+ var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){links.forEach(function(a){a.classList.remove('on')});var a=map[e.target.id];if(a)a.classList.add('on');}})},{rootMargin:'0px 0px -75% 0px'});
+ document.querySelectorAll('main h2[id],main h3[id]').forEach(function(h){io.observe(h)});
+})();
+</script></body></html>

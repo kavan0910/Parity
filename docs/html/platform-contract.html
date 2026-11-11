@@ -1,0 +1,298 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Platform contract (hosted product) | migration-agent docs</title><style>
+:root{--bg:#fbfaf7;--panel:#fff;--ink:#1c1b22;--mute:#6b6a76;--line:#e7e4dc;--accent:#5b4bdb;--accent2:#e0568b;--tint:#efecff;--code:#15141c;--codefg:#e9e7f5}
+@media (prefers-color-scheme:dark){:root{--bg:#0f0e14;--panel:#17161f;--ink:#ecebf3;--mute:#9a98a8;--line:#2a2836;--accent:#9b8cff;--accent2:#ff7fac;--tint:#221f3a}}
+*{box-sizing:border-box}html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.7 -apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,sans-serif}
+a{color:var(--accent)}
+.top{padding:44px 24px 34px;text-align:center;border-bottom:1px solid var(--line);background:radial-gradient(900px 300px at 50% -80px,var(--tint),transparent),var(--bg)}
+.top .tag{display:inline-block;padding:3px 12px;border:1px solid var(--line);border-radius:99px;font-size:13px;color:var(--mute);background:var(--panel)}
+.top h1{font-size:clamp(28px,5vw,44px);line-height:1.15;margin:14px auto 0;max-width:900px;letter-spacing:-.02em;background:linear-gradient(90deg,var(--accent),var(--accent2));-webkit-background-clip:text;background-clip:text;color:transparent}
+.layout{display:grid;grid-template-columns:250px minmax(0,1fr) 210px;gap:36px;max-width:1360px;margin:0 auto;padding:32px 24px 90px}
+nav.docs,nav.toc{position:sticky;top:20px;align-self:start;max-height:calc(100vh - 40px);overflow:auto;font-size:14px}
+nav b{display:block;margin:14px 0 6px;color:var(--mute);font-weight:600;text-transform:uppercase;letter-spacing:.08em;font-size:11.5px}
+nav b:first-child{margin-top:0}
+nav a{display:block;padding:4px 10px;border-left:2px solid var(--line);color:var(--mute);text-decoration:none}
+nav a:hover,nav a.on{color:var(--accent);border-color:var(--accent)}
+nav a.on{font-weight:600}
+nav.toc a.l3{padding-left:22px;font-size:13px}
+main{min-width:0}main h2{font-size:27px;margin:44px 0 12px;letter-spacing:-.01em;padding-top:6px;border-top:1px solid var(--line)}
+main h1{display:none}main h3{font-size:20px;margin:30px 0 8px}main h4{font-size:16px;margin:22px 0 6px}
+main p,main li{max-width:78ch}p{margin:0 0 14px}ul,ol{padding-left:24px;margin:0 0 16px}li{margin:4px 0}
+code{font:13.5px ui-monospace,SFMono-Regular,Menlo,monospace;background:var(--tint);padding:2px 6px;border-radius:6px}
+.cb{position:relative;margin:14px 0 20px}
+pre{background:var(--code);color:var(--codefg);padding:16px 18px;border-radius:14px;overflow:auto;margin:0;line-height:1.55;box-shadow:0 8px 24px -14px #0008}
+pre code{background:none;padding:0;color:inherit;font-size:13px}
+.cb button{position:absolute;top:8px;right:8px;font:12px inherit;padding:3px 9px;border-radius:8px;border:1px solid #fff3;background:#ffffff14;color:#e9e7f5;cursor:pointer}
+.cb button:hover{background:#ffffff2a}
+.cb .lbl{position:absolute;top:8px;left:14px;font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:#b9b5d6}
+.cb.mm pre{padding-top:34px}
+.tw{overflow-x:auto;margin:14px 0 22px;border:1px solid var(--line);border-radius:14px;background:var(--panel)}
+table{border-collapse:collapse;width:100%;font-size:14.5px}th,td{text-align:left;padding:9px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--mute);background:var(--tint)}tr:last-child td{border-bottom:0}
+blockquote{margin:16px 0;padding:10px 18px;border-left:4px solid var(--accent);background:var(--tint);border-radius:0 12px 12px 0}blockquote p{margin:6px 0}
+hr{border:0;border-top:1px solid var(--line);margin:30px 0}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;margin:18px 0}
+.card{display:block;padding:16px 18px;border:1px solid var(--line);border-radius:14px;background:var(--panel);text-decoration:none;color:var(--ink)}
+.card:hover{border-color:var(--accent)}.card b{display:block;color:var(--accent);margin-bottom:2px}.card span{color:var(--mute);font-size:14px}
+.pager{display:flex;justify-content:space-between;gap:12px;margin-top:56px;padding-top:20px;border-top:1px solid var(--line);font-size:14px}
+footer{text-align:center;color:var(--mute);font-size:13px;padding:28px;border-top:1px solid var(--line)}
+details.mob{display:none;margin:0 24px 16px;border:1px solid var(--line);border-radius:12px;background:var(--panel);padding:8px 14px}
+@media(max-width:1100px){.layout{grid-template-columns:230px minmax(0,1fr)}nav.toc{display:none}}
+@media(max-width:820px){.layout{grid-template-columns:1fr;padding-top:16px}nav.docs{display:none}details.mob{display:block}}
+</style></head><body>
+<header class="top"><span class="tag">migration-agent docs</span><h1>Platform contract (hosted product)</h1></header>
+<details class="mob"><summary>All docs</summary><a href="index.html">Overview</a><b>Start here</b><a href="README.html">migration-agent documentation</a><a href="user-guide.html">User guide</a><a href="architecture.html">Architecture</a><a href="api-reference.html">API reference</a><a href="deployment.html">Deployment guide</a><a href="threat-model.html">Threat model (D-06)</a><b>Product and platform</b><a href="product-architecture.html">Product architecture and roadmap: from CLI engine to hosted service</a><a class="on" href="platform-contract.html">Platform contract (hosted product)</a><a href="phase0-results.html">Phase 0 interim results (2026-11-09)</a><a href="operations-runbook.html">Operations runbook</a><b>Security</b><a href="security/security-overview-draft.html">Security overview (customer-facing DRAFT)</a><a href="security/threat-model-hosted.html">Threat model update: hosted product</a><a href="security/data-handling-and-retention.html">Data handling and retention policy (draft)</a><a href="security/pentest-2026-11-09.html">Hostile security review, 2026-11-09: findings and status</a><a href="security/incident-response.html">Incident response outline</a><a href="security/secure-sdlc.html">Secure development lifecycle</a><a href="security/soc2-readiness.html">SOC 2 readiness checklist</a><a href="security/subprocessors.html">Subprocessor list (TEMPLATE)</a><b>Hand-built guides</b><a href="../developer-handbook.html">Developer handbook</a><a href="../user-guide-app.html">Product user guide</a><a href="../tutorial.html">CLI tutorial</a></details>
+<div class="layout"><nav class="docs" aria-label="Documentation"><a href="index.html">Overview</a><b>Start here</b><a href="README.html">migration-agent documentation</a><a href="user-guide.html">User guide</a><a href="architecture.html">Architecture</a><a href="api-reference.html">API reference</a><a href="deployment.html">Deployment guide</a><a href="threat-model.html">Threat model (D-06)</a><b>Product and platform</b><a href="product-architecture.html">Product architecture and roadmap: from CLI engine to hosted service</a><a class="on" href="platform-contract.html">Platform contract (hosted product)</a><a href="phase0-results.html">Phase 0 interim results (2026-11-09)</a><a href="operations-runbook.html">Operations runbook</a><b>Security</b><a href="security/security-overview-draft.html">Security overview (customer-facing DRAFT)</a><a href="security/threat-model-hosted.html">Threat model update: hosted product</a><a href="security/data-handling-and-retention.html">Data handling and retention policy (draft)</a><a href="security/pentest-2026-11-09.html">Hostile security review, 2026-11-09: findings and status</a><a href="security/incident-response.html">Incident response outline</a><a href="security/secure-sdlc.html">Secure development lifecycle</a><a href="security/soc2-readiness.html">SOC 2 readiness checklist</a><a href="security/subprocessors.html">Subprocessor list (TEMPLATE)</a><b>Hand-built guides</b><a href="../developer-handbook.html">Developer handbook</a><a href="../user-guide-app.html">Product user guide</a><a href="../tutorial.html">CLI tutorial</a></nav>
+<main><h1 id="platform-contract-hosted-product">Platform contract (hosted product)</h1>
+<p>Single source of truth shared by the parallel workstreams. Implements <code>product-architecture.md</code> Phases 1 to 3,
+<strong>except billing</strong>: no payment provider, no checkout, no invoices. Billing stays a <code>BillingProvider</code> interface with a
+<code>NoBilling</code> implementation (decision deferred by the owner).</p>
+<p>Workstreams and owned directories (do not edit another stream's directory):</p>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>Stream</th>
+<th>Owns</th>
+<th>Depends on</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>A. Engine seams</td>
+<td><code>src/migration_agent/</code> (new <code>service.py</code>, <code>storage.py</code>; minimal edits elsewhere), <code>tests/</code> for those</td>
+<td>nothing</td>
+</tr>
+<tr>
+<td>B. Backend</td>
+<td><code>backend/</code></td>
+<td><code>migration_agent.service</code> (section 2)</td>
+</tr>
+<tr>
+<td>C. Web</td>
+<td><code>web/</code></td>
+<td>HTTP API (section 3)</td>
+</tr>
+<tr>
+<td>D. Ops, security, docs</td>
+<td><code>deploy/</code>, <code>docs/security/</code>, <code>.github/workflows/</code>, root <code>*.md</code> additions</td>
+<td>paths of A, B, C</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="1-repository-layout">1. Repository layout</h2>
+<div class="cb"><pre><code>src/migration_agent/        engine (library + CLI), stays pip-installable and CLI-compatible
+backend/                    FastAPI service + worker (own pyproject.toml, own venv at backend/.venv)
+web/                        Next.js (App Router, TypeScript, Tailwind)
+deploy/                     docker-compose for the full stack, Dockerfiles, env templates
+docs/security/              data-handling, retention, subprocessor list, SOC 2 readiness checklist
+</code></pre></div>
+<h2 id="2-engine-service-api-migration_agentservice-stream-a">2. Engine service API (<code>migration_agent.service</code>, stream A)</h2>
+<p>Pure functions over a local <strong>project directory</strong> (the existing folder layout). No HTTP, no database, no network
+other than the configured model endpoint. All must be importable without the <code>llm</code> extra unless an LLM is used.</p>
+<div class="cb"><pre><code language-python>class StageResult(BaseModel):
+    stage: str                        # ingest | extract | analyze | verify | resolve
+    status: Literal[&quot;ok&quot;, &quot;stopped_budget&quot;, &quot;failed&quot;]
+    summary: dict                     # stage specific counts (nodes, edges, findings, chunks ...)
+    cost_usd: float
+    error: str | None = None
+
+Event = dict   # {&quot;type&quot;:&quot;progress&quot;,&quot;stage&quot;:str,&quot;done&quot;:int,&quot;total&quot;:int}
+               # {&quot;type&quot;:&quot;usage&quot;,&quot;stage&quot;:str,&quot;task&quot;:str,&quot;model&quot;:str,&quot;input_tokens&quot;:int,&quot;output_tokens&quot;:int,&quot;usd&quot;:float}
+               # {&quot;type&quot;:&quot;log&quot;,&quot;level&quot;:str,&quot;message&quot;:str}
+
+def run_stage(project_dir: Path, stage: str, *, source: str | None = None, config: dict | None = None,
+              max_usd: float | None = None, workers: int = 1, incremental: bool = False, offline: bool = False,
+              on_event: Callable[[Event], None] | None = None, llm: object | None = None,
+              finding_id: str | None = None, status: str | None = None, note: str | None = None,
+              reanalyze: bool = False) -&gt; StageResult
+def estimate(project_dir: Path, config: dict | None = None, incremental: bool = False) -&gt; dict   # {&quot;chunks&quot;:int,&quot;usd&quot;:float}
+def review_state(project_dir: Path) -&gt; dict        # same shape the review UI serves at /api/state
+def graph_snapshot(project_dir: Path, version: int | None = None) -&gt; dict   # {&quot;version&quot;,&quot;nodes&quot;:[...],&quot;edges&quot;:[...]}
+def graph_versions(project_dir: Path) -&gt; list[dict]
+def graph_diff(project_dir: Path, a: int, b: int) -&gt; dict
+def add_comment(project_dir: Path, item_id: str, text: str, author: str | None = None) -&gt; dict
+def add_resolution(project_dir: Path, finding_id: str, status: str, note: str = &quot;&quot;, author: str | None = None) -&gt; dict
+def document(project_dir: Path) -&gt; str            # docs/understanding.latest.md or &quot;&quot;
+def changelog(project_dir: Path) -&gt; str
+def pack_project(project_dir: Path, *, include_cache: bool = True) -&gt; bytes   # deterministic .tar.gz
+def unpack_project(data: bytes, dest: Path) -&gt; None                           # validates paths, no traversal
+</code></pre></div>
+<p>Rules: <code>on_event</code> is called from worker threads safely; budget is enforced inside the engine (<code>max_usd</code>); the engine
+never reads credentials from the process environment when <code>config</code> carries an explicit <code>api_key</code>; <code>llm</code> allows tests to
+inject <code>FakeLLM</code>/<code>OfflineLLM</code>; the CLI keeps working unchanged; the existing 582 tests stay green.</p>
+<h2 id="3-http-api-v1-stream-b-implements-stream-c-consumes">3. HTTP API (<code>/v1</code>, stream B implements, stream C consumes)</h2>
+<p>JSON, ids are UUID strings, timestamps ISO-8601 UTC, auth <code>Authorization: Bearer &lt;jwt&gt;</code>.
+Errors: <code>{"error":{"code":"string","message":"string"}}</code> with proper status codes (401, 403, 404, 409, 422, 429).
+Lists: <code>{"items":[...],"total":int}</code> with <code>limit</code> (default 50, max 200) and <code>offset</code>.
+A resource of another workspace is always answered with <strong>404</strong>, never 403, to avoid leaking existence.</p>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>Area</th>
+<th>Endpoint</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Health</td>
+<td><code>GET /healthz</code>, <code>GET /readyz</code></td>
+<td>no auth</td>
+</tr>
+<tr>
+<td>Auth</td>
+<td><code>POST /v1/auth/signup</code>, <code>POST /v1/auth/login</code>, <code>GET /v1/me</code></td>
+<td><code>AUTH_MODE=dev</code> (password, local JWT) or <code>oidc</code> (verify external JWT via JWKS; users are created on first sight)</td>
+</tr>
+<tr>
+<td>Workspaces</td>
+<td><code>GET/POST /v1/workspaces</code>, <code>GET /v1/workspaces/{wid}</code>, <code>GET/POST /v1/workspaces/{wid}/members</code>, <code>DELETE .../members/{uid}</code></td>
+<td>roles: owner, admin, member, viewer</td>
+</tr>
+<tr>
+<td>Projects</td>
+<td><code>POST/GET /v1/workspaces/{wid}/projects</code>, <code>GET/PATCH/DELETE /v1/projects/{pid}</code></td>
+<td>DELETE removes every artifact, cache entry and row, writes an audit record</td>
+</tr>
+<tr>
+<td>Source</td>
+<td><code>POST /v1/projects/{pid}/source</code> (multipart zip/tar.gz <strong>or</strong> JSON <code>{"git_url":"https://..."}</code>)</td>
+<td>git URL: https only, public hosts only, block private/link-local/loopback (SSRF), size caps</td>
+</tr>
+<tr>
+<td>User docs</td>
+<td><code>POST/GET/DELETE /v1/projects/{pid}/user-docs</code></td>
+<td>for the Verifier only</td>
+</tr>
+<tr>
+<td>Estimate</td>
+<td><code>POST /v1/projects/{pid}/estimate</code></td>
+<td><code>{chunks, usd, allowed, reason}</code> using the engine dry-run and the entitlement check</td>
+</tr>
+<tr>
+<td>Runs</td>
+<td><code>POST /v1/projects/{pid}/runs</code> (202), <code>GET /v1/projects/{pid}/runs</code>, <code>GET /v1/runs/{rid}</code>, <code>POST /v1/runs/{rid}/cancel</code>, <code>GET /v1/runs/{rid}/events</code> (SSE)</td>
+<td>body <code>{type: analyze|verify|reanalyze, model_profile: fast|balanced|best, max_usd, incremental}</code>; status: queued, running, succeeded, failed, stopped_budget, cancelled</td>
+</tr>
+<tr>
+<td>Results</td>
+<td><code>GET /v1/projects/{pid}/graph</code> (<code>version,type,q,limit,offset</code>), <code>.../graph/nodes/{nid}</code>, <code>.../graph/versions</code>, <code>.../graph/diff?a=&amp;b=</code>, <code>.../document</code>, <code>.../changelog</code>, <code>.../export?format=md|json|html</code></td>
+<td></td>
+</tr>
+<tr>
+<td>Review</td>
+<td><code>GET /v1/projects/{pid}/findings</code>, <code>POST .../findings/{fid}/resolution</code>, <code>GET/POST .../comments</code></td>
+<td>resolution status: accepted_doc, accepted_code, dismissed, needs_reanalysis; <code>needs_reanalysis</code> and <code>accepted_doc</code> enqueue a <code>reanalyze</code> run</td>
+</tr>
+<tr>
+<td>Usage</td>
+<td><code>GET /v1/workspaces/{wid}/usage?from=&amp;to=</code>, <code>GET /v1/workspaces/{wid}/entitlements</code></td>
+<td>totals and per run; plan, limits, consumption</td>
+</tr>
+<tr>
+<td>Audit</td>
+<td><code>GET /v1/workspaces/{wid}/audit</code></td>
+<td>admins only</td>
+</tr>
+</tbody>
+</table></div>
+<p><code>model_profile</code> maps server-side to engine model configs; customers never choose raw model ids.</p>
+<h3 id="response-shapes-verified-end-to-end-by-scriptse2e_localsh-and-a-real-mode-browser-run">Response shapes (verified end to end by <code>scripts/e2e_local.sh</code> and a real-mode browser run)</h3>
+<p>All timestamps ISO-8601 UTC. Errors always <code>{"error":{"code","message"}}</code>; validation failures are 422 <code>invalid_request</code>,
+unsafe sources 422 <code>invalid_source</code>, plan limits 403 <code>entitlement_denied</code>, missing prerequisites 409 (<code>no_source</code>,
+<code>no_analysis</code>, <code>run_in_progress</code>), oversized bodies 413. Lists take <code>limit</code> (1..200, default 50) and <code>offset</code>.</p>
+<ul>
+<li><strong>Auth.</strong> <code>POST /v1/auth/signup</code> body <code>{email, password (10..256 chars), display_name?}</code> returns 201, <code>POST /v1/auth/login</code>
+  body <code>{email, password}</code> returns 200; both answer <code>{access_token, token_type:"bearer", expires_in, user}</code>. Signup creates
+  a default workspace (owner). <code>user</code> = <code>{id, email, display_name, created_at}</code>. <code>GET /v1/me</code> = user fields plus
+  <code>workspaces:[{id,name,role,created_at}]</code>. The web client copies <code>display_name</code> to <code>name</code>.</li>
+<li><strong>Workspace</strong> <code>{id, name, created_at, role}</code>. <strong>Member</strong> <code>{user_id, email, display_name, role, created_at}</code>;
+  <code>POST .../members</code> body <code>{email, role}</code> (the user must already have an account) returns 201 with a member.</li>
+<li><strong>Project</strong> <code>{id, workspace_id, name, description, created_at, updated_at, source, estimate, last_run, source_kind
+  ("none"|"git"|"upload"), source_ref, last_run_status, node_count, open_findings}</code>. <code>node_count</code> and <code>open_findings</code> are
+  <code>null</code> until the first successful run. Create body <code>{name, description?}</code>; PATCH <code>{name?, description?}</code>; DELETE 204.</li>
+<li><strong>Source.</strong> <code>POST /v1/projects/{pid}/source</code>, 201, answers the <em>source</em> (not the project):
+  <code>{id, kind:"git"|"upload", git_url, sha256, bytes, file_count, created_at}</code>. Upload is <code>multipart/form-data</code> with the single
+  field <code>file</code> (zip, tar.gz); git is JSON <code>{git_url}</code> (https only, public hosts, port 443). A new source replaces the old
+  one and clears the stored estimate. <code>GET</code> returns the same shape (404 when none).</li>
+<li><strong>Estimate</strong> (200, synchronous) <code>{chunks, usd, allowed, reason}</code>; body <code>{model_profile?, max_usd?, incremental?}</code>.</li>
+<li><strong>Run</strong> <code>{id, project_id, workspace_id, type, status, model_profile, max_usd, incremental, cost_usd, estimate_usd,
+  engine_version, error, current_stage, completed_stages, cancel_requested, created_at, started_at, finished_at}</code>.
+  <code>POST .../runs</code> answers 202 (200 when an <code>Idempotency-Key</code> replays an existing run).</li>
+<li><strong>SSE</strong> <code>GET /v1/runs/{rid}/events</code> (<code>Authorization: Bearer</code>, read with fetch streaming; <code>?after=&lt;seq&gt;</code> or
+  <code>Last-Event-ID</code> replays). Each message is <code>id: &lt;seq&gt;</code>, <code>event: &lt;type&gt;</code>, <code>data: &lt;json payload without "type"&gt;</code>. Types:
+  <code>status</code> (<code>{status}</code> where status is <code>running</code>, <code>retrying</code>, <code>cancel_requested</code>, a terminal status, ...),
+  <code>stage</code> (<code>{stage, status:"started"|"done"}</code>), <code>progress</code> (<code>{stage, done, total}</code>),
+  <code>usage</code> (<code>{stage, task, model, input_tokens, output_tokens, usd}</code>), <code>log</code> (<code>{level, message}</code>), and a final
+  <code>event: end</code> with <code>{status}</code> (the run's terminal status). Comment lines <code>: ping</code> are heartbeats.</li>
+<li><strong>Graph</strong> <code>GET .../graph</code> = <code>{version, total, items:[node], edges:[edge touching returned nodes]}</code> (<code>items</code> = the page;
+  <code>total</code> = matches before paging). Node <code>{id, type, name, module, qualified_symbol, responsibility, evidence:[{file,
+  line_start, line_end, symbol, quote}], quirk, suspected_bug, confidence}</code>. Node detail <code>{version, node, edges, neighbours}</code>.
+  Versions <code>{items:[{version, node_count, edge_count}], total}</code>. Diff <code>{a, b, added_nodes, removed_nodes, changed_nodes:
+  [{id, name, type}], added_edges, removed_edges, changed_edges (counts)}</code>.</li>
+<li><strong>Document / changelog</strong> answer <code>text/markdown</code> (plain body, not JSON); 404 until a run produced one. Export is a
+  download (<code>Content-Disposition</code>); <code>format=json</code> is <code>{project, graph, versions, findings}</code>.</li>
+<li><strong>Finding</strong> (the engine review shape) <code>{id, kind, severity, title, detail, item_ids, quotes:[{source, text, anchor,
+  verified}], area, resolution, comment_count}</code>; <code>resolution</code> is <code>null</code> or <code>{status, note, author, created_at}</code>.
+  <code>POST .../findings/{fid}/resolution</code> body <code>{status, note?, model_profile?, max_usd?}</code> answers 201
+  <code>{resolution, run, run_denied_reason}</code>; <code>run</code> is the queued <code>reanalyze</code> run for <code>needs_reanalysis</code>/<code>accepted_doc</code>.</li>
+<li><strong>Comment</strong> <code>{id, item_id, text, author, author_id, created_at}</code>; <code>item_id</code> is a graph/doc id or a finding id.</li>
+<li><strong>Usage</strong> <code>{from, to, totals:{input_tokens, output_tokens, usd, events, runs}, by_run:[{run_id, project_id, project_name,
+  type, input_tokens, output_tokens, usd, at}], by_model:[...]}</code>. <strong>Entitlements</strong> <code>{plan, limits:{max_projects, max_members,
+  max_runs_per_month, max_concurrent_runs, max_usd_per_run, monthly_usd_budget, max_source_mb}, consumption:{projects,
+  members, runs_this_month, active_runs, usd_this_month}}</code>. <strong>Audit</strong> item <code>{id, workspace_id, actor, action, target, at, meta}</code>.</li>
+<li><strong>CORS.</strong> Set <code>CORS_ORIGINS</code> (comma list) to the web origin; allowed methods GET/POST/PATCH/DELETE, headers
+  <code>Authorization, Content-Type, Idempotency-Key</code>, no credentials (bearer tokens only).</li>
+</ul>
+<h2 id="4-data-model-stream-b-postgres-in-production-sqlite-in-tests">4. Data model (stream B, Postgres in production, SQLite in tests)</h2>
+<p>workspaces, users, memberships(role), projects, sources, user_docs, runs(status, type, profile, max_usd,
+cost_usd, engine_version, started_at, finished_at, error), run_events(seq, type, payload), artifacts(run, kind, key,
+sha256, bytes), usage_events(workspace, project, run, stage, task, model, input_tokens, output_tokens, usd, at),
+plans(name, limits json), entitlements(workspace, plan, overrides json), audit_log(actor, action, target, at, meta),
+jobs(queue table: id, run_id, status, locked_by, locked_at, attempts, available_at).</p>
+<p>Tenancy: every project-scoped query filters by the caller's workspace membership in <strong>one shared dependency</strong>; no
+route builds its own filter. Postgres deployments additionally enable row-level security keyed on <code>workspace_id</code>.</p>
+<h2 id="5-worker-stream-b">5. Worker (stream B)</h2>
+<p><code>python -m app.worker</code>: claims jobs (<code>FOR UPDATE SKIP LOCKED</code> on Postgres, equivalent on SQLite), materialises the
+project from storage into a scratch dir, calls <code>migration_agent.service.run_stage</code> per stage, streams events into
+<code>run_events</code> and <code>usage_events</code>, uploads artifacts, enforces the per-run budget and entitlements, retries with
+backoff, is idempotent per run, and always cleans the scratch dir. The model API key is injected per job from
+server configuration, never stored in a project.</p>
+<p>Storage interface <code>ObjectStore</code> (put, get, delete_prefix, list) with <code>LocalStore</code> (dev, tests) and an <code>S3Store</code>
+skeleton behind the same interface. Keys are prefixed <code>{workspace_id}/{project_id}/</code>. LLM cache is per workspace.</p>
+<h2 id="6-billing-agnostic-seam-stream-b">6. Billing-agnostic seam (stream B)</h2>
+<p><code>BillingProvider</code> protocol (<code>ensure_customer</code>, <code>sync_plan</code>, <code>report_usage</code>) and <code>NoBilling</code> (no-ops). <code>can_start_run(
+workspace, estimate)</code> is the only place plan limits are enforced. Default plan <code>internal</code> is generous. No payment
+code, SDK, keys, webhooks or pricing numbers anywhere.</p>
+<h2 id="7-web-stream-c">7. Web (stream C)</h2>
+<p>Next.js App Router, TypeScript strict, Tailwind. Pages: landing, sign up / log in, dashboard (projects), new project
+(connect git URL or upload), project overview (runs, estimate, start run with live progress via SSE), understanding
+document, graph explorer (search, filter by type, node detail with evidence quotes and confidence, version diff),
+findings review (resolve, comment), usage and plan, workspace members, settings (delete project/data). Typed API
+client generated by hand from section 3 with one module (<code>web/lib/api.ts</code>). <code>NEXT_PUBLIC_API_MOCK=1</code> serves
+realistic fixtures so the whole UI can be demoed and tested without the backend. Accessible, responsive, light and
+dark. <code>npm run build</code>, <code>npm run lint</code> and <code>npm run typecheck</code> must pass.</p>
+<h2 id="8-ops-security-docs-stream-d">8. Ops, security, docs (stream D)</h2>
+<p><code>deploy/docker-compose.yml</code> (postgres, backend, worker with egress allowlist proxy, web), Dockerfiles for backend and
+web, <code>.env.example</code>, a smoke script, CI jobs for backend and web, <code>docs/security/</code> (data handling and retention,
+subprocessors, incident response outline, SOC 2 readiness checklist, secure SDLC), an operations runbook, and updates
+to README and CHANGELOG. No claims of certifications that do not exist.</p>
+<h2 id="9-definition-of-done">9. Definition of done</h2>
+<p>Each stream: tests pass locally, no secrets committed, nothing outside its owned directories modified (except stream A's
+engine and the CHANGELOG/README entries by D), a short <code>NOTES.md</code> in its directory listing what was built, what is
+deliberately not built, and open problems.</p><div class="pager"><a href="product-architecture.html">&larr; Product architecture and roadmap: from CLI engine to hosted service</a><a href="phase0-results.html">Phase 0 interim results (2026-11-09) &rarr;</a></div></main>
+<nav class="toc" aria-label="On this page"><b>On this page</b><a class="l2" href="#1-repository-layout">1. Repository layout</a><a class="l2" href="#2-engine-service-api-migration_agentservice-stream-a">2. Engine service API (migration_agent.service, stream A)</a><a class="l2" href="#3-http-api-v1-stream-b-implements-stream-c-consumes">3. HTTP API (/v1, stream B implements, stream C consumes)</a><a class="l3" href="#response-shapes-verified-end-to-end-by-scriptse2e_localsh-and-a-real-mode-browser-run">Response shapes (verified end to end by scripts/e2e_local.sh and a real-mode browser run)</a><a class="l2" href="#4-data-model-stream-b-postgres-in-production-sqlite-in-tests">4. Data model (stream B, Postgres in production, SQLite in tests)</a><a class="l2" href="#5-worker-stream-b">5. Worker (stream B)</a><a class="l2" href="#6-billing-agnostic-seam-stream-b">6. Billing-agnostic seam (stream B)</a><a class="l2" href="#7-web-stream-c">7. Web (stream C)</a><a class="l2" href="#8-ops-security-docs-stream-d">8. Ops, security, docs (stream D)</a><a class="l2" href="#9-definition-of-done">9. Definition of done</a></nav></div>
+<footer>Generated from <code>docs/platform-contract.md</code> by <code>scripts/build_docs_html.py</code>. Edit the Markdown, not this file.</footer>
+<script>
+(function(){
+ document.querySelectorAll('.cb').forEach(function(b){var btn=document.createElement('button');btn.textContent='Copy';
+  btn.addEventListener('click',function(){var t=b.querySelector('code').innerText;
+   (navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(function(){btn.textContent='Copied';setTimeout(function(){btn.textContent='Copy'},1400)},function(){btn.textContent='Press Ctrl/Cmd+C'});});
+  b.appendChild(btn);});
+ var links=[].slice.call(document.querySelectorAll('nav.toc a'));if(!links.length||!('IntersectionObserver' in window))return;
+ var map={};links.forEach(function(a){map[a.getAttribute('href').slice(1)]=a});
+ var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){links.forEach(function(a){a.classList.remove('on')});var a=map[e.target.id];if(a)a.classList.add('on');}})},{rootMargin:'0px 0px -75% 0px'});
+ document.querySelectorAll('main h2[id],main h3[id]').forEach(function(h){io.observe(h)});
+})();
+</script></body></html>

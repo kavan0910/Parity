@@ -90,6 +90,12 @@ class Settings(BaseSettings):
     profile_fast_model: str = "gemini/gemini-2.5-flash-lite"
     profile_balanced_model: str = "gemini/gemini-2.5-flash"
     profile_best_model: str = "gemini/gemini-2.5-pro"
+    # USD per 1M tokens (input, output) for each tier. Used for estimates and budget enforcement, so they MUST
+    # match the provider's current price list for the configured models. Defaults are list prices as last checked
+    # and are not guaranteed current; override via env (PROFILE_*_PRICE="in,out") whenever models or prices change.
+    profile_fast_price: tuple[float, float] = (0.10, 0.40)
+    profile_balanced_price: tuple[float, float] = (0.30, 2.50)
+    profile_best_price: tuple[float, float] = (1.25, 10.00)
     default_max_usd: float = 5.0
     hard_max_usd: float = 200.0
 

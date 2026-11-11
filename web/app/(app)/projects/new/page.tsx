@@ -82,7 +82,7 @@ export default function NewProject() {
                 <Input id="git" type="url" inputMode="url" value={git} onChange={(e) => setGit(e.target.value)} placeholder="https://github.com/org/repo" aria-invalid={!!errors.source} className="font-mono" />
               </Field>
             ) : (
-              <Field label="Archive" htmlFor="file" error={errors.source} hint=".zip, .tar.gz or .tgz, up to 200 MB. Secrets are redacted at ingest.">
+              <Field label="Archive" htmlFor="file" error={errors.source} hint=".zip, .tar.gz or .tgz, up to 100 MB. Secrets are redacted at ingest.">
                 <div
                   onDragOver={(e) => { e.preventDefault(); setDrag(true); }} onDragLeave={() => setDrag(false)}
                   onDrop={(e) => { e.preventDefault(); setDrag(false); pick(e.dataTransfer.files[0]); }}

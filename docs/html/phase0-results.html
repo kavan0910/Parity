@@ -1,0 +1,182 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Phase 0 interim results (2026-11-09) | migration-agent docs</title><style>
+:root{--bg:#fbfaf7;--panel:#fff;--ink:#1c1b22;--mute:#6b6a76;--line:#e7e4dc;--accent:#5b4bdb;--accent2:#e0568b;--tint:#efecff;--code:#15141c;--codefg:#e9e7f5}
+@media (prefers-color-scheme:dark){:root{--bg:#0f0e14;--panel:#17161f;--ink:#ecebf3;--mute:#9a98a8;--line:#2a2836;--accent:#9b8cff;--accent2:#ff7fac;--tint:#221f3a}}
+*{box-sizing:border-box}html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.7 -apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,sans-serif}
+a{color:var(--accent)}
+.top{padding:44px 24px 34px;text-align:center;border-bottom:1px solid var(--line);background:radial-gradient(900px 300px at 50% -80px,var(--tint),transparent),var(--bg)}
+.top .tag{display:inline-block;padding:3px 12px;border:1px solid var(--line);border-radius:99px;font-size:13px;color:var(--mute);background:var(--panel)}
+.top h1{font-size:clamp(28px,5vw,44px);line-height:1.15;margin:14px auto 0;max-width:900px;letter-spacing:-.02em;background:linear-gradient(90deg,var(--accent),var(--accent2));-webkit-background-clip:text;background-clip:text;color:transparent}
+.layout{display:grid;grid-template-columns:250px minmax(0,1fr) 210px;gap:36px;max-width:1360px;margin:0 auto;padding:32px 24px 90px}
+nav.docs,nav.toc{position:sticky;top:20px;align-self:start;max-height:calc(100vh - 40px);overflow:auto;font-size:14px}
+nav b{display:block;margin:14px 0 6px;color:var(--mute);font-weight:600;text-transform:uppercase;letter-spacing:.08em;font-size:11.5px}
+nav b:first-child{margin-top:0}
+nav a{display:block;padding:4px 10px;border-left:2px solid var(--line);color:var(--mute);text-decoration:none}
+nav a:hover,nav a.on{color:var(--accent);border-color:var(--accent)}
+nav a.on{font-weight:600}
+nav.toc a.l3{padding-left:22px;font-size:13px}
+main{min-width:0}main h2{font-size:27px;margin:44px 0 12px;letter-spacing:-.01em;padding-top:6px;border-top:1px solid var(--line)}
+main h1{display:none}main h3{font-size:20px;margin:30px 0 8px}main h4{font-size:16px;margin:22px 0 6px}
+main p,main li{max-width:78ch}p{margin:0 0 14px}ul,ol{padding-left:24px;margin:0 0 16px}li{margin:4px 0}
+code{font:13.5px ui-monospace,SFMono-Regular,Menlo,monospace;background:var(--tint);padding:2px 6px;border-radius:6px}
+.cb{position:relative;margin:14px 0 20px}
+pre{background:var(--code);color:var(--codefg);padding:16px 18px;border-radius:14px;overflow:auto;margin:0;line-height:1.55;box-shadow:0 8px 24px -14px #0008}
+pre code{background:none;padding:0;color:inherit;font-size:13px}
+.cb button{position:absolute;top:8px;right:8px;font:12px inherit;padding:3px 9px;border-radius:8px;border:1px solid #fff3;background:#ffffff14;color:#e9e7f5;cursor:pointer}
+.cb button:hover{background:#ffffff2a}
+.cb .lbl{position:absolute;top:8px;left:14px;font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:#b9b5d6}
+.cb.mm pre{padding-top:34px}
+.tw{overflow-x:auto;margin:14px 0 22px;border:1px solid var(--line);border-radius:14px;background:var(--panel)}
+table{border-collapse:collapse;width:100%;font-size:14.5px}th,td{text-align:left;padding:9px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--mute);background:var(--tint)}tr:last-child td{border-bottom:0}
+blockquote{margin:16px 0;padding:10px 18px;border-left:4px solid var(--accent);background:var(--tint);border-radius:0 12px 12px 0}blockquote p{margin:6px 0}
+hr{border:0;border-top:1px solid var(--line);margin:30px 0}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;margin:18px 0}
+.card{display:block;padding:16px 18px;border:1px solid var(--line);border-radius:14px;background:var(--panel);text-decoration:none;color:var(--ink)}
+.card:hover{border-color:var(--accent)}.card b{display:block;color:var(--accent);margin-bottom:2px}.card span{color:var(--mute);font-size:14px}
+.pager{display:flex;justify-content:space-between;gap:12px;margin-top:56px;padding-top:20px;border-top:1px solid var(--line);font-size:14px}
+footer{text-align:center;color:var(--mute);font-size:13px;padding:28px;border-top:1px solid var(--line)}
+details.mob{display:none;margin:0 24px 16px;border:1px solid var(--line);border-radius:12px;background:var(--panel);padding:8px 14px}
+@media(max-width:1100px){.layout{grid-template-columns:230px minmax(0,1fr)}nav.toc{display:none}}
+@media(max-width:820px){.layout{grid-template-columns:1fr;padding-top:16px}nav.docs{display:none}details.mob{display:block}}
+</style></head><body>
+<header class="top"><span class="tag">migration-agent docs</span><h1>Phase 0 interim results (2026-11-09)</h1></header>
+<details class="mob"><summary>All docs</summary><a href="index.html">Overview</a><b>Start here</b><a href="README.html">migration-agent documentation</a><a href="user-guide.html">User guide</a><a href="architecture.html">Architecture</a><a href="api-reference.html">API reference</a><a href="deployment.html">Deployment guide</a><a href="threat-model.html">Threat model (D-06)</a><b>Product and platform</b><a href="product-architecture.html">Product architecture and roadmap: from CLI engine to hosted service</a><a href="platform-contract.html">Platform contract (hosted product)</a><a class="on" href="phase0-results.html">Phase 0 interim results (2026-11-09)</a><a href="operations-runbook.html">Operations runbook</a><b>Security</b><a href="security/security-overview-draft.html">Security overview (customer-facing DRAFT)</a><a href="security/threat-model-hosted.html">Threat model update: hosted product</a><a href="security/data-handling-and-retention.html">Data handling and retention policy (draft)</a><a href="security/pentest-2026-11-09.html">Hostile security review, 2026-11-09: findings and status</a><a href="security/incident-response.html">Incident response outline</a><a href="security/secure-sdlc.html">Secure development lifecycle</a><a href="security/soc2-readiness.html">SOC 2 readiness checklist</a><a href="security/subprocessors.html">Subprocessor list (TEMPLATE)</a><b>Hand-built guides</b><a href="../developer-handbook.html">Developer handbook</a><a href="../user-guide-app.html">Product user guide</a><a href="../tutorial.html">CLI tutorial</a></details>
+<div class="layout"><nav class="docs" aria-label="Documentation"><a href="index.html">Overview</a><b>Start here</b><a href="README.html">migration-agent documentation</a><a href="user-guide.html">User guide</a><a href="architecture.html">Architecture</a><a href="api-reference.html">API reference</a><a href="deployment.html">Deployment guide</a><a href="threat-model.html">Threat model (D-06)</a><b>Product and platform</b><a href="product-architecture.html">Product architecture and roadmap: from CLI engine to hosted service</a><a href="platform-contract.html">Platform contract (hosted product)</a><a class="on" href="phase0-results.html">Phase 0 interim results (2026-11-09)</a><a href="operations-runbook.html">Operations runbook</a><b>Security</b><a href="security/security-overview-draft.html">Security overview (customer-facing DRAFT)</a><a href="security/threat-model-hosted.html">Threat model update: hosted product</a><a href="security/data-handling-and-retention.html">Data handling and retention policy (draft)</a><a href="security/pentest-2026-11-09.html">Hostile security review, 2026-11-09: findings and status</a><a href="security/incident-response.html">Incident response outline</a><a href="security/secure-sdlc.html">Secure development lifecycle</a><a href="security/soc2-readiness.html">SOC 2 readiness checklist</a><a href="security/subprocessors.html">Subprocessor list (TEMPLATE)</a><b>Hand-built guides</b><a href="../developer-handbook.html">Developer handbook</a><a href="../user-guide-app.html">Product user guide</a><a href="../tutorial.html">CLI tutorial</a></nav>
+<main><h1 id="phase-0-interim-results-2026-11-09">Phase 0 interim results (2026-11-09)</h1>
+<p>First measurement of the engine on real open-source repos, as called for in <code>product-architecture.md</code> section 11.
+<strong>This is a small first pass, not the full Phase 0.</strong> It proves the pipeline runs end to end on real code and gives
+first cost numbers. It does <strong>not</strong> yet establish accuracy: nothing here was hand-scored.</p>
+<h2 id="what-was-run">What was run</h2>
+<p>Each repo was cloned via <code>init &lt;git url&gt;</code>, then <code>ingest</code>, <code>extract</code>, <code>analyze --max-usd 1</code>. Work was done outside the repo
+(scratch directory). Verifier was not run (no user docs supplied).</p>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>Repo</th>
+<th>Source lines (java/py/js)</th>
+<th>Model config</th>
+<th>Cost</th>
+<th>Wall clock</th>
+<th>LLM calls</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>spring-projects/spring-petclinic</td>
+<td>4,297</td>
+<td>gemini-flash3 (<code>gemini-3-flash-preview</code>)</td>
+<td>$0.077</td>
+<td>51 s</td>
+<td>2</td>
+</tr>
+<tr>
+<td>gothinkster/django-realworld-example-app</td>
+<td>1,778</td>
+<td>gemini-lite (<code>gemini-3.1-flash-lite</code>)</td>
+<td>$0.021</td>
+<td>not timed</td>
+<td>2</td>
+</tr>
+<tr>
+<td>gothinkster/node-express-realworld-example-app</td>
+<td>2,374</td>
+<td>gemini-lite</td>
+<td>$0.026</td>
+<td>not timed</td>
+<td>3</td>
+</tr>
+</tbody>
+</table></div>
+<p>Why two configs: the flash3 run for the first repo succeeded, then the Gemini key hit its quota
+(<code>429</code>, provider asked to wait about 24,800 s). The other two were rerun on the lite model so they could finish.
+<strong>The runs are therefore not like-for-like.</strong> Cost and quality must not be compared across models from this table.</p>
+<h2 id="what-came-out">What came out</h2>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>Repo</th>
+<th>component</th>
+<th>endpoint</th>
+<th>data_entity</th>
+<th>business_rule</th>
+<th>external_dependency</th>
+<th>config</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>spring-petclinic</td>
+<td>55</td>
+<td>18</td>
+<td>2</td>
+<td>10</td>
+<td>50</td>
+<td>688</td>
+</tr>
+<tr>
+<td>django-realworld</td>
+<td>41</td>
+<td>0</td>
+<td>3</td>
+<td>0</td>
+<td>6</td>
+<td>0</td>
+</tr>
+<tr>
+<td>node-express-realworld</td>
+<td>42</td>
+<td>8</td>
+<td>5</td>
+<td>4</td>
+<td>39</td>
+<td>0</td>
+</tr>
+</tbody>
+</table></div>
+<p>Confidence (derived from evidence): spring-petclinic 801 low / 22 medium; django 45 low / 5 medium;
+node-express 90 low / 8 medium. <strong>No node reached <code>high</code> in any repo.</strong></p>
+<p>All three runs reported <code>coverage_complete: True</code>, <code>unmapped: 0</code>, <code>failed_chunks: 0</code>. Evidence validation rejected 2, 2
+and 1 claims respectively, i.e. the evidence check is actively catching bad claims.</p>
+<h2 id="observations-honest-reading">Observations (honest reading)</h2>
+<ol>
+<li><strong>The pipeline works on unseen real code at very low cost</strong> (cents per small repo). The unit-economics question is
+   still open because these repos are tiny. Cost at 100k to 1M lines is not extrapolable from one chunk each.</li>
+<li><strong>Most nodes are static facts, not model output.</strong> In spring-petclinic, 688 of 823 nodes are config keys from
+   extraction; the model contributed a small number (the log shows 24 for the single chunk). The product's value
+   depends on the model-derived layer (rules, flows), which is the thin part.</li>
+<li><strong>Django under-extraction: root cause found and fixed.</strong> The django repo showed 0 endpoints because the static route
+   extractor had no Django URLconf support (only Spring, Flask/FastAPI, Rails, ASP.NET, Express and a single-line
+   <code>path()</code> regex). It missed <code>url(r'^...')</code> and DRF <code>router.register</code>. Added <code>extract_django</code> (with tests, and
+   docstring/comment example filtering). After the fix the same repo yields 11 routes from static analysis alone,
+   matching the application's API surface. Cross-file <code>include()</code> prefixes (<code>/api/</code>) are still not resolved.
+   0 business rules from the lite model remains unexplained.</li>
+<li><strong>Confidence is low almost everywhere.</strong> Either the evidence bar is strict (good for trust) or the model is not
+   supplying strong evidence (bad for usefulness). Needs a sample review to tell which.</li>
+<li><strong>Everything ran as 1 chunk.</strong> Chunking, cross-reference resolution, parallelism and rate-limit behaviour at scale
+   are untested on real code. Those are where a hosted product will actually break.</li>
+</ol>
+<h2 id="not-done-yet-needed-to-finish-phase-0">Not done yet (needed to finish Phase 0)</h2>
+<ul>
+<li>Hand-score a sample of claims per repo for precision and recall against the source.</li>
+<li>Re-run all three on the same model to get comparable numbers (blocked by the Gemini daily quota; resets in about 7 hours, or supply another provider key).</li>
+<li>Larger repos (50k to 500k lines, several languages) to exercise chunking and measure cost per 1k lines.</li>
+<li>Run <code>verify</code> with real documentation to measure the Verifier.</li>
+<li>Investigate the Django 0-endpoint result.</li>
+</ul>
+<p>Raw project folders are in the session scratchpad and will be lost; re-create them with the commands above.</p><div class="pager"><a href="platform-contract.html">&larr; Platform contract (hosted product)</a><a href="operations-runbook.html">Operations runbook &rarr;</a></div></main>
+<nav class="toc" aria-label="On this page"><b>On this page</b><a class="l2" href="#what-was-run">What was run</a><a class="l2" href="#what-came-out">What came out</a><a class="l2" href="#observations-honest-reading">Observations (honest reading)</a><a class="l2" href="#not-done-yet-needed-to-finish-phase-0">Not done yet (needed to finish Phase 0)</a></nav></div>
+<footer>Generated from <code>docs/phase0-results.md</code> by <code>scripts/build_docs_html.py</code>. Edit the Markdown, not this file.</footer>
+<script>
+(function(){
+ document.querySelectorAll('.cb').forEach(function(b){var btn=document.createElement('button');btn.textContent='Copy';
+  btn.addEventListener('click',function(){var t=b.querySelector('code').innerText;
+   (navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(function(){btn.textContent='Copied';setTimeout(function(){btn.textContent='Copy'},1400)},function(){btn.textContent='Press Ctrl/Cmd+C'});});
+  b.appendChild(btn);});
+ var links=[].slice.call(document.querySelectorAll('nav.toc a'));if(!links.length||!('IntersectionObserver' in window))return;
+ var map={};links.forEach(function(a){map[a.getAttribute('href').slice(1)]=a});
+ var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){links.forEach(function(a){a.classList.remove('on')});var a=map[e.target.id];if(a)a.classList.add('on');}})},{rootMargin:'0px 0px -75% 0px'});
+ document.querySelectorAll('main h2[id],main h3[id]').forEach(function(h){io.observe(h)});
+})();
+</script></body></html>

@@ -441,7 +441,7 @@ route("POST", "/v1/projects/{pid}/source", withProject((r, p) => {
     const f = b.get("file");
     if (!(f instanceof File)) return err(422, "validation_error", "Choose a .zip or .tar.gz file.");
     if (!/\.(zip|tar\.gz|tgz)$/i.test(f.name)) return err(422, "unsupported_media", "Only .zip, .tar.gz and .tgz archives are accepted.");
-    if (f.size > 200 * 1024 * 1024) return err(422, "too_large", "Archive exceeds the 200 MB limit.");
+    if (f.size > 100 * 1024 * 1024) return err(422, "too_large", "Archive exceeds the 100 MB limit.");
     p.source_kind = "upload"; p.source_ref = f.name;
   } else {
     const url = text((b as { git_url?: string } | undefined)?.git_url);

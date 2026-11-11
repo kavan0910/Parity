@@ -1,0 +1,114 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Incident response outline | migration-agent docs</title><style>
+:root{--bg:#fbfaf7;--panel:#fff;--ink:#1c1b22;--mute:#6b6a76;--line:#e7e4dc;--accent:#5b4bdb;--accent2:#e0568b;--tint:#efecff;--code:#15141c;--codefg:#e9e7f5}
+@media (prefers-color-scheme:dark){:root{--bg:#0f0e14;--panel:#17161f;--ink:#ecebf3;--mute:#9a98a8;--line:#2a2836;--accent:#9b8cff;--accent2:#ff7fac;--tint:#221f3a}}
+*{box-sizing:border-box}html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.7 -apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,sans-serif}
+a{color:var(--accent)}
+.top{padding:44px 24px 34px;text-align:center;border-bottom:1px solid var(--line);background:radial-gradient(900px 300px at 50% -80px,var(--tint),transparent),var(--bg)}
+.top .tag{display:inline-block;padding:3px 12px;border:1px solid var(--line);border-radius:99px;font-size:13px;color:var(--mute);background:var(--panel)}
+.top h1{font-size:clamp(28px,5vw,44px);line-height:1.15;margin:14px auto 0;max-width:900px;letter-spacing:-.02em;background:linear-gradient(90deg,var(--accent),var(--accent2));-webkit-background-clip:text;background-clip:text;color:transparent}
+.layout{display:grid;grid-template-columns:250px minmax(0,1fr) 210px;gap:36px;max-width:1360px;margin:0 auto;padding:32px 24px 90px}
+nav.docs,nav.toc{position:sticky;top:20px;align-self:start;max-height:calc(100vh - 40px);overflow:auto;font-size:14px}
+nav b{display:block;margin:14px 0 6px;color:var(--mute);font-weight:600;text-transform:uppercase;letter-spacing:.08em;font-size:11.5px}
+nav b:first-child{margin-top:0}
+nav a{display:block;padding:4px 10px;border-left:2px solid var(--line);color:var(--mute);text-decoration:none}
+nav a:hover,nav a.on{color:var(--accent);border-color:var(--accent)}
+nav a.on{font-weight:600}
+nav.toc a.l3{padding-left:22px;font-size:13px}
+main{min-width:0}main h2{font-size:27px;margin:44px 0 12px;letter-spacing:-.01em;padding-top:6px;border-top:1px solid var(--line)}
+main h1{display:none}main h3{font-size:20px;margin:30px 0 8px}main h4{font-size:16px;margin:22px 0 6px}
+main p,main li{max-width:78ch}p{margin:0 0 14px}ul,ol{padding-left:24px;margin:0 0 16px}li{margin:4px 0}
+code{font:13.5px ui-monospace,SFMono-Regular,Menlo,monospace;background:var(--tint);padding:2px 6px;border-radius:6px}
+.cb{position:relative;margin:14px 0 20px}
+pre{background:var(--code);color:var(--codefg);padding:16px 18px;border-radius:14px;overflow:auto;margin:0;line-height:1.55;box-shadow:0 8px 24px -14px #0008}
+pre code{background:none;padding:0;color:inherit;font-size:13px}
+.cb button{position:absolute;top:8px;right:8px;font:12px inherit;padding:3px 9px;border-radius:8px;border:1px solid #fff3;background:#ffffff14;color:#e9e7f5;cursor:pointer}
+.cb button:hover{background:#ffffff2a}
+.cb .lbl{position:absolute;top:8px;left:14px;font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:#b9b5d6}
+.cb.mm pre{padding-top:34px}
+.tw{overflow-x:auto;margin:14px 0 22px;border:1px solid var(--line);border-radius:14px;background:var(--panel)}
+table{border-collapse:collapse;width:100%;font-size:14.5px}th,td{text-align:left;padding:9px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--mute);background:var(--tint)}tr:last-child td{border-bottom:0}
+blockquote{margin:16px 0;padding:10px 18px;border-left:4px solid var(--accent);background:var(--tint);border-radius:0 12px 12px 0}blockquote p{margin:6px 0}
+hr{border:0;border-top:1px solid var(--line);margin:30px 0}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;margin:18px 0}
+.card{display:block;padding:16px 18px;border:1px solid var(--line);border-radius:14px;background:var(--panel);text-decoration:none;color:var(--ink)}
+.card:hover{border-color:var(--accent)}.card b{display:block;color:var(--accent);margin-bottom:2px}.card span{color:var(--mute);font-size:14px}
+.pager{display:flex;justify-content:space-between;gap:12px;margin-top:56px;padding-top:20px;border-top:1px solid var(--line);font-size:14px}
+footer{text-align:center;color:var(--mute);font-size:13px;padding:28px;border-top:1px solid var(--line)}
+details.mob{display:none;margin:0 24px 16px;border:1px solid var(--line);border-radius:12px;background:var(--panel);padding:8px 14px}
+@media(max-width:1100px){.layout{grid-template-columns:230px minmax(0,1fr)}nav.toc{display:none}}
+@media(max-width:820px){.layout{grid-template-columns:1fr;padding-top:16px}nav.docs{display:none}details.mob{display:block}}
+</style></head><body>
+<header class="top"><span class="tag">migration-agent docs</span><h1>Incident response outline</h1></header>
+<details class="mob"><summary>All docs</summary><a href="../index.html">Overview</a><b>Start here</b><a href="../README.html">migration-agent documentation</a><a href="../user-guide.html">User guide</a><a href="../architecture.html">Architecture</a><a href="../api-reference.html">API reference</a><a href="../deployment.html">Deployment guide</a><a href="../threat-model.html">Threat model (D-06)</a><b>Product and platform</b><a href="../product-architecture.html">Product architecture and roadmap: from CLI engine to hosted service</a><a href="../platform-contract.html">Platform contract (hosted product)</a><a href="../phase0-results.html">Phase 0 interim results (2026-11-09)</a><a href="../operations-runbook.html">Operations runbook</a><b>Security</b><a href="security-overview-draft.html">Security overview (customer-facing DRAFT)</a><a href="threat-model-hosted.html">Threat model update: hosted product</a><a href="data-handling-and-retention.html">Data handling and retention policy (draft)</a><a href="pentest-2026-11-09.html">Hostile security review, 2026-11-09: findings and status</a><a class="on" href="incident-response.html">Incident response outline</a><a href="secure-sdlc.html">Secure development lifecycle</a><a href="soc2-readiness.html">SOC 2 readiness checklist</a><a href="subprocessors.html">Subprocessor list (TEMPLATE)</a><b>Hand-built guides</b><a href="../../developer-handbook.html">Developer handbook</a><a href="../../user-guide-app.html">Product user guide</a><a href="../../tutorial.html">CLI tutorial</a></details>
+<div class="layout"><nav class="docs" aria-label="Documentation"><a href="../index.html">Overview</a><b>Start here</b><a href="../README.html">migration-agent documentation</a><a href="../user-guide.html">User guide</a><a href="../architecture.html">Architecture</a><a href="../api-reference.html">API reference</a><a href="../deployment.html">Deployment guide</a><a href="../threat-model.html">Threat model (D-06)</a><b>Product and platform</b><a href="../product-architecture.html">Product architecture and roadmap: from CLI engine to hosted service</a><a href="../platform-contract.html">Platform contract (hosted product)</a><a href="../phase0-results.html">Phase 0 interim results (2026-11-09)</a><a href="../operations-runbook.html">Operations runbook</a><b>Security</b><a href="security-overview-draft.html">Security overview (customer-facing DRAFT)</a><a href="threat-model-hosted.html">Threat model update: hosted product</a><a href="data-handling-and-retention.html">Data handling and retention policy (draft)</a><a href="pentest-2026-11-09.html">Hostile security review, 2026-11-09: findings and status</a><a class="on" href="incident-response.html">Incident response outline</a><a href="secure-sdlc.html">Secure development lifecycle</a><a href="soc2-readiness.html">SOC 2 readiness checklist</a><a href="subprocessors.html">Subprocessor list (TEMPLATE)</a><b>Hand-built guides</b><a href="../../developer-handbook.html">Developer handbook</a><a href="../../user-guide-app.html">Product user guide</a><a href="../../tutorial.html">CLI tutorial</a></nav>
+<main><h1 id="incident-response-outline">Incident response outline</h1>
+<p>Status: outline for a solo operator. <strong>Never exercised.</strong> First tabletop exercise is an open action.</p>
+<h2 id="1-roles">1. Roles</h2>
+<p>Incident lead = the on-call operator (currently one person). <strong>[PLACEHOLDER]</strong> deputy and legal/privacy contact.</p>
+<h2 id="2-severity">2. Severity</h2>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>Sev</th>
+<th>Meaning</th>
+<th>Examples</th>
+<th>Response target</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>Confirmed cross-tenant exposure, source leak, credential compromise</td>
+<td>tenant A reads B's graph; provider key leaked</td>
+<td>Start immediately, contain within hours</td>
+</tr>
+<tr>
+<td>2</td>
+<td>Likely exposure or sustained outage of core path</td>
+<td>worker sandbox escape suspected; DB down</td>
+<td>Same day</td>
+</tr>
+<tr>
+<td>3</td>
+<td>Degraded service, no data exposure</td>
+<td>queue stuck, model provider outage</td>
+<td>Next business day</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="3-phases">3. Phases</h2>
+<ol>
+<li><strong>Detect and triage.</strong> Sources: uptime alerts, error tracking, audit log anomalies, user or researcher report (<code>SECURITY.md</code>). Open an incident note (time-ordered log, UTC). Assign severity.</li>
+<li><strong>Contain.</strong> Typical levers: revoke/rotate keys (runbook "Rotating keys"), disable signups, stop the worker (<code>docker compose stop worker</code>), block a workspace, revoke tokens by rotating <code>JWT_SECRET</code>, cut egress by stopping <code>egress-proxy</code>.</li>
+<li><strong>Preserve evidence.</strong> Snapshot logs, <code>audit_log</code>, proxy access log, DB state before changing things where safe.</li>
+<li><strong>Eradicate and recover.</strong> Patch, rebuild images, restore from backup if integrity is in doubt (runbook "Restore"), verify with smoke test.</li>
+<li><strong>Notify.</strong> Affected customers and, where required, regulators. <strong>[PLACEHOLDER: legal review of notification duties and deadlines; do not assume a deadline here.]</strong> Notify the model provider if their key or data was involved.</li>
+<li><strong>Post-incident review</strong> within 5 business days: timeline, root cause, what worked, actions with owners. Blameless. Add a regression test or control. Update the threat model.</li>
+</ol>
+<h2 id="4-communication">4. Communication</h2>
+<p>Template: what happened, what data, what we did, what customers should do, next update time. Do not speculate; state unknowns. Status page <strong>[NOT YET BUILT]</strong>.</p>
+<h2 id="5-preparedness-checklist">5. Preparedness checklist</h2>
+<ul>
+<li>[ ] On-call contact method defined and tested</li>
+<li>[ ] Secret rotation procedure rehearsed once (runbook)</li>
+<li>[ ] Backup restore tested (runbook)</li>
+<li>[ ] Customer contact list reachable from outside the platform</li>
+<li>[ ] Tabletop exercise held; findings recorded here</li>
+</ul><div class="pager"><a href="pentest-2026-11-09.html">&larr; Hostile security review, 2026-11-09: findings and status</a><a href="secure-sdlc.html">Secure development lifecycle &rarr;</a></div></main>
+<nav class="toc" aria-label="On this page"><b>On this page</b><a class="l2" href="#1-roles">1. Roles</a><a class="l2" href="#2-severity">2. Severity</a><a class="l2" href="#3-phases">3. Phases</a><a class="l2" href="#4-communication">4. Communication</a><a class="l2" href="#5-preparedness-checklist">5. Preparedness checklist</a></nav></div>
+<footer>Generated from <code>docs/security/incident-response.md</code> by <code>scripts/build_docs_html.py</code>. Edit the Markdown, not this file.</footer>
+<script>
+(function(){
+ document.querySelectorAll('.cb').forEach(function(b){var btn=document.createElement('button');btn.textContent='Copy';
+  btn.addEventListener('click',function(){var t=b.querySelector('code').innerText;
+   (navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(function(){btn.textContent='Copied';setTimeout(function(){btn.textContent='Copy'},1400)},function(){btn.textContent='Press Ctrl/Cmd+C'});});
+  b.appendChild(btn);});
+ var links=[].slice.call(document.querySelectorAll('nav.toc a'));if(!links.length||!('IntersectionObserver' in window))return;
+ var map={};links.forEach(function(a){map[a.getAttribute('href').slice(1)]=a});
+ var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){links.forEach(function(a){a.classList.remove('on')});var a=map[e.target.id];if(a)a.classList.add('on');}})},{rootMargin:'0px 0px -75% 0px'});
+ document.querySelectorAll('main h2[id],main h3[id]').forEach(function(h){io.observe(h)});
+})();
+</script></body></html>

@@ -41,7 +41,7 @@ describe("validation and formatting", () => {
   it("checks archive type and size", () => {
     expect(validateArchive({ name: "a.tar.gz", size: 10 })).toBeNull();
     expect(validateArchive({ name: "a.rar", size: 10 })).toMatch(/zip/);
-    expect(validateArchive({ name: "a.zip", size: 300 * 1024 * 1024 })).toMatch(/200 MB/);
+    expect(validateArchive({ name: "a.zip", size: 150 * 1024 * 1024 })).toMatch(/100 MB/);
   });
   it("extracts headings outside code fences and recognises node ids", () => {
     const md = "# T\n## 1. Alpha\n```\n## not a heading\n```\n### Beta\n";

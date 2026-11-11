@@ -1,4 +1,4 @@
-export const MAX_ARCHIVE_BYTES = 200 * 1024 * 1024;
+export const MAX_ARCHIVE_BYTES = 100 * 1024 * 1024;
 const ARCHIVE = /\.(zip|tar\.gz|tgz)$/i;
 
 export function validateGitUrl(raw: string): string | null {
@@ -13,6 +13,6 @@ export function validateGitUrl(raw: string): string | null {
 }
 export function validateArchive(f: { name: string; size: number }): string | null {
   if (!ARCHIVE.test(f.name)) return "Use a .zip, .tar.gz or .tgz archive.";
-  if (f.size > MAX_ARCHIVE_BYTES) return "That archive is larger than the 200 MB limit.";
+  if (f.size > MAX_ARCHIVE_BYTES) return "That archive is larger than the 100 MB limit.";
   return null;
 }
