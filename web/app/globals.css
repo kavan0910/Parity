@@ -158,3 +158,132 @@ dialog::backdrop { background: color-mix(in srgb, var(--ink) 55%, transparent); 
 @media (scripting: none) { .r3d { opacity: 1; transform: none; } }
 @media (max-width: 1023px) { .scene { display: none; } }
 @media (prefers-reduced-motion: reduce) { .tilt { transition: none; } .r3d { opacity: 1; transform: none; } }
+
+/* ---------- section-specific motion (each animation explains its section; all off for reduced motion) ---------- */
+.viz { position: relative; margin-top: 16px; height: 58px; overflow: hidden; border: 1px solid var(--line); border-radius: 10px; background: var(--surface-2); font: 11px var(--font-mono); }
+.viz-map { padding: 10px 12px; display: grid; gap: 8px; }
+.viz-map .row { display: flex; align-items: center; gap: 10px; height: 14px; }
+.viz-map .bar { height: 7px; width: 62%; border-radius: 4px; background: var(--line-strong); }
+.viz-map b { color: var(--accent); font-weight: 500; opacity: 1; white-space: nowrap; }
+.viz-diff { padding: 8px 12px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; align-content: center; }
+.viz-diff span { display: flex; justify-content: space-between; padding: 3px 8px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); color: var(--muted); }
+.viz-diff .bad { border-color: var(--danger); color: var(--danger); }
+.viz-slices { display: flex; align-items: center; gap: 6px; padding: 0 12px; }
+.viz-slices i { flex: 1; height: 26px; border-radius: 6px; background: var(--line-strong); }
+.viz-slices em { margin-left: 8px; font-style: normal; color: var(--muted); white-space: nowrap; }
+.viz-budget { padding: 12px; display: grid; gap: 8px; }
+.viz-budget .track { position: relative; height: 10px; border-radius: 6px; background: var(--line); }
+.viz-budget .fill { position: absolute; inset: 0 auto 0 0; width: 78%; border-radius: 6px; background: var(--accent); }
+.viz-budget .cap { position: absolute; top: -5px; bottom: -5px; left: 80%; width: 2px; background: var(--danger); }
+.viz-budget p { display: flex; justify-content: space-between; color: var(--muted); }
+
+.jrail { position: relative; height: 3px; margin: 22px 4px 14px; border-radius: 3px; background: var(--line); overflow: visible; }
+.jrail .jfill { position: absolute; inset: 0 auto 0 0; width: 100%; border-radius: 3px; background: linear-gradient(90deg, var(--accent), color-mix(in srgb, var(--accent) 40%, transparent)); }
+.jrail .jdot { position: absolute; top: 50%; left: 100%; width: 11px; height: 11px; margin: -5.5px 0 0 -5.5px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 25%, transparent); }
+
+.ver { display: grid; gap: 4px; margin-top: 12px; font: 500 13px var(--font-mono); }
+.ver .line { display: flex; align-items: center; gap: 10px; }
+.ver .old { color: var(--muted); }
+.ver .arrow { color: var(--accent); }
+.ver .new { color: var(--ink); padding: 1px 8px; border-radius: 6px; background: var(--accent-soft); border: 1px solid var(--accent); }
+
+.cmp tbody tr { }
+.cmp td:last-child::before { content: "\2713\00a0"; color: var(--ok); font-weight: 700; }
+
+.orb { position: relative; display: inline-block; width: 46px; height: 46px; margin-bottom: 14px; border-radius: 50%; background: radial-gradient(circle at 32% 28%, color-mix(in srgb, var(--accent) 70%, #fff), var(--accent) 45%, color-mix(in srgb, var(--accent) 40%, #000)); box-shadow: 0 10px 24px -10px var(--accent); }
+.orb::before { content: ""; position: absolute; inset: -9px; border: 1.5px solid color-mix(in srgb, var(--accent) 45%, transparent); border-radius: 50%; transform: rotateX(68deg); }
+.orb::after { content: ""; position: absolute; left: 50%; top: -9px; width: 7px; height: 7px; margin-left: -3.5px; border-radius: 50%; background: var(--ink); }
+
+.draw { fill: none; stroke: var(--accent); stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+.sicon { display: block; margin-bottom: 14px; }
+
+.aurora { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
+.aurora i { position: absolute; width: 60%; aspect-ratio: 1; border-radius: 50%; filter: blur(70px); opacity: .5; }
+.aurora i:nth-child(1) { left: -10%; top: -40%; background: color-mix(in srgb, var(--accent) 70%, transparent); }
+.aurora i:nth-child(2) { right: -12%; bottom: -55%; background: color-mix(in srgb, #7c9cff 60%, transparent); }
+.shine { position: relative; overflow: hidden; }
+.shine::after { content: ""; position: absolute; inset: 0; background: linear-gradient(105deg, transparent 30%, rgba(255,255,255,.55) 50%, transparent 70%); transform: translateX(-120%); }
+.scrollbar-top { position: fixed; inset: 0 0 auto 0; height: 3px; z-index: 60; transform-origin: 0 50%; transform: scaleX(0); background: linear-gradient(90deg, var(--accent), #7c9cff); pointer-events: none; }
+details > p { transform-origin: top; }
+
+@media (prefers-reduced-motion: no-preference) {
+  /* Why: fog resolves into a citation, a mismatch is flagged, slices flip one at a time, spend stops at the cap */
+  .viz-map .bar { filter: blur(4px); width: 78%; }
+  .viz-map b { opacity: 0; transform: translateX(-8px); }
+  .in .viz-map .bar { animation: unfog 1.1s ease forwards; animation-delay: calc(var(--r, 0) * .35s + .4s); }
+  .in .viz-map b { animation: cite 0.7s ease forwards; animation-delay: calc(var(--r, 0) * .35s + .9s); }
+  .in .viz-diff .bad { animation: flag 1.8s ease-in-out .9s infinite; }
+  .in .viz-slices i { animation: flip 6s ease-in-out infinite; animation-delay: calc(var(--i) * .7s); }
+  .viz-budget .fill { width: 0; }
+  .in .viz-budget .fill { animation: fillcap 3.4s cubic-bezier(.3,.7,.2,1) .5s forwards; }
+  .in .viz-budget .cap { animation: capblink 1.4s ease-in-out 3.6s infinite; }
+
+  /* How: a rail fills across the five steps and each step lights up in turn */
+  .jrail .jfill { width: 0; }
+  .in .jrail .jfill { animation: railfill 3.4s cubic-bezier(.4,.1,.2,1) .4s forwards; }
+  .jrail .jdot { left: 0; }
+  .in .jrail .jdot { animation: raildot 3.4s cubic-bezier(.4,.1,.2,1) .4s forwards, dotpulse 1.6s ease-in-out 3.8s infinite; }
+  .jstep { opacity: .35; }
+  .in .jstep { animation: stepon .6s ease forwards; animation-delay: calc(var(--i) * .68s + .5s); }
+
+  /* Stacks: the old version is struck out, the new one slides in */
+  .ver .new { opacity: 0; transform: translateX(-10px); }
+  .in .ver .old { animation: oldout .8s ease forwards; animation-delay: calc(var(--p, 0) * .25s + .5s); }
+  .in .ver .new { animation: newin .7s cubic-bezier(.2,.8,.2,1) forwards; animation-delay: calc(var(--p, 0) * .25s + 1.1s); }
+
+  /* Results: comparison rows arrive in order */
+  .cmp tbody tr { opacity: 0; transform: translateY(10px); }
+  .in .cmp tbody tr { animation: rowin .55s ease forwards; animation-delay: calc(var(--i) * .13s + .2s); }
+
+  /* Step 1 detail: cited lines highlight one by one, the mismatch pulses */
+  .cite-line { background: transparent; }
+  .in .cite-line { animation: citeon .6s ease forwards; animation-delay: calc(var(--i) * .2s + .5s); }
+  .in .sev { animation: sevpulse 2s ease-in-out .8s infinite; }
+  .qL { opacity: 0; transform: translateX(-18px); }
+  .qR { opacity: 0; transform: translateX(18px); }
+  .in .qL, .in .qR { animation: qin .7s cubic-bezier(.2,.8,.2,1) forwards; animation-delay: calc(var(--i) * .25s + .3s); }
+
+  /* Security: icons draw themselves */
+  .draw { stroke-dasharray: 60; stroke-dashoffset: 60; }
+  .in .draw { animation: draw 1.3s ease forwards; animation-delay: calc(var(--i, 0) * .09s + .2s); }
+
+  /* Who: the orbiting marker */
+  .orb::after { transform-origin: 3.5px 32px; animation: orbitdot 5s linear infinite; }
+  .orb { animation: bob 6s ease-in-out infinite; }
+
+  /* Early access: connectors draw between the steps */
+  .astep::after { content: ""; position: absolute; top: 2.15rem; right: -1rem; width: 1rem; height: 2px; background: var(--accent); transform: scaleX(0); transform-origin: left; }
+  .astep:last-child::after { display: none; }
+  .in .astep::after { animation: linegrow .5s ease forwards; animation-delay: calc(var(--i) * .3s + .7s); }
+  .in .anum { animation: numpulse 2.4s ease-in-out infinite; animation-delay: calc(var(--i) * .3s + 1s); }
+
+  /* Closing call to action */
+  .aurora i:nth-child(1) { animation: drift1 14s ease-in-out infinite; }
+  .aurora i:nth-child(2) { animation: drift2 17s ease-in-out infinite; }
+  .shine::after { animation: shine 3.6s ease-in-out infinite; }
+  details[open] > p { animation: faqin .35s ease; }
+}
+@keyframes unfog { to { filter: blur(0); width: 34%; } }
+@keyframes cite { to { opacity: 1; transform: none; } }
+@keyframes flag { 0%, 100% { box-shadow: none; background: var(--surface); } 50% { box-shadow: 0 0 0 3px color-mix(in srgb, var(--danger) 30%, transparent); background: var(--danger-soft); } }
+@keyframes flip { 0%, 6% { background: var(--line-strong); } 14%, 34% { background: var(--accent); box-shadow: 0 0 14px -2px var(--accent); } 44%, 100% { background: var(--line-strong); box-shadow: none; } }
+@keyframes fillcap { 0% { width: 0; } 100% { width: 80%; background: var(--danger); } }
+@keyframes capblink { 0%, 100% { opacity: 1; } 50% { opacity: .35; } }
+@keyframes railfill { to { width: 100%; } }
+@keyframes raildot { to { left: 100%; } }
+@keyframes dotpulse { 0%, 100% { box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 25%, transparent); } 50% { box-shadow: 0 0 0 9px color-mix(in srgb, var(--accent) 5%, transparent); } }
+@keyframes stepon { from { opacity: .35; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+@keyframes oldout { to { opacity: .5; text-decoration: line-through; } }
+@keyframes newin { to { opacity: 1; transform: none; } }
+@keyframes rowin { to { opacity: 1; transform: none; } }
+@keyframes citeon { to { background: var(--accent-soft); } }
+@keyframes sevpulse { 0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--danger) 45%, transparent); } 50% { box-shadow: 0 0 0 6px transparent; } }
+@keyframes qin { to { opacity: 1; transform: none; } }
+@keyframes draw { to { stroke-dashoffset: 0; } }
+@keyframes orbitdot { to { transform: rotate(360deg); } }
+@keyframes linegrow { to { transform: scaleX(1); } }
+@keyframes numpulse { 0%, 100% { text-shadow: none; } 50% { text-shadow: 0 0 14px var(--accent); } }
+@keyframes drift1 { 0%, 100% { transform: translate(0, 0) scale(1); } 50% { transform: translate(14%, 18%) scale(1.15); } }
+@keyframes drift2 { 0%, 100% { transform: translate(0, 0) scale(1); } 50% { transform: translate(-16%, -14%) scale(1.1); } }
+@keyframes shine { 0%, 55% { transform: translateX(-120%); } 85%, 100% { transform: translateX(120%); } }
+@keyframes faqin { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }

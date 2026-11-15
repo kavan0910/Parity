@@ -6,6 +6,9 @@ import { MigrationJourney, TARGETS } from "@/components/MigrationJourney";
 import { HeroScene } from "@/components/HeroScene";
 import { Reveal3D } from "@/components/Reveal3D";
 import { Tilt3D } from "@/components/Tilt3D";
+import { CountUp } from "@/components/CountUp";
+import { ScrollProgress } from "@/components/ScrollProgress";
+import { PainViz, SecurityIcon, type IconKind } from "@/components/SectionArt";
 import { CONTACT_EMAIL, FAQ, HOME_DESCRIPTION, HOME_TITLE, PATHS, jsonLd } from "@/lib/site";
 
 export const metadata: Metadata = {
@@ -31,20 +34,20 @@ const PROOF = [
 ] as const;
 
 const PAINS = [
-  ["Nobody knows what the old app really does", "Parity maps it first. Every business rule it finds cites a file and a line, and is checked against your own docs."],
-  ["A rewrite changes behaviour and nobody notices", "The same recorded cases run against the old and the new app, and every difference is listed before you cut over."],
-  ["A big-bang cut-over is a gamble", "Move one approved slice at a time, with a router and a rollback for every step."],
-  ["The bill is unknown until the project is over", "Each run is estimated first and capped with a hard budget that stops it gracefully."],
+  ["Nobody knows what the old app really does", "Parity maps it first. Every business rule it finds cites a file and a line, and is checked against your own docs.", "map"],
+  ["A rewrite changes behaviour and nobody notices", "The same recorded cases run against the old and the new app, and every difference is listed before you cut over.", "diff"],
+  ["A big-bang cut-over is a gamble", "Move one approved slice at a time, with a router and a rollback for every step.", "slices"],
+  ["The bill is unknown until the project is over", "Each run is estimated first and capped with a hard budget that stops it gracefully.", "budget"],
 ] as const;
 
-const SECURITY = [
-  ["Your repository is never touched", "Source is copied into a project. The migrated app is written to its own folder."],
-  ["Analysis never runs your code", "The model reads a path-jailed, read-only copy. It has no shell and no network tool."],
-  ["Generated code runs only in a sandbox", "Locked-down Docker containers: tests with no network, builds only through the mirror you allow."],
-  ["Secrets are redacted at ingest", "Credential files are withheld and secret patterns removed before anything reaches a model."],
-  ["You approve every gate", "The map, each slice and the cut-over need a person's sign-off, and an approval goes stale if the evidence changes."],
-  ["Spend is capped", "A hard budget stops a run gracefully, and re-running unchanged code makes no model calls."],
-] as const;
+const SECURITY: readonly (readonly [string, string, IconKind])[] = [
+  ["Your repository is never touched", "Source is copied into a project. The migrated app is written to its own folder.", "repo"],
+  ["Analysis never runs your code", "The model reads a path-jailed, read-only copy. It has no shell and no network tool.", "noexec"],
+  ["Generated code runs only in a sandbox", "Locked-down Docker containers: tests with no network, builds only through the mirror you allow.", "sandbox"],
+  ["Secrets are redacted at ingest", "Credential files are withheld and secret patterns removed before anything reaches a model.", "lock"],
+  ["You approve every gate", "The map, each slice and the cut-over need a person's sign-off, and an approval goes stale if the evidence changes.", "approve"],
+  ["Spend is capped", "A hard budget stops a run gracefully, and re-running unchanged code makes no model calls.", "gauge"],
+];
 
 const WHO = [
   ["Platform and engineering leads", "Your Java 8, Django 3 or aging Node service is a risk, and a rewrite you cannot verify is a bigger one."],
@@ -52,14 +55,14 @@ const WHO = [
   ["Teams who inherited an app", "Nobody who wrote it is left. Get a cited map of what it does before anyone touches it."],
 ] as const;
 
-const RESULTS = [
-  ["24 / 24", "recorded cases matched between the old and the new Express app in the sandbox trial; a deliberately changed status code was caught."],
-  ["90", "fuzz variants compared between old and new in that trial, with no difference on identical code."],
-  ["100%", "of cited evidence is checked against a real file and line range before it can steer the migration."],
-  ["$0.077", "to map Spring PetClinic (4,297 lines) in 51 seconds, with a hard budget that stops a run gracefully."],
-  ["5", "migration paths covered: Java 8 to 21, Spring Boot 2 to 3, Django 3 to 5, Express to Fastify, JavaScript to Go."],
-  ["0", "changes to your repository. Your source is copied; the new app is written to its own folder."],
-] as const;
+const RESULTS: readonly { to: number; pre?: string; post?: string; dec?: number; text: string }[] = [
+  { to: 24, post: " / 24", text: "recorded cases matched between the old and the new Express app in the sandbox trial; a deliberately changed status code was caught." },
+  { to: 90, text: "fuzz variants compared between old and new in that trial, with no difference on identical code." },
+  { to: 100, post: "%", text: "of cited evidence is checked against a real file and line range before it can steer the migration." },
+  { to: 0.077, pre: "$", dec: 3, text: "to map Spring PetClinic (4,297 lines) in 51 seconds, with a hard budget that stops a run gracefully." },
+  { to: 5, text: "migration paths covered: Java 8 to 21, Spring Boot 2 to 3, Django 3 to 5, Express to Fastify, JavaScript to Go." },
+  { to: 0, text: "changes to your repository. Your source is copied; the new app is written to its own folder." },
+];
 
 const COMPARE = [
   ["Do we know what the app does?", "Reverse-engineered from memory and stale docs.", "A map where every claim cites a file and line, checked against your own docs."],
@@ -69,11 +72,19 @@ const COMPARE = [
   ["Who decides?", "Whoever merges last.", "You approve the map, every slice and the cut-over."],
 ] as const;
 
+const VERS: Record<string, readonly (readonly [string, string])[]> = {
+  "java-spring": [["Java 8", "Java 21"], ["Spring Boot 2", "Spring Boot 3"]],
+  django: [["Django 3", "Django 5"], ["Python 3.8", "Python 3.12"]],
+  "express-fastify": [["Express", "Fastify"]],
+  "js-go": [["JavaScript", "Go"]],
+};
+
 const NAV = [["#why", "Why Parity"], ["#how", "How it works"], ["#stacks", "Stacks"], ["#results", "Results"], ["#security", "Security"], ["#faq", "FAQ"]] as const;
 
 export default function Landing() {
   return (
     <div className="min-h-dvh">
+      <ScrollProgress />
       {jsonLd().map((d, i) => (
         <script key={i} type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(d).replace(/</g, "\\u003c") }} />
       ))}
@@ -160,13 +171,14 @@ export default function Landing() {
             <h2 id="why-h" className="display max-w-3xl text-4xl sm:text-5xl">Legacy migrations fail quietly. Parity makes every difference visible.</h2>
           </Reveal3D>
           <div className="mt-10 grid gap-4 md:grid-cols-2">
-            {PAINS.map(([p, a], i) => (
+            {PAINS.map(([p, a, kind], i) => (
               <Reveal3D key={p} delay={i * 0.08}>
                 <article className="card3d h-full rounded-2xl border border-line bg-surface p-6">
                   <p className="font-mono text-xs uppercase text-danger">The problem</p>
                   <h3 className="mt-2 text-lg font-semibold">{p}</h3>
                   <p className="mt-3 font-mono text-xs uppercase text-accent">With Parity</p>
                   <p className="mt-1 text-sm text-muted">{a}</p>
+                  <PainViz kind={kind} />
                 </article>
               </Reveal3D>
             ))}
@@ -180,7 +192,7 @@ export default function Landing() {
               <h2 id="how-h" className="display max-w-3xl text-4xl sm:text-5xl">Five steps from the app you have to the app you want.</h2>
               <p className="mt-4 max-w-2xl text-muted">You cannot migrate safely what you cannot describe, so step 1 maps the legacy app. Everything after it is built on that approved map.</p>
             </Reveal3D>
-            <Reveal3D className="mt-10" delay={0.1}><MigrationJourney level={3} /></Reveal3D>
+            <Reveal3D className="mt-10" delay={0.1}><MigrationJourney level={3} animate /></Reveal3D>
             <div className="mt-6 grid gap-4 md:grid-cols-2">
               <Reveal3D>
                 <div className="card3d h-full rounded-2xl border border-line bg-surface p-6">
@@ -210,6 +222,11 @@ export default function Landing() {
                 <article id={p.id} className="card3d h-full rounded-2xl border border-line-strong bg-surface p-6">
                   <h3 className="display text-2xl">{p.name}</h3>
                   <p className="mt-2 text-sm text-muted">{p.text}</p>
+                  <div className="ver" aria-hidden="true">
+                    {(VERS[p.id] ?? []).map(([a, b], n) => (
+                      <p key={a} className="line" style={{ "--p": n } as React.CSSProperties}><span className="old">{a}</span><span className="arrow">{"→"}</span><span className="new">{b}</span></p>
+                    ))}
+                  </div>
                 </article>
               </Reveal3D>
             ))}
@@ -225,11 +242,11 @@ export default function Landing() {
               <p className="mt-4 max-w-2xl text-muted">Migrations fail quietly: behaviour drifts and nobody notices until production. Here is what changes, with the numbers we have actually measured.</p>
             </Reveal3D>
             <dl className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {RESULTS.map(([v, l], i) => (
-                <Reveal3D key={l} delay={(i % 3) * 0.08}>
+              {RESULTS.map((r, i) => (
+                <Reveal3D key={r.text} delay={(i % 3) * 0.08}>
                   <div className="card3d h-full rounded-2xl border border-line bg-surface p-6">
-                    <dt className="display text-5xl tnum text-accent">{v}</dt>
-                    <dd className="mt-2 text-sm text-muted">{l}</dd>
+                    <dt className="display text-5xl tnum text-accent"><CountUp to={r.to} pre={r.pre} post={r.post} decimals={r.dec} /></dt>
+                    <dd className="mt-2 text-sm text-muted">{r.text}</dd>
                   </div>
                 </Reveal3D>
               ))}
@@ -239,12 +256,12 @@ export default function Landing() {
             <Reveal3D className="mt-14">
               <h3 className="display text-3xl">Rewriting by hand versus migrating with Parity</h3>
               <div className="mt-5 overflow-x-auto rounded-2xl border border-line bg-surface">
-                <table className="w-full min-w-[640px] text-left text-sm">
+                <table className="cmp w-full min-w-[640px] text-left text-sm">
                   <caption className="sr-only">Manual legacy rewrite compared with Parity</caption>
                   <thead className="border-b border-line bg-surface-2 font-mono text-[11px] uppercase text-muted"><tr><th scope="col" className="px-4 py-3 font-normal">Question</th><th scope="col" className="px-4 py-3 font-normal">Manual rewrite</th><th scope="col" className="px-4 py-3 font-normal text-accent">Parity</th></tr></thead>
                   <tbody>
-                    {COMPARE.map(([q, a, b]) => (
-                      <tr key={q} className="border-b border-line last:border-0"><th scope="row" className="px-4 py-3 font-medium">{q}</th><td className="px-4 py-3 text-muted">{a}</td><td className="px-4 py-3">{b}</td></tr>
+                    {COMPARE.map(([q, a, b], i) => (
+                      <tr key={q} style={{ "--i": i } as React.CSSProperties} className="border-b border-line last:border-0"><th scope="row" className="px-4 py-3 font-medium">{q}</th><td className="px-4 py-3 text-muted">{a}</td><td className="px-4 py-3">{b}</td></tr>
                     ))}
                   </tbody>
                 </table>
@@ -276,7 +293,7 @@ export default function Landing() {
                 <div className="quote ml-6 mt-4 overflow-hidden sm:ml-12">
                   <div className="px-4 py-3 font-mono text-[12.5px] leading-6">
                     {CODE.map(([n, line]) => (
-                      <div key={n} className={`flex gap-4 ${n >= 18 ? "bg-accent-soft -mx-4 px-4" : "text-muted"}`}>
+                      <div key={n} style={{ "--i": n - 18 } as React.CSSProperties} className={`flex gap-4 ${n >= 18 ? "cite-line bg-accent-soft -mx-4 px-4" : "text-muted"}`}>
                         <span className="w-5 select-none text-right opacity-60">{n}</span>
                         <code className="whitespace-pre">{line}</code>
                       </div>
@@ -289,9 +306,9 @@ export default function Landing() {
             <Reveal3D delay={0.1}>
               <div className="card3d space-y-3 rounded-2xl border border-line-strong bg-surface p-5">
                 <p className="eyebrow">Catching a wrong requirement before it is migrated</p>
-                <div className="flex items-center justify-between"><strong>Owner search page size</strong><span className="rounded bg-danger-soft px-2 py-0.5 font-mono text-[11px] font-semibold uppercase text-danger">high</span></div>
-                <blockquote className="quote px-4 py-2 text-sm"><span className="eyebrow block">docs/user-guide.md:41</span>Search results for owners are displayed 10 per page.</blockquote>
-                <blockquote className="quote px-4 py-2"><span className="eyebrow block">OwnerController.java:122</span><code className="font-mono text-[12.5px]">int pageSize = 5;</code></blockquote>
+                <div className="flex items-center justify-between"><strong>Owner search page size</strong><span className="sev rounded bg-danger-soft px-2 py-0.5 font-mono text-[11px] font-semibold uppercase text-danger">high</span></div>
+                <blockquote style={{ "--i": 0 } as React.CSSProperties} className="qL quote px-4 py-2 text-sm"><span className="eyebrow block">docs/user-guide.md:41</span>Search results for owners are displayed 10 per page.</blockquote>
+                <blockquote style={{ "--i": 1 } as React.CSSProperties} className="qR quote px-4 py-2"><span className="eyebrow block">OwnerController.java:122</span><code className="font-mono text-[12.5px]">int pageSize = 5;</code></blockquote>
                 <p className="text-sm text-muted">A Verifier that never sees your code compares the map with your own docs. You decide which is right, and the migration then preserves the right behaviour.</p>
               </div>
             </Reveal3D>
@@ -305,9 +322,10 @@ export default function Landing() {
               <h2 id="security-h" className="display max-w-3xl text-4xl sm:text-5xl">Built for teams that cannot afford a surprise.</h2>
             </Reveal3D>
             <div className="mt-10 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {SECURITY.map(([t, d], i) => (
+              {SECURITY.map(([t, d, icon], i) => (
                 <Reveal3D key={t} delay={(i % 3) * 0.08}>
                   <article className="card3d h-full rounded-2xl border border-line bg-surface p-6">
+                    <SecurityIcon kind={icon} i={i} />
                     <h3 className="font-semibold">{t}</h3>
                     <p className="mt-2 text-sm text-muted">{d}</p>
                   </article>
@@ -332,6 +350,7 @@ export default function Landing() {
             {WHO.map(([t, d], i) => (
               <Reveal3D key={t} delay={i * 0.08}>
                 <article className="card3d h-full rounded-2xl border border-line bg-surface p-6">
+                  <span className="orb" aria-hidden="true" />
                   <h3 className="display text-2xl">{t}</h3>
                   <p className="mt-2 text-sm text-muted">{d}</p>
                 </article>
@@ -347,23 +366,19 @@ export default function Landing() {
               <h2 id="access-h" className="display max-w-3xl text-4xl sm:text-5xl">Start in minutes. See your legacy app mapped today.</h2>
               <p className="mt-4 max-w-2xl text-muted">Parity is in early access. Billing is not enabled yet, so workspaces run on the internal plan with a hard spending cap. The first step runs here; approval and migration run in the command-line tool.</p>
             </Reveal3D>
-            <ol className="mt-10 grid gap-4 md:grid-cols-3">
+            <Reveal3D className="mt-10"><ol className="grid gap-4 md:grid-cols-3">
               {[
                 ["1", "Create a workspace", "Sign up and connect your legacy app: a public git URL or an archive."],
                 ["2", "Get the map", "See the estimated cost first, then read the cited map and review the findings."],
                 ["3", "Approve and migrate", "Continue in the command-line tool: approve, migrate slice by slice, prove, cut over."],
               ].map(([n, t, d], i) => (
-                <li key={n}>
-                  <Reveal3D delay={i * 0.08}>
-                    <div className="card3d h-full rounded-2xl border border-line bg-surface p-6">
-                      <span className="font-mono text-sm text-accent">{n}</span>
-                      <h3 className="display mt-4 text-2xl">{t}</h3>
-                      <p className="mt-2 text-sm text-muted">{d}</p>
-                    </div>
-                  </Reveal3D>
+                <li key={n} className="astep card3d relative rounded-2xl border border-line bg-surface p-6" style={{ "--i": i } as React.CSSProperties}>
+                  <span className="anum font-mono text-sm text-accent">{n}</span>
+                  <h3 className="display mt-4 text-2xl">{t}</h3>
+                  <p className="mt-2 text-sm text-muted">{d}</p>
                 </li>
               ))}
-            </ol>
+            </ol></Reveal3D>
             <Reveal3D className="mt-8 flex flex-wrap items-center gap-3">
               <LinkButton href="/signup" variant="primary" className="min-h-12 px-8 text-base">Get early access</LinkButton>
               {CONTACT_EMAIL && <a href={`mailto:${CONTACT_EMAIL}`} className="inline-flex min-h-12 items-center rounded-lg border border-line-strong px-6 text-base hover:bg-surface">Talk to us</a>}
@@ -387,10 +402,11 @@ export default function Landing() {
         </section>
 
         <section className="px-4 pb-24 sm:px-6">
-          <div className="mx-auto max-w-6xl rounded-3xl bg-ink px-6 py-14 text-center text-bg sm:px-14">
-            <h2 className="display text-4xl sm:text-6xl">Move the app you have to the stack you want.</h2>
-            <p className="mx-auto mt-3 max-w-lg opacity-75">Create a workspace, connect your legacy app and get the cited map. Early access is free while billing is not enabled.</p>
-            <LinkButton href="/signup" variant="primary" className="mt-8 min-h-12 px-8 text-base">Get early access</LinkButton>
+          <div className="relative mx-auto max-w-6xl overflow-hidden rounded-3xl bg-ink px-6 py-14 text-center text-bg sm:px-14">
+            <div className="aurora" aria-hidden="true"><i /><i /></div>
+            <h2 className="display relative text-4xl sm:text-6xl">Move the app you have to the stack you want.</h2>
+            <p className="relative mx-auto mt-3 max-w-lg opacity-75">Create a workspace, connect your legacy app and get the cited map. Early access is free while billing is not enabled.</p>
+            <LinkButton href="/signup" variant="primary" className="shine relative mt-8 min-h-12 px-8 text-base">Get early access</LinkButton>
           </div>
         </section>
       </main>

@@ -17,7 +17,7 @@ const STEPS = [
   { n: "05", t: "Cut over", d: "Move traffic slice by slice, with a plan you approve.", where: "cli" },
 ] as const;
 
-export function MigrationJourney({ done = 0, compact = false, className, level = 2 }: { done?: number; compact?: boolean; className?: string; level?: 2 | 3 }) {
+export function MigrationJourney({ done = 0, compact = false, className, level = 2, animate = false }: { done?: number; compact?: boolean; className?: string; level?: 2 | 3; animate?: boolean }) {
   const H = (level === 2 ? "h2" : "h3") as "h2" | "h3";
   const S = (level === 2 ? "h3" : "h4") as "h3" | "h4";
   return (
@@ -33,11 +33,12 @@ export function MigrationJourney({ done = 0, compact = false, className, level =
           ))}
         </ul>
       </div>
-      <ol className={cx("mt-5 grid gap-px overflow-hidden rounded-xl border border-line bg-line", compact ? "sm:grid-cols-5" : "md:grid-cols-5")}>
+      {animate && <div className="jrail" aria-hidden="true"><span className="jfill" /><span className="jdot" /></div>}
+      <ol className={cx(animate ? "mt-2" : "mt-5", "grid gap-px overflow-hidden rounded-xl border border-line bg-line", compact ? "sm:grid-cols-5" : "md:grid-cols-5")}>
         {STEPS.map((s, i) => {
           const isDone = i < done;
           return (
-            <li key={s.n} className="bg-surface p-4">
+            <li key={s.n} className={cx("bg-surface p-4", animate && "jstep")} style={animate ? ({ "--i": i } as React.CSSProperties) : undefined}>
               <div className="flex items-center justify-between gap-2">
                 <span className="font-mono text-xs text-accent">{s.n}</span>
                 <span className={cx("rounded-full px-2 py-0.5 font-mono text-[10px] uppercase", isDone ? "bg-ok-soft text-ok" : s.where === "app" ? "bg-accent-soft text-accent" : "border border-line-strong text-muted")}>

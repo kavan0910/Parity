@@ -100,6 +100,13 @@ The version lives in `pyproject.toml` only.
   hover lift on cards. All of it is off for `prefers-reduced-motion`, on touch, and without JavaScript.
 - `/privacy` and `/terms` pages (early-access wording drawn from `docs/security/data-handling-and-retention.md`), a branded
   404 and error page, legal pages in the sitemap. Optional `NEXT_PUBLIC_CONTACT_EMAIL` adds "Talk to us" and contact links.
+- Section-specific motion, each tied to what its section says: tiny live demos on the four problems (fog resolving into a
+  file:line citation, a 404/410 mismatch flagged, slices flipping one at a time, a spend bar stopping at its cap); a rail that
+  fills across the five steps as each lights up; old versions struck through while the new ones slide in; counters that
+  count up (server-rendered final values, so crawlers see them); comparison rows arriving in order; cited code lines
+  highlighting one by one with a pulsing mismatch; security icons that draw themselves; orbiting markers for personas;
+  connectors drawn between the early-access steps; an aurora behind the closing call to action; a scroll-progress bar.
+  All of it is off for `prefers-reduced-motion`.
 - `npm audit --omit=dev`: 0 vulnerabilities.
 
 ### Changed: product name and headline
