@@ -4,12 +4,15 @@
 {% macro evs(n) -%}
 {% if n.evidence %}{% for e in n.evidence %}{{ ev(e) }}{{ ", " if not loop.last }}{% endfor %}{% else %}no evidence{% endif %}
 {%- endmacro %}
-{% macro item(n, anchor=true) %}
+{% macro item(n, anchor=true, decision=none) %}
 - {% if anchor %}<a id="{{ n.id }}"></a>{% endif %}**{{ n.id }}** {{ n.name }}{% if n.quirk %} · **preserved quirk**{% endif %}{% if n.suspected_bug %} · **suspected bug**{% endif %}
 
   - Responsibility: {{ n.responsibility or "(not described)" }}
   - Evidence: {{ evs(n) }}
   - Confidence: {{ n.confidence }}
+{% if decision %}
+  - Migration decision: {{ decision }}
+{% endif %}
 {% if n.module %}
   - Module: `{{ n.module }}`
 {% endif %}
@@ -103,13 +106,13 @@ Calls / contracts:
 
 {% if sec.bugs %}> Suspected bugs found while reading the code. Review before migrating.
 
-{% for n in sec.bugs %}{{ item(n, false) }}{% endfor %}{% else %}_No suspected bugs were found._
+{% for n in sec.bugs %}{{ item(n, false, decisions[n.id]) }}{% endfor %}{% else %}_No suspected bugs were found._
 {% endif %}
 ### Preserved quirks
 
 {% if sec.quirks %}Behaviour that looks odd but must be preserved.
 
-{% for n in sec.quirks %}{{ item(n, false) }}{% endfor %}{% else %}_No preserved quirks recorded._
+{% for n in sec.quirks %}{{ item(n, false, decisions[n.id]) }}{% endfor %}{% else %}_No preserved quirks recorded._
 {% endif %}
 
 ## 13. Blind Spots / low confidence

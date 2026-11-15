@@ -7,7 +7,7 @@ from pathlib import Path
 from pydantic import BaseModel, Field
 
 from ..analyze.chunker import LINE_FMT
-from ..analyze.coverage import check_coverage
+from ..analyze.coverage import project_coverage
 from ..analyze.evidence import verify_evidence
 from ..analyze.merger import Checkpoint, collapse_entity_components, dedupe_fact_endpoints, merge_patches
 from ..analyze.module_analyzer import load_prompt, neutralize, render, run_patch_task
@@ -23,6 +23,7 @@ from ..sandbox.tools import ReadOnlyTools
 from . import comments as _comments
 from . import resolutions as _resolutions
 from ._io import atomic_write, now_iso
+from .decisions import effective_decisions
 
 MARGIN = 40
 PROMPT_VERSION = "reanalyze.v1"
@@ -223,9 +224,10 @@ def _write_doc(project: Project, graph: Graph, previous: Graph) -> None:
     if ast_path.exists():
         ast = AstFacts.model_validate_json(ast_path.read_text())
         fallback = [f.path for f in ast.files if f.parse_status == "fallback"]
-    cov = check_coverage(inv, graph)
+    cov = project_coverage(project, inv, graph)
     doc = render_understanding(
-        graph, {"name": meta.name, "source": meta.source, "fallback_parsed_files": fallback}, inv.counts,
+        graph, {"name": meta.name, "source": meta.source, "fallback_parsed_files": fallback,
+                "decisions": effective_decisions(project, graph)}, inv.counts,
         coverage=cov.model_dump(exclude={"unmapped_items"}) | {"unmapped_ids": [i.id for i in cov.unmapped_items]},
         previous=previous)
     atomic_write(project.docs / "understanding.latest.md", doc)

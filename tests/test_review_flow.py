@@ -141,3 +141,18 @@ def test_later_analyze_keeps_review_refinements(proj):
     run_analyze(proj, OfflineLLM(), incremental=True)
     last = load_latest(proj.graph_dir)
     assert {n.id for n in last.nodes} == {n.id for n in refined.nodes} and ids(last) == ids(refined)
+
+
+def test_reanalysis_doc_matches_offline_render_and_invalidates_approval(proj):
+    from migration_agent.review.approval import approval_status, approve, readiness
+    from migration_agent.review.docrender import render_latest
+    add_resolution(proj, "F-0001", "accepted_code")
+    add_resolution(proj, "F-0002", "dismissed")
+    assert readiness(proj).ready
+    approve(proj, "alice")
+    add_comment(proj, proj.comp.id, "please recheck")
+    reanalyze(proj, FakeLLM(_responder(proj.comp)))
+    doc = (proj.docs / "understanding.latest.md").read_text()
+    assert doc == render_latest(proj)  # includes the re-analysis changelog section
+    assert approval_status(proj)["state"] == "stale"
+    assert readiness(proj).ready

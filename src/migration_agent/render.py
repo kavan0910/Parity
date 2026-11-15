@@ -100,6 +100,16 @@ def _sections(g: Graph, meta: dict) -> dict:
     }
 
 
+def _decision_line(d) -> str:
+    """'preserve (default)' | 'preserve' | 'fix - <note>' (note collapsed to one line)."""
+    if not isinstance(d, dict) or d.get("decision") not in ("preserve", "fix"):
+        return "preserve (default)"
+    # one line, and no raw HTML (a note must not be able to forge `<a id=...>` anchors in the doc)
+    note = " ".join(str(d.get("note") or "").split()).replace("<", "‹").replace(">", "›")
+    out = d["decision"] + ("" if d.get("explicit", True) else " (default)")
+    return out + (f" - {note}" if note else "")
+
+
 def _node_fields(a: Node, b: Node) -> list[str]:
     da, db = a.model_dump(), b.model_dump()
     fields = sorted(k for k in db if da[k] != db[k])
@@ -151,7 +161,9 @@ def render_understanding(graph: Graph, meta: dict, inventory_counts: dict, cover
     """Render the 15-section Understanding Document from the graph alone.
 
     meta keys (all optional): name, source, description/purpose, fallback_parsed_files,
-    open_questions, assumptions, change_reasons ({id: reason}).
+    open_questions, assumptions, change_reasons ({id: reason}),
+    decisions ({item_id: {"decision": "preserve"|"fix", "note": str, "explicit": bool}}; quirk/bug nodes
+    without an entry render as "preserve (default)").
     coverage: any flat dict (e.g. mapped/unmapped/excluded counts); lists are rendered as counts.
     """
     meta = meta or {}
@@ -163,10 +175,13 @@ def render_understanding(graph: Graph, meta: dict, inventory_counts: dict, cover
         cov.append((k, ", ".join(map(str, v)) if isinstance(v, (list, tuple, set)) and v and len(v) <= 20
                     else len(v) if isinstance(v, (list, tuple, set)) else v))
     sec = _sections(graph, meta)
+    decisions = {n.id: _decision_line((meta.get("decisions") or {}).get(n.id))
+                 for n in graph.nodes if n.quirk or n.suspected_bug}
     changelog = render_changelog(previous, graph, meta.get("change_reasons")) if previous is not None else ""
     out = _env.get_template("understanding.md.j2").render(
         graph=graph, name=meta.get("name", "(unnamed)"), source=meta.get("source", ""),
         description=meta.get("description", ""), purpose=meta.get("purpose") or meta.get("description", ""),
         toc=[(f"[{i}]", t) for i, t in enumerate(SECTIONS, 1)], counts=sorted(counts.items()),
-        sec=sec, links=sec["links"], inventory_counts=dict(inventory_counts or {}), cov=cov, changelog=changelog)
+        sec=sec, links=sec["links"], inventory_counts=dict(inventory_counts or {}), cov=cov, changelog=changelog,
+        decisions=decisions)
     return _clean(out)

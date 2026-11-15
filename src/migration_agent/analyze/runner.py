@@ -17,10 +17,11 @@ from ..llm.litellm_client import LLMConfig, estimate_cost
 from ..pipeline import Inventory, build_fact_graph
 from ..project import Project
 from ..render import render_understanding
+from ..review.decisions import effective_decisions
 from ..sandbox.tools import ReadOnlyTools
 from ..viz.graph_html import write_graph_html
 from .chunker import plan_chunks, render_chunk_text
-from .coverage import check_coverage
+from .coverage import check_coverage, project_coverage, save_exclusions
 from .crossref import resolve_cross_refs
 from .evidence import verify_evidence
 from .gapfill import fill_gaps
@@ -311,6 +312,7 @@ def run_analyze(proj: Project, llm: LLMClient, *, log: Callable[[str], None] = l
     graph = collapse_entity_components(dedupe_fact_endpoints(graph), reg)
     ver = verify_evidence(graph, proj.code)
     graph = ver.graph
+    excluded: dict[str, str] = {}
     cov = check_coverage(inv, graph)
     if not cov.complete and not stopped:
         gsig = _sig(patches_sig, xp.model_dump_json() if xp else "", inv_sig)
@@ -327,15 +329,21 @@ def run_analyze(proj: Project, llm: LLMClient, *, log: Callable[[str], None] = l
         if gf is not None:
             res = merge_patches(cur + ([xp] if xp else []) + [gf.patch], reg, base=base)
             graph = verify_evidence(collapse_entity_components(dedupe_fact_endpoints(res.graph), reg), proj.code).graph
-            cov = check_coverage(inv, graph, {k: v["reason"] for k, v in gf.classified.items() if v.get("status") == "excluded"})
+            excluded = {k: v["reason"] for k, v in gf.classified.items() if v.get("status") == "excluded"}
+            cov = check_coverage(inv, graph, excluded)
     reg.save()
     save_snapshot(proj.graph_dir, graph)
     from ..graph import load_latest
     graph = load_latest(proj.graph_dir)
+    # persist exactly the exclusions this render uses, so offline re-renders/readiness/approval agree with it
+    save_exclusions(proj, excluded, graph.version)
     prev = None
     meta = {"name": proj.meta().name, "source": proj.meta().source,
-            "fallback_parsed_files": [f.path for f in ast.files if f.parse_status == "fallback"]}
-    doc = render_understanding(graph, meta, inv.counts, coverage=cov.model_dump(exclude={"unmapped_items"}) | {"unmapped_ids": [i.id for i in cov.unmapped_items]}, previous=prev)
+            "fallback_parsed_files": [f.path for f in ast.files if f.parse_status == "fallback"],
+            "decisions": effective_decisions(proj, graph)}
+    from ..review.docrender import coverage_dict
+    cov = project_coverage(proj, inv, graph)  # same computation as the offline re-render and readiness
+    doc = render_understanding(graph, meta, inv.counts, coverage=coverage_dict(cov), previous=prev)
     (proj.docs / "understanding.latest.md").write_text(doc)
     write_graph_html(proj.docs / "graph.html", graph, title=meta["name"])
     failed_chunks = sorted(k for k in failures if k in by_id)
