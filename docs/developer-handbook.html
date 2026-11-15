@@ -6,23 +6,24 @@
 <title>migration-agent Developer Handbook</title>
 <meta name="description" content="Everything a new developer needs to understand migration-agent (engine, backend, web, deploy, security, tests) and be productive on day one.">
 <style>:root{
-  --bg:#f7f4ee;--panel:#fffefb;--ink:#1d1a16;--body:#2b2721;--mute:#6a6254;--line:#e6dfd0;--line2:#d2c8b2;
-  --accent:#4f46c8;--accent2:#c93d78;--tint:#eeeafa;--teal:#0f766e;--tealt:#dff1ec;--warn:#92550a;--warnt:#fbf0d6;
-  --bad:#b3261e;--badt:#fbe5e1;--ok:#17734a;--okt:#dcf0e3;--code:#17141c;--codefg:#ece9f6;
-  --shadow:0 1px 2px rgba(33,29,24,.05),0 10px 28px -16px rgba(33,29,24,.28);
+  color-scheme:light dark;
+  --bg:#f6f2e9;--panel:#fffdf8;--ink:#1f2328;--body:#1f2328;--mute:#5b6270;--line:#e3dccb;--line2:#d2c9b3;
+  --accent:#4338ca;--accent2:#0f766e;--tint:#e7e6fa;--teal:#0f766e;--tealt:#dcefeb;--warn:#8a4b08;--warnt:#fbeed2;
+  --bad:#b42318;--badt:#fbe4e1;--ok:#166534;--okt:#dcf1e1;--code:#16150f;--codefg:#ece8dc;
+  --shadow:0 10px 30px -18px rgba(60,45,10,.35);
   --serif:"Iowan Old Style","Palatino Linotype",Palatino,"Book Antiqua",Georgia,serif;
   --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,"Helvetica Neue",Arial,sans-serif;
   --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
-  --fs:17px;--measure:70ch;
+  --fs:16px;--measure:70ch;
 }
 @media (prefers-color-scheme:dark){:root:not([data-theme=light]){
-  --bg:#13110e;--panel:#1b1814;--ink:#f1ebdf;--body:#ddd6c7;--mute:#a39b8b;--line:#2d2921;--line2:#473f33;
-  --accent:#a99cff;--accent2:#ff86b0;--tint:#262240;--teal:#5eead4;--tealt:#10302b;--warn:#f2b84b;--warnt:#33270b;
-  --bad:#ff8f86;--badt:#3a1a17;--ok:#6ee7a0;--okt:#12301e;--code:#0c0b10;--shadow:0 1px 2px #0006,0 10px 28px -16px #000}}
+  --bg:#12110e;--panel:#1a1913;--ink:#ece8dd;--body:#ece8dd;--mute:#a9a597;--line:#2f2d25;--line2:#403d32;
+  --accent:#a9b4ff;--accent2:#4fd1c0;--tint:#232349;--teal:#4fd1c0;--tealt:#14302c;--warn:#f0b866;--warnt:#33260f;
+  --bad:#ff9b8f;--badt:#3a1914;--ok:#7fd99a;--okt:#14301c;--code:#0b0a07;--shadow:0 10px 30px -18px rgba(0,0,0,.8)}}
 :root[data-theme=dark]{
-  --bg:#13110e;--panel:#1b1814;--ink:#f1ebdf;--body:#ddd6c7;--mute:#a39b8b;--line:#2d2921;--line2:#473f33;
-  --accent:#a99cff;--accent2:#ff86b0;--tint:#262240;--teal:#5eead4;--tealt:#10302b;--warn:#f2b84b;--warnt:#33270b;
-  --bad:#ff8f86;--badt:#3a1a17;--ok:#6ee7a0;--okt:#12301e;--code:#0c0b10;--shadow:0 1px 2px #0006,0 10px 28px -16px #000}
+  --bg:#12110e;--panel:#1a1913;--ink:#ece8dd;--body:#ece8dd;--mute:#a9a597;--line:#2f2d25;--line2:#403d32;
+  --accent:#a9b4ff;--accent2:#4fd1c0;--tint:#232349;--teal:#4fd1c0;--tealt:#14302c;--warn:#f0b866;--warnt:#33260f;
+  --bad:#ff9b8f;--badt:#3a1914;--ok:#7fd99a;--okt:#14301c;--code:#0b0a07;--shadow:0 10px 30px -18px rgba(0,0,0,.8)}
 *{box-sizing:border-box}
 html{scroll-behavior:smooth;scroll-padding-top:28px;-webkit-text-size-adjust:100%}
 @media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
@@ -37,9 +38,9 @@ a:hover{text-decoration-thickness:2px}
 #prog i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--accent),var(--accent2));transition:width .1s linear}
 
 /* hero: editorial, left aligned over the reading column */
-.hero{padding:56px max(24px,calc((100% - 1180px)/2 + 24px)) 40px;background:radial-gradient(900px 300px at 20% -120px,var(--tint),transparent),var(--bg);border-bottom:1px solid var(--line)}
+.hero{padding:56px max(24px,calc((100% - 1180px)/2 + 24px)) 40px;background:radial-gradient(800px 300px at 85% -60px,var(--tint),transparent 70%),radial-gradient(700px 300px at 5% -80px,var(--tealt),transparent 70%),var(--bg);border-bottom:1px solid var(--line)}
 .hero .tag{display:block;width:fit-content;max-width:100%;margin-bottom:0;padding:5px 12px;border:1px solid var(--line);border-radius:99px;font:600 12px/1.5 var(--mono);letter-spacing:.04em;color:var(--mute);background:var(--panel)}
-.hero h1{font:400 clamp(36px,6vw,64px)/1.05 var(--serif);letter-spacing:-.02em;margin:18px 0 14px;background:linear-gradient(90deg,var(--accent),var(--accent2));-webkit-background-clip:text;background-clip:text;color:transparent;text-wrap:balance}
+.hero h1{font:400 clamp(36px,6vw,64px)/1.05 var(--serif);letter-spacing:-.02em;margin:18px 0 14px;color:var(--ink);text-wrap:balance}
 .hero p{max-width:62ch;margin:0;color:var(--mute);font-size:19px;line-height:1.7}
 .hero .meta{max-width:760px;margin:18px 0 0;font:14px/1.6 var(--sans);color:var(--mute)}
 
@@ -187,7 +188,7 @@ footer{text-align:center;color:var(--mute);font:13px var(--sans);padding:32px;bo
 </head>
 <body>
 <header class="hero">
-  <span class="tag">Developer handbook &middot; engine 0.2.0 &middot; platform and Phase 2 0.3.0 (unreleased) &middot; updated 2026-11-14</span>
+  <span class="tag">Developer handbook &middot; engine 0.2.0 &middot; platform and Phase 2 0.3.0 (unreleased) &middot; updated 2026-11-15</span>
   <h1>migration-agent: developer handbook</h1>
   <p>Read a legacy codebase without ever running it, produce an evidence-backed knowledge graph, and let humans review it. This handbook explains how the whole repository works so you can ship your first change on day one.</p>
   <div class="meta">Every statement was checked against the code at the time of writing. Items I could not verify are marked <span class="b warn">unverified</span> or <span class="b no">not built</span>. When this page and the code disagree, the code wins: please fix the page.</div>

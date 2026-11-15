@@ -1,50 +1,194 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Threat model (D-06) | migration-agent docs</title><style>
-:root{--bg:#fbfaf7;--panel:#fff;--ink:#1c1b22;--mute:#6b6a76;--line:#e7e4dc;--accent:#5b4bdb;--accent2:#e0568b;--tint:#efecff;--code:#15141c;--codefg:#e9e7f5}
-@media (prefers-color-scheme:dark){:root{--bg:#0f0e14;--panel:#17161f;--ink:#ecebf3;--mute:#9a98a8;--line:#2a2836;--accent:#9b8cff;--accent2:#ff7fac;--tint:#221f3a}}
-*{box-sizing:border-box}html{scroll-behavior:smooth}
-body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.7 -apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,sans-serif}
-a{color:var(--accent)}
-.top{padding:44px 24px 34px;text-align:center;border-bottom:1px solid var(--line);background:radial-gradient(900px 300px at 50% -80px,var(--tint),transparent),var(--bg)}
-.top .tag{display:inline-block;padding:3px 12px;border:1px solid var(--line);border-radius:99px;font-size:13px;color:var(--mute);background:var(--panel)}
-.top h1{font-size:clamp(28px,5vw,44px);line-height:1.15;margin:14px auto 0;max-width:900px;letter-spacing:-.02em;background:linear-gradient(90deg,var(--accent),var(--accent2));-webkit-background-clip:text;background-clip:text;color:transparent}
-.layout{display:grid;grid-template-columns:250px minmax(0,1fr) 210px;gap:36px;max-width:1360px;margin:0 auto;padding:32px 24px 90px}
-nav.docs,nav.toc{position:sticky;top:20px;align-self:start;max-height:calc(100vh - 40px);overflow:auto;font-size:14px}
-nav b{display:block;margin:14px 0 6px;color:var(--mute);font-weight:600;text-transform:uppercase;letter-spacing:.08em;font-size:11.5px}
-nav b:first-child{margin-top:0}
-nav a{display:block;padding:4px 10px;border-left:2px solid var(--line);color:var(--mute);text-decoration:none}
-nav a:hover,nav a.on{color:var(--accent);border-color:var(--accent)}
-nav a.on{font-weight:600}
-nav.toc a.l3{padding-left:22px;font-size:13px}
-main{min-width:0}main h2{font-size:27px;margin:44px 0 12px;letter-spacing:-.01em;padding-top:6px;border-top:1px solid var(--line)}
-main h1{display:none}main h3{font-size:20px;margin:30px 0 8px}main h4{font-size:16px;margin:22px 0 6px}
-main p,main li{max-width:78ch}p{margin:0 0 14px}ul,ol{padding-left:24px;margin:0 0 16px}li{margin:4px 0}
-code{font:13.5px ui-monospace,SFMono-Regular,Menlo,monospace;background:var(--tint);padding:2px 6px;border-radius:6px}
-.cb{position:relative;margin:14px 0 20px}
-pre{background:var(--code);color:var(--codefg);padding:16px 18px;border-radius:14px;overflow:auto;margin:0;line-height:1.55;box-shadow:0 8px 24px -14px #0008}
-pre code{background:none;padding:0;color:inherit;font-size:13px}
-.cb button{position:absolute;top:8px;right:8px;font:12px inherit;padding:3px 9px;border-radius:8px;border:1px solid #fff3;background:#ffffff14;color:#e9e7f5;cursor:pointer}
-.cb button:hover{background:#ffffff2a}
-.cb .lbl{position:absolute;top:8px;left:14px;font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:#b9b5d6}
-.cb.mm pre{padding-top:34px}
+<title>Threat model (D-06) | migration-agent docs</title><style>:root{
+  color-scheme:light dark;
+  --bg:#f6f2e9;--panel:#fffdf8;--panel2:#faf6ec;--ink:#1f2328;--mute:#5b6270;--line:#e3dccb;--line2:#d2c9b3;
+  --teal:#0f766e;--teal-soft:#dcefeb;--indigo:#4338ca;--indigo-soft:#e7e6fa;
+  --warn:#8a4b08;--warn-soft:#fbeed2;--danger:#b42318;--danger-soft:#fbe4e1;--ok:#166534;--ok-soft:#dcf1e1;
+  --code:#16150f;--codefg:#ece8dc;--codeline:#2c2a22;--shadow:0 10px 30px -18px rgba(60,45,10,.35);
+  --serif:"Iowan Old Style","Palatino Linotype",Palatino,"Book Antiqua",Georgia,serif;
+  --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,"Helvetica Neue",Arial,sans-serif;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#12110e;--panel:#1a1913;--panel2:#201e17;--ink:#ece8dd;--mute:#a9a597;--line:#2f2d25;--line2:#403d32;
+    --teal:#4fd1c0;--teal-soft:#14302c;--indigo:#a9b4ff;--indigo-soft:#232349;
+    --warn:#f0b866;--warn-soft:#33260f;--danger:#ff9b8f;--danger-soft:#3a1914;--ok:#7fd99a;--ok-soft:#14301c;
+    --code:#0b0a07;--codefg:#ece8dc;--codeline:#2c2a22;--shadow:0 10px 30px -18px rgba(0,0,0,.8);
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#12110e;--panel:#1a1913;--panel2:#201e17;--ink:#ece8dd;--mute:#a9a597;--line:#2f2d25;--line2:#403d32;
+  --teal:#4fd1c0;--teal-soft:#14302c;--indigo:#a9b4ff;--indigo-soft:#232349;
+  --warn:#f0b866;--warn-soft:#33260f;--danger:#ff9b8f;--danger-soft:#3a1914;--ok:#7fd99a;--ok-soft:#14301c;
+  --code:#0b0a07;--codefg:#ece8dc;--codeline:#2c2a22;--shadow:0 10px 30px -18px rgba(0,0,0,.8);
+}
+:root[data-theme="light"]{color-scheme:light}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:20px}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{animation:none!important;transition:none!important}}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.7 var(--sans);-webkit-text-size-adjust:100%}
+a{color:var(--indigo);text-underline-offset:3px}
+a:hover{color:var(--teal)}
+:focus-visible{outline:3px solid var(--indigo);outline-offset:2px;border-radius:4px}
+.skip{position:absolute;left:12px;top:-60px;background:var(--ink);color:var(--bg);padding:10px 14px;border-radius:8px;z-index:100;text-decoration:none}
+.skip:focus{top:12px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+/* hero */
+.hero{border-bottom:1px solid var(--line);background:
+  radial-gradient(800px 300px at 85% -60px,var(--indigo-soft),transparent 70%),
+  radial-gradient(700px 300px at 5% -80px,var(--teal-soft),transparent 70%),var(--bg)}
+.hero-in{max-width:1180px;margin:0 auto;padding:56px 20px 44px}
+.topbar{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:36px;font-size:14px}
+.brand{font-family:var(--mono);font-size:13px;letter-spacing:.04em;color:var(--mute)}
+.brand b{color:var(--teal)}
+.btn{font:inherit;font-size:14px;border:1px solid var(--line2);background:var(--panel);color:var(--ink);border-radius:10px;padding:8px 14px;min-height:40px;cursor:pointer}
+.btn:hover{border-color:var(--teal)}
+.eyebrow{font:600 12px/1 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--teal)}
+h1{font:400 clamp(38px,6.4vw,70px)/1.04 var(--serif);letter-spacing:-.02em;margin:14px 0 16px;max-width:15ch}
+h1 em{color:var(--indigo);font-style:italic}
+.lede{max-width:62ch;font-size:19px;color:var(--mute);margin:0 0 22px}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
+.chip{display:inline-flex;gap:6px;align-items:center;padding:5px 12px;border:1px solid var(--line2);border-radius:99px;background:var(--panel);font-size:13px;color:var(--mute)}
+.chip b{color:var(--ink);font-weight:600}
+
+/* layout */
+.layout{display:grid;grid-template-columns:250px minmax(0,1fr);gap:56px;max-width:1180px;margin:0 auto;padding:36px 20px 96px}
+.side{position:sticky;top:20px;align-self:start;max-height:calc(100vh - 40px);overflow:auto;font-size:14px;padding-right:6px}
+.side b.h{display:block;margin:0 0 8px;font:600 11.5px/1 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--mute)}
+.side a{display:block;padding:5px 10px;border-left:2px solid var(--line);color:var(--mute);text-decoration:none;line-height:1.4}
+.side a:hover{color:var(--teal);border-color:var(--teal)}
+.side a.on{color:var(--ink);border-color:var(--teal);font-weight:600;background:linear-gradient(90deg,var(--teal-soft),transparent)}
+.side .grp{margin:14px 0 4px;font:600 11px/1 var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--mute);padding-left:12px}
+.mnav{display:none;margin:0 0 24px;border:1px solid var(--line2);border-radius:12px;background:var(--panel)}
+.mnav summary{cursor:pointer;padding:12px 16px;font-weight:600;min-height:44px}
+.mnav nav{padding:4px 12px 14px;columns:2;column-gap:20px;font-size:14px}
+.mnav a{display:block;padding:4px 0;break-inside:avoid}
+main{min-width:0}
+section{margin-bottom:68px}
+h2{font:400 clamp(28px,4vw,40px)/1.15 var(--serif);letter-spacing:-.01em;margin:0 0 18px;padding-top:6px}
+h2 .n{font:600 13px var(--mono);color:var(--teal);display:block;margin-bottom:6px;letter-spacing:.1em}
+h3{font:600 19px/1.35 var(--sans);margin:36px 0 8px}
+h3 .tag{font:600 11px var(--mono);letter-spacing:.06em;text-transform:uppercase;margin-left:8px;vertical-align:2px}
+h4{font:600 15px/1.4 var(--sans);margin:22px 0 6px}
+p{margin:0 0 14px}
+ul,ol{padding-left:22px;margin:0 0 16px}
+li{margin:5px 0}
+hr{border:0;border-top:1px solid var(--line);margin:28px 0}
+code{font:13.5px var(--mono);background:var(--panel2);border:1px solid var(--line);padding:1px 6px;border-radius:6px;overflow-wrap:anywhere}
+kbd{font:12.5px var(--mono);border:1px solid var(--line2);border-bottom-width:2px;background:var(--panel);padding:1px 7px;border-radius:6px;white-space:nowrap}
+.ui{font-weight:600;color:var(--ink);background:var(--indigo-soft);padding:0 6px;border-radius:5px;white-space:nowrap}
+.pw{position:relative;margin:14px 0 20px}
+pre{background:var(--code);color:var(--codefg);padding:16px 18px;border-radius:14px;overflow:auto;margin:0;line-height:1.55;font:13px/1.6 var(--mono);box-shadow:var(--shadow);border:1px solid var(--codeline)}
+pre code{background:none;border:0;padding:0;color:inherit;font:inherit;overflow-wrap:normal}
+.copy{position:absolute;top:8px;right:8px;font:12px var(--mono);background:#ffffff14;color:#d9d5c8;border:1px solid #ffffff2a;border-radius:8px;padding:4px 10px;cursor:pointer;min-height:30px}
+.copy:hover{background:#ffffff26}
 .tw{overflow-x:auto;margin:14px 0 22px;border:1px solid var(--line);border-radius:14px;background:var(--panel)}
-table{border-collapse:collapse;width:100%;font-size:14.5px}th,td{text-align:left;padding:9px 14px;border-bottom:1px solid var(--line);vertical-align:top}
-th{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--mute);background:var(--tint)}tr:last-child td{border-bottom:0}
-blockquote{margin:16px 0;padding:10px 18px;border-left:4px solid var(--accent);background:var(--tint);border-radius:0 12px 12px 0}blockquote p{margin:6px 0}
-hr{border:0;border-top:1px solid var(--line);margin:30px 0}
-.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;margin:18px 0}
-.card{display:block;padding:16px 18px;border:1px solid var(--line);border-radius:14px;background:var(--panel);text-decoration:none;color:var(--ink)}
-.card:hover{border-color:var(--accent)}.card b{display:block;color:var(--accent);margin-bottom:2px}.card span{color:var(--mute);font-size:14px}
+table{border-collapse:collapse;width:100%;font-size:14.5px;min-width:560px}
+caption{text-align:left;padding:10px 14px;font-size:13px;color:var(--mute)}
+th,td{text-align:left;padding:10px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font:600 11.5px var(--mono);text-transform:uppercase;letter-spacing:.08em;color:var(--mute);background:var(--panel2)}
+tr:last-child td{border-bottom:0}
+td code{font-size:12.5px}
+
+/* components */
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px;margin:18px 0 22px}
+.card{padding:18px 20px;border:1px solid var(--line);border-radius:16px;background:var(--panel)}
+.card b{display:block;margin-bottom:4px}
+.card p{margin:0;color:var(--mute);font-size:15px}
+.call{padding:14px 18px;border-left:4px solid var(--teal);background:var(--teal-soft);border-radius:0 12px 12px 0;margin:18px 0}
+.call p:last-child{margin:0}
+.call.warn{border-color:var(--warn);background:var(--warn-soft)}
+.call.bad{border-color:var(--danger);background:var(--danger-soft)}
+.call.na{border-color:var(--indigo);background:var(--indigo-soft)}
+.call .t{font:700 12px var(--mono);letter-spacing:.08em;text-transform:uppercase;display:block;margin-bottom:4px}
+.call.warn .t{color:var(--warn)}.call.bad .t{color:var(--danger)}.call.na .t{color:var(--indigo)}.call .t{color:var(--teal)}
+.cli{border:1px dashed var(--line2);border-radius:14px;padding:12px 16px 4px;margin:18px 0;background:var(--panel2)}
+.cli>.t{font:700 11.5px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--mute);display:block;margin-bottom:6px}
+.cli .pw{margin:8px 0 12px}
+.badge{display:inline-block;font:600 11px/1 var(--mono);letter-spacing:.05em;text-transform:uppercase;padding:4px 8px;border-radius:99px;white-space:nowrap}
+.badge.na{background:var(--indigo-soft);color:var(--indigo)}
+.badge.ok{background:var(--ok-soft);color:var(--ok)}
+.badge.warn{background:var(--warn-soft);color:var(--warn)}
+.badge.bad{background:var(--danger-soft);color:var(--danger)}
+.badge.mute{background:var(--panel2);color:var(--mute);border:1px solid var(--line)}
+ol.steps{list-style:none;padding:0;counter-reset:s;margin:18px 0}
+ol.steps>li{counter-increment:s;position:relative;padding:0 0 18px 52px;margin:0}
+ol.steps>li::before{content:counter(s);position:absolute;left:0;top:0;width:34px;height:34px;border-radius:10px;background:var(--teal);color:#fff;display:grid;place-items:center;font:700 15px var(--mono)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) ol.steps>li::before{color:#04201c}}
+:root[data-theme="dark"] ol.steps>li::before{color:#04201c}
+ol.steps>li::after{content:"";position:absolute;left:16px;top:38px;bottom:4px;width:2px;background:var(--line)}
+ol.steps>li:last-child::after{display:none}
+ol.steps>li>b:first-child{display:block;margin-bottom:2px}
+figure{margin:22px 0}
+figure .dia{overflow-x:auto;border:1px solid var(--line);border-radius:16px;background:var(--panel);padding:10px}
+figcaption{font-size:13.5px;color:var(--mute);margin-top:8px}
+svg text{font-family:var(--sans);fill:var(--ink)}
+svg .b{fill:var(--panel2);stroke:var(--line2);stroke-width:1.4}
+svg .bt{fill:var(--teal-soft);stroke:var(--teal);stroke-width:1.6}
+svg .bi{fill:var(--indigo-soft);stroke:var(--indigo);stroke-width:1.6}
+svg .bw{fill:var(--warn-soft);stroke:var(--warn);stroke-width:1.4}
+svg .ln{stroke:var(--mute);stroke-width:1.6;fill:none}
+svg .ld{stroke:var(--mute);stroke-width:1.4;fill:none;stroke-dasharray:5 4}
+svg .ar{fill:var(--mute)}
+svg .sm{font-size:11.5px;fill:var(--mute)}
+svg .tt{font-size:13px;font-weight:600}
+svg .mo{font-family:var(--mono);font-size:11.5px}
+.perm td:not(:first-child),.perm th:not(:first-child){text-align:center}
+.yes{color:var(--ok);font-weight:700}.no{color:var(--mute)}
+dl.gl{display:grid;grid-template-columns:minmax(150px,230px) 1fr;gap:0;border:1px solid var(--line);border-radius:14px;background:var(--panel);overflow:hidden}
+dl.gl dt{padding:10px 14px;font-weight:600;border-bottom:1px solid var(--line);background:var(--panel2)}
+dl.gl dd{margin:0;padding:10px 14px;border-bottom:1px solid var(--line)}
+dl.gl dt:last-of-type,dl.gl dd:last-of-type{border-bottom:0}
+details.faq{border:1px solid var(--line);border-radius:12px;background:var(--panel);margin:10px 0}
+details.faq summary{cursor:pointer;padding:13px 16px;font-weight:600;min-height:44px}
+details.faq div{padding:0 16px 8px}
+footer{border-top:1px solid var(--line);padding:30px 20px;text-align:center;color:var(--mute);font-size:13.5px}
+@media (max-width:900px){
+  .layout{grid-template-columns:1fr;gap:0;padding-top:24px}
+  .side{display:none}.mnav{display:block}
+  dl.gl{grid-template-columns:1fr}
+  dl.gl dt{border-bottom:0;padding-bottom:2px}
+}
+@media (max-width:520px){.mnav nav{columns:1}ol.steps>li{padding-left:44px}.hero-in{padding-top:36px}}
+@media print{.side,.mnav,.copy,.btn{display:none}.layout{display:block}body{background:#fff;color:#000}}
+
+/* ---- additions for generated and converted pages (same tokens) ---- */
+.side .sub{margin:2px 0 6px 12px;padding-left:0}
+.side .sub a{font-size:13px;padding:3px 10px}
+.side .toc-h{margin-top:22px}
 .pager{display:flex;justify-content:space-between;gap:12px;margin-top:56px;padding-top:20px;border-top:1px solid var(--line);font-size:14px}
-footer{text-align:center;color:var(--mute);font-size:13px;padding:28px;border-top:1px solid var(--line)}
-details.mob{display:none;margin:0 24px 16px;border:1px solid var(--line);border-radius:12px;background:var(--panel);padding:8px 14px}
-@media(max-width:1100px){.layout{grid-template-columns:230px minmax(0,1fr)}nav.toc{display:none}}
-@media(max-width:820px){.layout{grid-template-columns:1fr;padding-top:16px}nav.docs{display:none}details.mob{display:block}}
+a.card{display:block;text-decoration:none;color:var(--ink)}
+a.card:hover{border-color:var(--teal)}
+a.card b{color:var(--teal)}
+a.card span{color:var(--mute);font-size:14px}
+main h2{border-top:1px solid var(--line);padding-top:26px;margin-top:44px}
+main>h2:first-child,main>section:first-child>h2{border-top:0;margin-top:0}
+.flow{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:20px 0}
+.flow span{padding:8px 14px;border-radius:10px;background:var(--panel);border:1px solid var(--line2);font-weight:600;font-size:14px}
+.flow i{color:var(--mute);font-style:normal}
+.flow span:last-of-type{background:var(--teal);color:#fff;border-color:var(--teal)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .flow span:last-of-type{color:#04201c}}
+:root[data-theme="dark"] .flow span:last-of-type{color:#04201c}
+.cb{position:relative;margin:14px 0 20px}
+.cb .lbl{position:absolute;top:8px;left:14px;font:11px var(--mono);text-transform:uppercase;letter-spacing:.08em;color:#b9b5d6}
+.cb.mm pre{padding-top:34px}
+
+main>h1{display:none}
+.mnav+section>h2{border-top:0;margin-top:0}
 </style></head><body>
-<header class="top"><span class="tag">migration-agent docs</span><h1>Threat model (D-06)</h1></header>
-<details class="mob"><summary>All docs</summary><a href="index.html">Overview</a><b>Start here</b><a href="README.html">migration-agent documentation</a><a href="user-guide.html">User guide</a><a href="architecture.html">Architecture</a><a href="api-reference.html">API reference</a><a href="deployment.html">Deployment guide</a><a class="on" href="threat-model.html">Threat model (D-06)</a><b>Phase 2: migrate</b><a href="phase2-architecture.html">Phase 2 architecture: the migrate/ package</a><a href="phase2-plan.html">Phase 2 implementation plan: Migrate &amp; Prove Equivalence</a><b>Roadmap</b><a href="remaining-work.html">What is built, what is verified, and what is left</a><b>Product and platform</b><a href="product-architecture.html">Product architecture and roadmap: from CLI engine to hosted service</a><a href="platform-contract.html">Platform contract (hosted product)</a><a href="phase0-results.html">Phase 0 interim results (2026-11-09)</a><a href="operations-runbook.html">Operations runbook</a><b>Security</b><a href="security/security-overview-draft.html">Security overview (customer-facing DRAFT)</a><a href="security/threat-model-hosted.html">Threat model update: hosted product</a><a href="security/data-handling-and-retention.html">Data handling and retention policy (draft)</a><a href="security/pentest-2026-11-09.html">Hostile security review, 2026-11-09: findings and status</a><a href="security/incident-response.html">Incident response outline</a><a href="security/secure-sdlc.html">Secure development lifecycle</a><a href="security/soc2-readiness.html">SOC 2 readiness checklist</a><a href="security/subprocessors.html">Subprocessor list (TEMPLATE)</a><b>Hand-built guides</b><a href="../developer-handbook.html">Developer handbook</a><a href="../user-guide-app.html">Product user guide</a><a href="../tutorial.html">CLI tutorial</a></details>
-<div class="layout"><nav class="docs" aria-label="Documentation"><a href="index.html">Overview</a><b>Start here</b><a href="README.html">migration-agent documentation</a><a href="user-guide.html">User guide</a><a href="architecture.html">Architecture</a><a href="api-reference.html">API reference</a><a href="deployment.html">Deployment guide</a><a class="on" href="threat-model.html">Threat model (D-06)</a><b>Phase 2: migrate</b><a href="phase2-architecture.html">Phase 2 architecture: the migrate/ package</a><a href="phase2-plan.html">Phase 2 implementation plan: Migrate &amp; Prove Equivalence</a><b>Roadmap</b><a href="remaining-work.html">What is built, what is verified, and what is left</a><b>Product and platform</b><a href="product-architecture.html">Product architecture and roadmap: from CLI engine to hosted service</a><a href="platform-contract.html">Platform contract (hosted product)</a><a href="phase0-results.html">Phase 0 interim results (2026-11-09)</a><a href="operations-runbook.html">Operations runbook</a><b>Security</b><a href="security/security-overview-draft.html">Security overview (customer-facing DRAFT)</a><a href="security/threat-model-hosted.html">Threat model update: hosted product</a><a href="security/data-handling-and-retention.html">Data handling and retention policy (draft)</a><a href="security/pentest-2026-11-09.html">Hostile security review, 2026-11-09: findings and status</a><a href="security/incident-response.html">Incident response outline</a><a href="security/secure-sdlc.html">Secure development lifecycle</a><a href="security/soc2-readiness.html">SOC 2 readiness checklist</a><a href="security/subprocessors.html">Subprocessor list (TEMPLATE)</a><b>Hand-built guides</b><a href="../developer-handbook.html">Developer handbook</a><a href="../user-guide-app.html">Product user guide</a><a href="../tutorial.html">CLI tutorial</a></nav>
-<main><h1 id="threat-model-d-06">Threat model (D-06)</h1>
+<a class="skip" href="#main">Skip to the content</a>
+<header class="hero"><div class="hero-in">
+<div class="topbar"><span class="brand"><b>migration</b> agent / docs</span><button class="btn" id="theme" type="button" aria-label="Toggle light and dark theme">Toggle theme</button></div>
+<span class="eyebrow">Start here</span>
+<h1 style="max-width:none">Threat model (D-06)</h1>
+<p class="lede">Generated from the Markdown in <code>docs/threat-model.md</code>.</p>
+</div></header>
+<div class="layout" id="top">
+<aside class="side" aria-label="Documentation"><b class="h">Documentation</b><a href="index.html">Overview</a><div class="grp">Start here</div><a href="README.html">migration-agent documentation</a><a href="user-guide.html">User guide</a><a href="architecture.html">Architecture</a><a href="api-reference.html">API reference</a><a href="deployment.html">Deployment guide</a><a class="on" href="threat-model.html">Threat model (D-06)</a><div class="grp">Phase 2: migrate</div><a href="phase2-architecture.html">Phase 2 architecture: the migrate/ package</a><a href="phase2-plan.html">Phase 2 implementation plan: Migrate &amp; Prove Equivalence</a><div class="grp">Roadmap</div><a href="remaining-work.html">What is built, what is verified, and what is left</a><div class="grp">Product and platform</div><a href="product-architecture.html">Product architecture and roadmap: from CLI engine to hosted service</a><a href="platform-contract.html">Platform contract (hosted product)</a><a href="phase0-results.html">Phase 0 interim results (2026-11-09)</a><a href="operations-runbook.html">Operations runbook</a><div class="grp">Security</div><a href="security/security-overview-draft.html">Security overview (customer-facing DRAFT)</a><a href="security/threat-model-hosted.html">Threat model update: hosted product</a><a href="security/data-handling-and-retention.html">Data handling and retention policy (draft)</a><a href="security/pentest-2026-11-09.html">Hostile security review, 2026-11-09: findings and status</a><a href="security/incident-response.html">Incident response outline</a><a href="security/secure-sdlc.html">Secure development lifecycle</a><a href="security/soc2-readiness.html">SOC 2 readiness checklist</a><a href="security/subprocessors.html">Subprocessor list (TEMPLATE)</a><div class="grp">Hand-built guides</div><a href="../developer-handbook.html">Developer handbook</a><a href="../user-guide-app.html">Product user guide</a><a href="../tutorial.html">CLI tutorial</a><b class="h toc-h">On this page</b><a class="toc" href="#1-assets">1. Assets</a><a class="toc" href="#2-actors">2. Actors</a><a class="toc" href="#3-trust-boundaries">3. Trust boundaries</a><a class="toc" href="#4-network-egress-allowlist">4. Network egress allowlist</a><a class="toc" href="#5-secrets-handling">5. Secrets handling</a><a class="toc" href="#6-stride-threat-table">6. STRIDE threat table</a><a class="toc" href="#7-residual-risks-accepted-or-open">7. Residual risks (accepted or open)</a><a class="toc" href="#8-bugs-found-by-the-red-team-suite-fixed">8. Bugs found by the red-team suite (fixed)</a><a class="toc" href="#9-phase-2-execution">9. Phase 2 execution</a><a class="toc sub" href="#91-generated-code-review-routing-and-approvals-m3-to-m7">9.1 Generated code, review, routing and approvals (M3 to M7)</a></aside>
+<main id="main"><details class="mnav"><summary>All docs and this page</summary><nav><b class="h">Documentation</b><a href="index.html">Overview</a><div class="grp">Start here</div><a href="README.html">migration-agent documentation</a><a href="user-guide.html">User guide</a><a href="architecture.html">Architecture</a><a href="api-reference.html">API reference</a><a href="deployment.html">Deployment guide</a><a class="on" href="threat-model.html">Threat model (D-06)</a><div class="grp">Phase 2: migrate</div><a href="phase2-architecture.html">Phase 2 architecture: the migrate/ package</a><a href="phase2-plan.html">Phase 2 implementation plan: Migrate &amp; Prove Equivalence</a><div class="grp">Roadmap</div><a href="remaining-work.html">What is built, what is verified, and what is left</a><div class="grp">Product and platform</div><a href="product-architecture.html">Product architecture and roadmap: from CLI engine to hosted service</a><a href="platform-contract.html">Platform contract (hosted product)</a><a href="phase0-results.html">Phase 0 interim results (2026-11-09)</a><a href="operations-runbook.html">Operations runbook</a><div class="grp">Security</div><a href="security/security-overview-draft.html">Security overview (customer-facing DRAFT)</a><a href="security/threat-model-hosted.html">Threat model update: hosted product</a><a href="security/data-handling-and-retention.html">Data handling and retention policy (draft)</a><a href="security/pentest-2026-11-09.html">Hostile security review, 2026-11-09: findings and status</a><a href="security/incident-response.html">Incident response outline</a><a href="security/secure-sdlc.html">Secure development lifecycle</a><a href="security/soc2-readiness.html">SOC 2 readiness checklist</a><a href="security/subprocessors.html">Subprocessor list (TEMPLATE)</a><div class="grp">Hand-built guides</div><a href="../developer-handbook.html">Developer handbook</a><a href="../user-guide-app.html">Product user guide</a><a href="../tutorial.html">CLI tutorial</a></nav></details><h1 id="threat-model-d-06">Threat model (D-06)</h1>
 <p>Scope: the <code>migration-agent</code> CLI, its project folder, the ingestion engine, the analysis/verification
 pipeline, the local review server, and the container sandbox. Verified by the red-team suite in
 <code>tests/redteam/</code> (fixtures built at test time by <code>scripts/make_redteam.py</code>; inert payloads in
@@ -636,17 +780,40 @@ CLI/self-hosted only, P2-Q13), and scanning of the router and runner images.</p>
 <li>With <code>db.engine</code> <code>sqlite</code> or <code>none</code> the composite gives each service its own database, so cross-service schema
     coupling is not exercised by the composite suite.</li>
 </ol><div class="pager"><a href="deployment.html">&larr; Deployment guide</a><a href="phase2-architecture.html">Phase 2 architecture: the migrate/ package &rarr;</a></div></main>
-<nav class="toc" aria-label="On this page"><b>On this page</b><a class="l2" href="#1-assets">1. Assets</a><a class="l2" href="#2-actors">2. Actors</a><a class="l2" href="#3-trust-boundaries">3. Trust boundaries</a><a class="l2" href="#4-network-egress-allowlist">4. Network egress allowlist</a><a class="l2" href="#5-secrets-handling">5. Secrets handling</a><a class="l2" href="#6-stride-threat-table">6. STRIDE threat table</a><a class="l2" href="#7-residual-risks-accepted-or-open">7. Residual risks (accepted or open)</a><a class="l2" href="#8-bugs-found-by-the-red-team-suite-fixed">8. Bugs found by the red-team suite (fixed)</a><a class="l2" href="#9-phase-2-execution">9. Phase 2 execution</a><a class="l3" href="#91-generated-code-review-routing-and-approvals-m3-to-m7">9.1 Generated code, review, routing and approvals (M3 to M7)</a></nav></div>
+</div>
 <footer>Generated from <code>docs/threat-model.md</code> by <code>scripts/build_docs_html.py</code>. Edit the Markdown, not this file.</footer>
 <script>
 (function(){
- document.querySelectorAll('.cb').forEach(function(b){var btn=document.createElement('button');btn.textContent='Copy';
-  btn.addEventListener('click',function(){var t=b.querySelector('code').innerText;
-   (navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(function(){btn.textContent='Copied';setTimeout(function(){btn.textContent='Copy'},1400)},function(){btn.textContent='Press Ctrl/Cmd+C'});});
-  b.appendChild(btn);});
- var links=[].slice.call(document.querySelectorAll('nav.toc a'));if(!links.length||!('IntersectionObserver' in window))return;
- var map={};links.forEach(function(a){map[a.getAttribute('href').slice(1)]=a});
- var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){links.forEach(function(a){a.classList.remove('on')});var a=map[e.target.id];if(a)a.classList.add('on');}})},{rootMargin:'0px 0px -75% 0px'});
- document.querySelectorAll('main h2[id],main h3[id]').forEach(function(h){io.observe(h)});
+  var root=document.documentElement,btn=document.getElementById('theme');
+  try{var t=localStorage.getItem('ma-guide-theme');if(t==='light'||t==='dark')root.setAttribute('data-theme',t);}catch(e){}
+  if(btn)btn.addEventListener('click',function(){
+    var cur=root.getAttribute('data-theme');
+    if(!cur)cur=window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';
+    var next=cur==='dark'?'light':'dark';root.setAttribute('data-theme',next);
+    try{localStorage.setItem('ma-guide-theme',next);}catch(e){}
+  });
+  document.querySelectorAll('.pw,.cb').forEach(function(w){
+    var pre=w.querySelector('pre');if(!pre)return;
+    var b=document.createElement('button');b.type='button';b.className='copy';b.textContent='Copy';
+    b.setAttribute('aria-label','Copy code to clipboard');
+    b.addEventListener('click',function(){
+      var txt=pre.innerText;
+      var done=function(){b.textContent='Copied';setTimeout(function(){b.textContent='Copy';},1500);};
+      if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(txt).then(done,function(){});}
+      else{try{var r=document.createRange();r.selectNodeContents(pre);var s=window.getSelection();s.removeAllRanges();s.addRange(r);document.execCommand('copy');s.removeAllRanges();done();}catch(e){}}
+    });
+    w.appendChild(b);
+  });
+  document.querySelectorAll('.tw,.dia').forEach(function(el){el.setAttribute('tabindex','0');el.setAttribute('role','region');if(!el.getAttribute('aria-label'))el.setAttribute('aria-label','Scrollable content');});
+  var links=[].slice.call(document.querySelectorAll('.side a.toc'));
+  var map={};links.forEach(function(a){map[a.getAttribute('href').slice(1)]=a;});
+  if(links.length&&'IntersectionObserver' in window){
+    var io=new IntersectionObserver(function(es){es.forEach(function(e){
+      if(e.isIntersecting){links.forEach(function(l){l.classList.remove('on');l.removeAttribute('aria-current');});
+        var a=map[e.target.id];if(a){a.classList.add('on');a.setAttribute('aria-current','true');}}});
+    },{rootMargin:'-10% 0px -80% 0px'});
+    document.querySelectorAll('main h2[id],main h3[id]').forEach(function(h){io.observe(h);});
+  }
+  document.querySelectorAll('.mnav a').forEach(function(a){a.addEventListener('click',function(){document.querySelector('.mnav').removeAttribute('open');});});
 })();
 </script></body></html>

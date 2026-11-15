@@ -42,59 +42,41 @@ HAND_BUILT = [
     ("../tutorial.html", "CLI tutorial", "From install to a reviewed result"),
 ]
 
-CSS = """
-:root{--bg:#fbfaf7;--panel:#fff;--ink:#1c1b22;--mute:#6b6a76;--line:#e7e4dc;--accent:#5b4bdb;--accent2:#e0568b;--tint:#efecff;--code:#15141c;--codefg:#e9e7f5}
-@media (prefers-color-scheme:dark){:root{--bg:#0f0e14;--panel:#17161f;--ink:#ecebf3;--mute:#9a98a8;--line:#2a2836;--accent:#9b8cff;--accent2:#ff7fac;--tint:#221f3a}}
-*{box-sizing:border-box}html{scroll-behavior:smooth}
-body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.7 -apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,sans-serif}
-a{color:var(--accent)}
-.top{padding:44px 24px 34px;text-align:center;border-bottom:1px solid var(--line);background:radial-gradient(900px 300px at 50% -80px,var(--tint),transparent),var(--bg)}
-.top .tag{display:inline-block;padding:3px 12px;border:1px solid var(--line);border-radius:99px;font-size:13px;color:var(--mute);background:var(--panel)}
-.top h1{font-size:clamp(28px,5vw,44px);line-height:1.15;margin:14px auto 0;max-width:900px;letter-spacing:-.02em;background:linear-gradient(90deg,var(--accent),var(--accent2));-webkit-background-clip:text;background-clip:text;color:transparent}
-.layout{display:grid;grid-template-columns:250px minmax(0,1fr) 210px;gap:36px;max-width:1360px;margin:0 auto;padding:32px 24px 90px}
-nav.docs,nav.toc{position:sticky;top:20px;align-self:start;max-height:calc(100vh - 40px);overflow:auto;font-size:14px}
-nav b{display:block;margin:14px 0 6px;color:var(--mute);font-weight:600;text-transform:uppercase;letter-spacing:.08em;font-size:11.5px}
-nav b:first-child{margin-top:0}
-nav a{display:block;padding:4px 10px;border-left:2px solid var(--line);color:var(--mute);text-decoration:none}
-nav a:hover,nav a.on{color:var(--accent);border-color:var(--accent)}
-nav a.on{font-weight:600}
-nav.toc a.l3{padding-left:22px;font-size:13px}
-main{min-width:0}main h2{font-size:27px;margin:44px 0 12px;letter-spacing:-.01em;padding-top:6px;border-top:1px solid var(--line)}
-main h1{display:none}main h3{font-size:20px;margin:30px 0 8px}main h4{font-size:16px;margin:22px 0 6px}
-main p,main li{max-width:78ch}p{margin:0 0 14px}ul,ol{padding-left:24px;margin:0 0 16px}li{margin:4px 0}
-code{font:13.5px ui-monospace,SFMono-Regular,Menlo,monospace;background:var(--tint);padding:2px 6px;border-radius:6px}
-.cb{position:relative;margin:14px 0 20px}
-pre{background:var(--code);color:var(--codefg);padding:16px 18px;border-radius:14px;overflow:auto;margin:0;line-height:1.55;box-shadow:0 8px 24px -14px #0008}
-pre code{background:none;padding:0;color:inherit;font-size:13px}
-.cb button{position:absolute;top:8px;right:8px;font:12px inherit;padding:3px 9px;border-radius:8px;border:1px solid #fff3;background:#ffffff14;color:#e9e7f5;cursor:pointer}
-.cb button:hover{background:#ffffff2a}
-.cb .lbl{position:absolute;top:8px;left:14px;font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:#b9b5d6}
-.cb.mm pre{padding-top:34px}
-.tw{overflow-x:auto;margin:14px 0 22px;border:1px solid var(--line);border-radius:14px;background:var(--panel)}
-table{border-collapse:collapse;width:100%;font-size:14.5px}th,td{text-align:left;padding:9px 14px;border-bottom:1px solid var(--line);vertical-align:top}
-th{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--mute);background:var(--tint)}tr:last-child td{border-bottom:0}
-blockquote{margin:16px 0;padding:10px 18px;border-left:4px solid var(--accent);background:var(--tint);border-radius:0 12px 12px 0}blockquote p{margin:6px 0}
-hr{border:0;border-top:1px solid var(--line);margin:30px 0}
-.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;margin:18px 0}
-.card{display:block;padding:16px 18px;border:1px solid var(--line);border-radius:14px;background:var(--panel);text-decoration:none;color:var(--ink)}
-.card:hover{border-color:var(--accent)}.card b{display:block;color:var(--accent);margin-bottom:2px}.card span{color:var(--mute);font-size:14px}
-.pager{display:flex;justify-content:space-between;gap:12px;margin-top:56px;padding-top:20px;border-top:1px solid var(--line);font-size:14px}
-footer{text-align:center;color:var(--mute);font-size:13px;padding:28px;border-top:1px solid var(--line)}
-details.mob{display:none;margin:0 24px 16px;border:1px solid var(--line);border-radius:12px;background:var(--panel);padding:8px 14px}
-@media(max-width:1100px){.layout{grid-template-columns:230px minmax(0,1fr)}nav.toc{display:none}}
-@media(max-width:820px){.layout{grid-template-columns:1fr;padding-top:16px}nav.docs{display:none}details.mob{display:block}}
-"""
+CSS = (ROOT / "scripts" / "docs_theme.css").read_text()   # the user-guide-app.html design, shared by every doc
 
 JS = """
 (function(){
- document.querySelectorAll('.cb').forEach(function(b){var btn=document.createElement('button');btn.textContent='Copy';
-  btn.addEventListener('click',function(){var t=b.querySelector('code').innerText;
-   (navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(function(){btn.textContent='Copied';setTimeout(function(){btn.textContent='Copy'},1400)},function(){btn.textContent='Press Ctrl/Cmd+C'});});
-  b.appendChild(btn);});
- var links=[].slice.call(document.querySelectorAll('nav.toc a'));if(!links.length||!('IntersectionObserver' in window))return;
- var map={};links.forEach(function(a){map[a.getAttribute('href').slice(1)]=a});
- var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){links.forEach(function(a){a.classList.remove('on')});var a=map[e.target.id];if(a)a.classList.add('on');}})},{rootMargin:'0px 0px -75% 0px'});
- document.querySelectorAll('main h2[id],main h3[id]').forEach(function(h){io.observe(h)});
+  var root=document.documentElement,btn=document.getElementById('theme');
+  try{var t=localStorage.getItem('ma-guide-theme');if(t==='light'||t==='dark')root.setAttribute('data-theme',t);}catch(e){}
+  if(btn)btn.addEventListener('click',function(){
+    var cur=root.getAttribute('data-theme');
+    if(!cur)cur=window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';
+    var next=cur==='dark'?'light':'dark';root.setAttribute('data-theme',next);
+    try{localStorage.setItem('ma-guide-theme',next);}catch(e){}
+  });
+  document.querySelectorAll('.pw,.cb').forEach(function(w){
+    var pre=w.querySelector('pre');if(!pre)return;
+    var b=document.createElement('button');b.type='button';b.className='copy';b.textContent='Copy';
+    b.setAttribute('aria-label','Copy code to clipboard');
+    b.addEventListener('click',function(){
+      var txt=pre.innerText;
+      var done=function(){b.textContent='Copied';setTimeout(function(){b.textContent='Copy';},1500);};
+      if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(txt).then(done,function(){});}
+      else{try{var r=document.createRange();r.selectNodeContents(pre);var s=window.getSelection();s.removeAllRanges();s.addRange(r);document.execCommand('copy');s.removeAllRanges();done();}catch(e){}}
+    });
+    w.appendChild(b);
+  });
+  document.querySelectorAll('.tw,.dia').forEach(function(el){el.setAttribute('tabindex','0');el.setAttribute('role','region');if(!el.getAttribute('aria-label'))el.setAttribute('aria-label','Scrollable content');});
+  var links=[].slice.call(document.querySelectorAll('.side a.toc'));
+  var map={};links.forEach(function(a){map[a.getAttribute('href').slice(1)]=a;});
+  if(links.length&&'IntersectionObserver' in window){
+    var io=new IntersectionObserver(function(es){es.forEach(function(e){
+      if(e.isIntersecting){links.forEach(function(l){l.classList.remove('on');l.removeAttribute('aria-current');});
+        var a=map[e.target.id];if(a){a.classList.add('on');a.setAttribute('aria-current','true');}}});
+    },{rootMargin:'-10% 0px -80% 0px'});
+    document.querySelectorAll('main h2[id],main h3[id]').forEach(function(h){io.observe(h);});
+  }
+  document.querySelectorAll('.mnav a').forEach(function(a){a.addEventListener('click',function(){document.querySelector('.mnav').removeAttribute('open');});});
 })();
 """
 
@@ -135,28 +117,39 @@ def render(md_text: str) -> tuple[str, list[tuple[int, str, str]]]:
     body = md.convert(md_text)
     body = re.sub(r"<table>", '<div class="tw"><table>', body)
     body = body.replace("</table>", "</table></div>")
+    body = re.sub(r"<blockquote>\s*(.*?)\s*</blockquote>", r'<div class="call">\1</div>', body, flags=re.S)
 
     def code(m: re.Match) -> str:
         cls = m.group(1) or ""
         inner = m.group(2)
         if "mermaid" in cls:
             return f'<div class="cb mm"><span class="lbl">diagram source (mermaid)</span><pre><code>{inner}</code></pre></div>'
-        return f'<div class="cb"><pre><code{(" " + cls) if cls else ""}>{inner}</code></pre></div>'
+        return f'<div class="pw"><pre><code{(" " + cls) if cls else ""}>{inner}</code></pre></div>'
     body = re.sub(r'<pre><code(?: class="([^"]*)")?>(.*?)</code></pre>', code, body, flags=re.S)
     toc = [(int(m.group(1)), m.group(2), re.sub(r"<[^>]+>", "", m.group(3)))
            for m in re.finditer(r'<h([23]) id="([^"]+)">(.*?)</h\1>', body, re.S)]
     return body, toc
 
 
-def page(title: str, slug: str, body: str, toc: list, nav: str, prev_next: str, depth_to_root: str) -> str:
-    toc_html = "".join(f'<a class="l{lvl}" href="#{i}">{html.escape(t)}</a>' for lvl, i, t in toc)
+def page(title: str, slug: str, body: str, toc: list, nav: str, prev_next: str, depth_to_root: str,
+         group: str = "Documentation") -> str:
+    toc_html = "".join(f'<a class="toc{" sub" if lvl == 3 else ""}" href="#{i}">{html.escape(t)}</a>' for lvl, i, t in toc)
+    side_toc = f'<b class="h toc-h">On this page</b>{toc_html}' if toc else ""
+    lede = ("Generated from the Markdown in <code>docs/" + html.escape(slug) + ".md</code>." if slug != "index"
+            else "All project documentation in one place.")
     return f"""<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>{html.escape(title)} | migration-agent docs</title><style>{CSS}</style></head><body>
-<header class="top"><span class="tag">migration-agent docs</span><h1>{html.escape(title)}</h1></header>
-<details class="mob"><summary>All docs</summary>{nav}</details>
-<div class="layout"><nav class="docs" aria-label="Documentation">{nav}</nav>
-<main>{body}{prev_next}</main>
-<nav class="toc" aria-label="On this page"><b>On this page</b>{toc_html}</nav></div>
+<a class="skip" href="#main">Skip to the content</a>
+<header class="hero"><div class="hero-in">
+<div class="topbar"><span class="brand"><b>migration</b> agent / docs</span><button class="btn" id="theme" type="button" aria-label="Toggle light and dark theme">Toggle theme</button></div>
+<span class="eyebrow">{html.escape(group)}</span>
+<h1 style="max-width:none">{html.escape(title)}</h1>
+<p class="lede">{lede}</p>
+</div></header>
+<div class="layout" id="top">
+<aside class="side" aria-label="Documentation">{nav}{side_toc}</aside>
+<main id="main"><details class="mnav"><summary>All docs and this page</summary><nav>{nav}</nav></details>{body}{prev_next}</main>
+</div>
 <footer>Generated from <code>docs/{html.escape(slug)}.md</code> by <code>scripts/build_docs_html.py</code>. Edit the Markdown, not this file.</footer>
 <script>{JS}</script></body></html>"""
 
@@ -170,16 +163,16 @@ def main() -> None:
     order += sorted(known - set(order))
 
     def nav_for(cur: str) -> str:
-        out = [f'<a href="{rel(cur, "index")}">Overview</a>']
+        out = ['<b class="h">Documentation</b>', f'<a href="{rel(cur, "index")}">Overview</a>']
         for name, slugs in GROUPS + [("Other", sorted(known - {s for _, ss in GROUPS for s in ss}))]:
             items = [s for s in slugs if s in known]
             if not items:
                 continue
-            out.append(f"<b>{html.escape(name)}</b>")
+            out.append(f'<div class="grp">{html.escape(name)}</div>')
             for s in items:
                 on = ' class="on"' if s == cur else ""
                 out.append(f'<a{on} href="{rel(cur, s)}">{html.escape(titles[s])}</a>')
-        out.append("<b>Hand-built guides</b>")
+        out.append('<div class="grp">Hand-built guides</div>')
         for href, name, _ in HAND_BUILT:
             prefix = "../" * cur.count("/")
             out.append(f'<a href="{prefix}{href}">{html.escape(name)}</a>')
@@ -202,7 +195,8 @@ def main() -> None:
             pn += f'<a href="{rel(slug, n)}">{html.escape(titles[n])} &rarr;</a>'
         target = OUT / (slug + ".html")
         target.parent.mkdir(parents=True, exist_ok=True)
-        target.write_text(page(titles[slug], slug, body, toc, nav_for(slug), f'<div class="pager">{pn}</div>', ""))
+        grp = next((n for n, ss in GROUPS if slug in ss), "Documentation")
+        target.write_text(page(titles[slug], slug, body, toc, nav_for(slug), f'<div class="pager">{pn}</div>', "", grp))
 
     cards = "".join(f'<a class="card" href="{h}"><b>{html.escape(n)}</b><span>{html.escape(d)}</span></a>' for h, n, d in HAND_BUILT)
     for name, slugs in GROUPS:
