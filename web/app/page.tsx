@@ -20,6 +20,7 @@ export default function Landing() {
           <Logo />
           <nav aria-label="Primary" className="flex items-center gap-1">
             <a href="#how" className="hidden rounded-lg px-3 py-2 text-sm hover:bg-surface-2 sm:block">How it works</a>
+            <a href="#status" className="hidden rounded-lg px-3 py-2 text-sm hover:bg-surface-2 sm:block">What you get</a>
             <a href="#migrate" className="hidden rounded-lg px-3 py-2 text-sm hover:bg-surface-2 sm:block">Migrate</a>
             <a href="#honest" className="hidden rounded-lg px-3 py-2 text-sm hover:bg-surface-2 sm:block">Measured</a>
             <ThemeToggle />
@@ -33,20 +34,19 @@ export default function Landing() {
         <section className="dotgrid border-b border-line">
           <div className="mx-auto grid max-w-6xl gap-12 px-4 pb-20 pt-14 sm:px-6 lg:grid-cols-[1.05fr_1fr] lg:pt-24">
             <div>
-              <p className="eyebrow rise mb-5">For teams modernising a legacy service</p>
+              <p className="eyebrow rise mb-5">Legacy service modernisation, with evidence at every step</p>
               <h1 className="display rise rise-1 text-[3.1rem] sm:text-7xl">
-                Know what the service does <em className="text-accent">before</em> you rewrite it.
+                Understand it, approve it, then migrate it <em className="text-accent">with proof</em>.
               </h1>
               <p className="rise rise-2 mt-6 max-w-xl text-lg text-muted">
-                Migration Agent reads your code in a read-only sandbox and produces an understanding document and a knowledge graph.
-                Every claim cites a file and a line, so a reviewer can check it in seconds instead of trusting a summary.
-                When you are ready to rewrite, the command-line tool migrates it slice by slice and checks each slice against the old service.
+                Migration Agent reads your legacy service in a read-only sandbox and writes an understanding document where every claim cites a file and a line.
+                You approve it. Then it migrates the service one slice at a time and checks each slice against the responses your running legacy service actually gives.
               </p>
               <div className="rise rise-3 mt-8 flex flex-wrap gap-3">
                 <LinkButton href="/signup" variant="primary" className="min-h-12 px-6 text-base">Create a workspace</LinkButton>
                 <LinkButton href="/login" className="min-h-12 px-6 text-base">Log in</LinkButton>
               </div>
-              <p className="rise rise-4 mt-5 font-mono text-xs text-muted">Run on three reference repos: Spring, Django and Express.</p>
+              <p className="rise rise-4 mt-5 font-mono text-xs text-muted">Understand and approve run here. Migration is a command-line beta. Tried on three reference repos: Spring, Django and Express.</p>
             </div>
 
             <figure className="rise rise-2 relative" aria-label="A claim linked to the lines of code that prove it">
@@ -77,17 +77,37 @@ export default function Landing() {
 
         <section id="how" className="mx-auto max-w-6xl scroll-mt-20 px-4 py-20 sm:px-6">
           <p className="eyebrow mb-3">How it works</p>
-          <h2 className="display max-w-3xl text-4xl sm:text-5xl">A map you can check, not a summary you have to trust.</h2>
-          <ol className="mt-12 grid gap-px overflow-hidden rounded-2xl border border-line bg-line md:grid-cols-3">
+          <h2 className="display max-w-3xl text-4xl sm:text-5xl">Two phases, one folder of state, a human sign-off between them.</h2>
+          <p className="mt-4 max-w-2xl text-muted">Phase 1 produces a map you can check. You approve it. Phase 2 uses that approved map as the contract for the migration.</p>
+
+          <h3 className="eyebrow mt-12">Phase 1: understand and approve</h3>
+          <ol className="mt-4 grid gap-px overflow-hidden rounded-2xl border border-line bg-line md:grid-cols-4">
             {[
-              ["01", "Connect", "Paste a public git URL or upload an archive. You see the estimated cost before anything runs, and a hard budget stops a run gracefully."],
+              ["01", "Connect", "Paste a public git URL or upload an archive. You see the estimated cost first, and a hard budget stops a run gracefully."],
               ["02", "Read", "Static extraction finds routes, entities and config. Models add the business rules. Evidence that does not exist in the code is rejected."],
-              ["03", "Review", "A Verifier compares the document with your own requirements and flags contradictions. You resolve each finding; only the affected code is re-read."],
+              ["03", "Verify", "A blind Verifier compares the document with your own docs and flags contradictions. You resolve each one; only the affected code is re-read."],
+              ["04", "Approve", "Decide per quirk whether to preserve or fix it, then sign off. Approval pins the exact graph and document and goes stale if either changes."],
             ].map(([n, t, d]) => (
-              <li key={n} className="bg-surface p-7">
+              <li key={n} className="bg-surface p-6">
                 <span className="font-mono text-sm text-accent">{n}</span>
-                <h3 className="display mt-6 text-3xl">{t}</h3>
-                <p className="mt-2 text-muted">{d}</p>
+                <h4 className="display mt-5 text-2xl">{t}</h4>
+                <p className="mt-2 text-sm text-muted">{d}</p>
+              </li>
+            ))}
+          </ol>
+
+          <h3 className="eyebrow mt-12">Phase 2: migrate and prove equivalence (command-line beta)</h3>
+          <ol className="mt-4 grid gap-px overflow-hidden rounded-2xl border border-line bg-line md:grid-cols-4">
+            {[
+              ["05", "Plan", "Pick the target (Java 8 to 21, Spring Boot 2 to 3, Django 3 to 5, Express to Fastify, JS to Go). Target-fit finds risks; the planner cuts the service into ordered slices."],
+              ["06", "Record", "Cases run twice against your live legacy service in a Docker sandbox. Expected behaviour is recorded, never written by the model. Token-protected services get a random token per run."],
+              ["07", "Generate", "The model returns structured edits and never gets a shell. Builds and tests run in the sandbox; a fresh-session reviewer checks each slice."],
+              ["08", "Prove and cut over", "Old and new restart from the same data and run the same cases. You approve each slice, a router moves its routes, and the cut-over plan needs its own approval."],
+            ].map(([n, t, d]) => (
+              <li key={n} className="bg-surface p-6">
+                <span className="font-mono text-sm text-accent">{n}</span>
+                <h4 className="display mt-5 text-2xl">{t}</h4>
+                <p className="mt-2 text-sm text-muted">{d}</p>
               </li>
             ))}
           </ol>
@@ -111,36 +131,32 @@ export default function Landing() {
           </div>
         </section>
 
-        <section id="migrate" className="mx-auto max-w-6xl scroll-mt-20 px-4 py-20 sm:px-6">
-          <p className="eyebrow mb-3">Then migrate, with proof</p>
-          <h2 className="display max-w-3xl text-4xl sm:text-5xl">A slice ships only when it answers like the old service.</h2>
-          <p className="mt-4 max-w-2xl text-muted">
-            You sign off on the understanding, then the command-line tool moves one slice at a time. The expected behaviour is recorded from your
-            running legacy service, never written by the model. This part is a <strong className="text-ink">beta</strong>: it runs on your own machine with
-            Docker, and the hosted app does not run it.
-          </p>
-          <ol className="mt-10 grid gap-px overflow-hidden rounded-2xl border border-line bg-line md:grid-cols-4">
-            {[
-              ["01", "Approve", "Decide per quirk whether to preserve or fix it. Approval pins the exact graph and document, and goes stale if either changes."],
-              ["02", "Record", "Cases run twice against the live old service in a sandbox. Services that need a token get a random one on every request."],
-              ["03", "Compare", "Old and new restart from the same data and run the same cases. Every difference is listed; a fuzzer and a latency check add warnings."],
-              ["04", "Cut over", "You approve each slice, a router moves its routes, and the cut-over plan needs its own approval. Nothing is deployed for you."],
-            ].map(([n, t, d]) => (
-              <li key={n} className="bg-surface p-6">
-                <span className="font-mono text-sm text-accent">{n}</span>
-                <h3 className="display mt-5 text-2xl">{t}</h3>
-                <p className="mt-2 text-sm text-muted">{d}</p>
-              </li>
-            ))}
-          </ol>
-          <div className="mt-8 rounded-2xl border border-line-strong bg-surface p-6">
-            <p className="eyebrow mb-2">Sandbox trial, no model</p>
-            <p className="text-sm text-muted">
-              On the Express sample, the sandbox built the old service, recorded 24 authenticated cases, and ran a copy as the new one:
-              24 of 24 matched and 90 fuzz variants found no difference. A deliberately changed status code was caught.
-              A second, subtler change (a price boundary) was <strong className="text-ink">not</strong> caught, because the offline cases never reach it.
-              Model-written cases are meant to cover that, and they have not run yet.
-            </p>
+        <section id="status" className="border-y border-line bg-surface-2">
+          <div className="mx-auto max-w-6xl scroll-mt-20 px-4 py-20 sm:px-6">
+            <p className="eyebrow mb-3">What you get today</p>
+            <h2 className="display max-w-3xl text-4xl sm:text-5xl">Where each part runs, and how far along it is.</h2>
+            <div className="mt-10 grid gap-4 md:grid-cols-3">
+              {[
+                ["Available", "In this app", "Understand and verify", "Connect a repo, read it, review findings, explore the graph, add your docs for the Verifier, and track cost and usage."],
+                ["Available", "Command line", "Approve", "Record preserve-or-fix decisions per quirk, check readiness, and sign off. The approval writes the migration contract."],
+                ["Beta", "Command line, needs Docker", "Migrate with proof", "Target fit, slices, recorded cases, sandboxed generation, equivalence, fuzzing, a strangler router and a cut-over plan. Run it on your own machine."],
+              ].map(([badge, where, t, d]) => (
+                <article key={t} className="rounded-2xl border border-line-strong bg-surface p-6">
+                  <p className="font-mono text-xs uppercase text-accent">{badge} · {where}</p>
+                  <h3 className="display mt-3 text-2xl">{t}</h3>
+                  <p className="mt-2 text-sm text-muted">{d}</p>
+                </article>
+              ))}
+            </div>
+            <div className="mt-8 rounded-2xl border border-line-strong bg-surface p-6">
+              <p className="eyebrow mb-2">Sandbox trial of the migration beta, no model</p>
+              <p className="text-sm text-muted">
+                On the Express sample, the sandbox built the old service, recorded 24 authenticated cases, and ran a copy as the new one:
+                24 of 24 matched and 90 fuzz variants found no difference. A deliberately changed status code was caught.
+                A second, subtler change (a price boundary) was <strong className="text-ink">not</strong> caught, because the offline cases never reach it.
+                Model-written cases are meant to cover that, and they have not run yet.
+              </p>
+            </div>
           </div>
         </section>
 
@@ -160,13 +176,13 @@ export default function Landing() {
               </div>
             ))}
           </dl>
-          <p className="mt-8 max-w-2xl text-sm text-muted">Labels are small and hand written: treat these as a regression guide, not a benchmark. The first live run of the migration sandbox found seven bugs that every offline test had missed; all are fixed.</p>
+          <p className="mt-8 max-w-2xl text-sm text-muted">Labels are small and hand written: treat these as a regression guide, not a benchmark. The first live run of the migration sandbox found seven bugs that every offline test had missed; all are fixed. Nothing here is certified or audited.</p>
         </section>
 
         <section className="px-4 pb-24 sm:px-6">
           <div className="mx-auto max-w-6xl rounded-3xl bg-ink px-6 py-14 text-center text-bg sm:px-14">
-            <h2 className="display text-4xl sm:text-6xl">Find out what your service really does.</h2>
-            <p className="mx-auto mt-3 max-w-lg opacity-75">Billing is not enabled yet. Create a workspace and run your first analysis under the internal plan. Approval and migration are available in the command-line tool.</p>
+            <h2 className="display text-4xl sm:text-6xl">Find out what your service really does, then move it safely.</h2>
+            <p className="mx-auto mt-3 max-w-lg opacity-75">Billing is not enabled yet. Create a workspace and run your first analysis under the internal plan. Approval and migration run in the command-line tool.</p>
             <LinkButton href="/signup" variant="primary" className="mt-8 min-h-12 px-8 text-base">Create a workspace</LinkButton>
           </div>
         </section>
@@ -175,7 +191,7 @@ export default function Landing() {
       <footer className="border-t border-line">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-4 py-8 text-sm text-muted sm:px-6">
           <Logo />
-          <p>Your source is read in a sandbox. Secrets are redacted at ingest.</p>
+          <p>Your source is read in a sandbox. Secrets are redacted at ingest. Migration code runs only in locked-down Docker containers.</p>
         </div>
       </footer>
     </div>
