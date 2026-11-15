@@ -1,0 +1,44 @@
+/* ---- docs motion: orientation, not decoration. Everything is visible without JS (the .js-motion class is added by JS)
+        and nothing animates for prefers-reduced-motion. ---- */
+.mprog{position:fixed;inset:0 0 auto 0;height:3px;z-index:90;transform-origin:0 50%;transform:scaleX(0);background:linear-gradient(90deg,var(--teal,#0f766e),var(--indigo,#4338ca));pointer-events:none}
+.mtop{position:fixed;right:18px;bottom:18px;z-index:80;width:42px;height:42px;border-radius:50%;border:1px solid var(--line2,#d2c9b3);background:var(--panel,#fff);color:var(--ink,#111);font:700 18px/1 var(--sans,system-ui);cursor:pointer;box-shadow:var(--shadow,0 6px 20px rgba(0,0,0,.2));opacity:0;transform:translateY(12px);pointer-events:none;transition:opacity .25s,transform .25s}
+.mtop.on{opacity:1;transform:none;pointer-events:auto}
+.mtop:hover{border-color:var(--teal,#0f766e);color:var(--teal,#0f766e)}
+@media print{.mprog,.mtop{display:none}.mv{opacity:1!important;transform:none!important}}
+@media (prefers-reduced-motion:no-preference){
+  /* the active contents link and hover states ease instead of snapping */
+  .side a,nav#toc a{transition:color .2s,border-color .2s,background .25s,padding-left .2s}
+  .side a:hover,nav#toc a:hover{padding-left:14px}
+  a.card,.card{transition:transform .25s cubic-bezier(.2,.7,.2,1),border-color .25s,box-shadow .25s}
+  a.card:hover,.card:hover{transform:translateY(-4px);box-shadow:0 14px 30px -18px rgba(0,0,0,.45)}
+  /* blocks ease in once, as you reach them */
+  html.js-motion .mv{opacity:0;transform:translateY(14px);transition:opacity .55s ease,transform .6s cubic-bezier(.2,.7,.2,1)}
+  html.js-motion .mv.mv-in{opacity:1;transform:none}
+  html.js-motion .call.mv{transform:translateX(-16px)}
+  html.js-motion .call.mv.mv-in{transform:none}
+  /* tables: rows follow the table */
+  html.js-motion .tw.mv tbody tr{opacity:0;transform:translateY(6px)}
+  html.js-motion .tw.mv-in tbody tr{animation:mrow .45s ease forwards;animation-delay:calc(var(--r,0)*.045s + .1s)}
+  /* numbered steps: the connector draws down the list */
+  html.js-motion ol.steps.mv-in>li::after{transform-origin:top;animation:mgrow .5s ease both;animation-delay:calc(var(--r,0)*.18s + .2s)}
+  html.js-motion ol.steps.mv-in>li::before{animation:mpop .45s cubic-bezier(.2,.9,.3,1.4) both;animation-delay:calc(var(--r,0)*.18s)}
+  /* pipelines: the stages light up in order, like data flowing through */
+  html.js-motion .flow.mv-in span{animation:mlight 3.2s ease both;animation-delay:calc(var(--r,0)*.35s + .2s)}
+  /* diagrams come alive only while visible */
+  html.js-motion .mv-in svg .bx,html.js-motion .mv-in svg .b,html.js-motion .mv-in svg .bt,html.js-motion .mv-in svg .bi,html.js-motion .mv-in svg .bw{animation:mpop .5s cubic-bezier(.2,.9,.3,1.3) both;animation-delay:calc(var(--k,0)*.04s)}
+  html.js-motion .mv-in svg .ln.d,html.js-motion .mv-in svg .ld{animation:mmarch 1.4s linear infinite}
+  /* jump links: the heading you land on flashes */
+  :target{animation:mflash 1.8s ease}
+  h2:target,h3:target,.sub:target>h3,section:target>h2{animation:mflash 1.8s ease;border-radius:6px}
+  /* copy feedback */
+  .copy.done,.cp.done{animation:mpop .35s ease}
+  summary{transition:background .2s}
+  details[open]>*:not(summary){animation:mfade .3s ease}
+}
+@keyframes mrow{to{opacity:1;transform:none}}
+@keyframes mgrow{from{transform:scaleY(0)}to{transform:scaleY(1)}}
+@keyframes mpop{from{opacity:0;transform:scale(.85)}to{opacity:1;transform:none}}
+@keyframes mlight{0%,10%{box-shadow:none}18%,40%{border-color:var(--teal,#0f766e);box-shadow:0 0 0 3px color-mix(in srgb,var(--teal,#0f766e) 25%,transparent)}60%,100%{box-shadow:none}}
+@keyframes mmarch{to{stroke-dashoffset:-18}}
+@keyframes mflash{0%,40%{background:color-mix(in srgb,var(--teal,#0f766e) 22%,transparent)}100%{background:transparent}}
+@keyframes mfade{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}

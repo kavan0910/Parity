@@ -23,7 +23,8 @@ app is step 1 of the migration, not the product. Phase 1 is steps 1 and 2, Phase
 | [remaining-work.md](remaining-work.md) | Everyone | What is built, what ran for real, and what is left, against every plan (grill, implementation plan, Phase 2 plan, roadmap) |
 | `eval/README.md` (repository root) | Contributors | Eval fixtures, Phase 1 scoring, Phase 2 target pairs, gate and baseline |
 
-HTML versions of these pages are in `html/` (built by `scripts/build_docs_html.py`). The hand-built pages
+HTML versions of these pages are in `html/` (built by `scripts/build_docs_html.py`, which also adds the shared reading motion from
+`scripts/docs_motion.*`; `scripts/apply_docs_motion.py` refreshes it on the hand-built pages). The hand-built pages
 `developer-handbook.html` (chapter 14), `tutorial.html` (sections 5 and 6) and `user-guide-app.html` (CLI table and
 "Not available yet") are maintained separately. They were last updated on 2026-11-15 (Phase 1 approval gate, Phase 2, the live Docker findings); update them by hand whenever the markdown pages change in substance. The hosted app guide documents the
 web app only: approval and Phase 2 are CLI features.

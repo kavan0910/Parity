@@ -90,6 +90,15 @@ The version lives in `pyproject.toml` only.
   workdir-masking guard.
 - Docs: `docs/remaining-work.md` (what is built, verified and left, against every plan).
 
+### Changed: motion in the HTML docs
+- Every HTML doc (generated pages, tutorial, hosted guide, handbook) gets the same useful motion: a reading-progress bar, a
+  back-to-top button, blocks that ease in as you reach them, table rows that follow their table, numbered-step connectors
+  that draw down the list, pipeline stages that light up in order, diagrams that animate while visible, a flash on the
+  heading you jump to, a contents list that follows your position, and copy-button feedback. Content is fully visible
+  without JavaScript, and nothing moves for `prefers-reduced-motion`.
+- Source: `scripts/docs_motion.css` and `scripts/docs_motion.js`. `scripts/build_docs_html.py` includes them in generated
+  pages; run `python scripts/apply_docs_motion.py` to refresh the three hand-built pages (it is idempotent).
+
 ### Changed: acquisition landing page (web app)
 - Customer-facing sections and navigation: Why Parity, How it works, Stacks, Results, Security, FAQ (replacing "The MVP",
   "What you get", "Measured"), plus "Who it is for", an early-access section, and a footer with product, trust and

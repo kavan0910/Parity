@@ -42,7 +42,9 @@ HAND_BUILT = [
     ("../tutorial.html", "CLI tutorial", "From install to a reviewed result"),
 ]
 
-CSS = (ROOT / "scripts" / "docs_theme.css").read_text()   # the user-guide-app.html design, shared by every doc
+CSS = (ROOT / "scripts" / "docs_theme.css").read_text() + (ROOT / "scripts" / "docs_motion.css").read_text()   # the user-guide-app.html design plus shared motion
+
+JS_MOTION = (ROOT / "scripts" / "docs_motion.js").read_text()
 
 JS = """
 (function(){
@@ -151,7 +153,7 @@ def page(title: str, slug: str, body: str, toc: list, nav: str, prev_next: str, 
 <main id="main"><details class="mnav"><summary>All docs and this page</summary><nav>{nav}</nav></details>{body}{prev_next}</main>
 </div>
 <footer>Generated from <code>docs/{html.escape(slug)}.md</code> by <code>scripts/build_docs_html.py</code>. Edit the Markdown, not this file.</footer>
-<script>{JS}</script></body></html>"""
+<script>{JS}</script><script>{JS_MOTION}</script></body></html>"""
 
 
 def main() -> None:
