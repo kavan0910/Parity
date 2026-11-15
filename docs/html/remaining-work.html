@@ -1,0 +1,382 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>What is built, what is verified, and what is left | migration-agent docs</title><style>
+:root{--bg:#fbfaf7;--panel:#fff;--ink:#1c1b22;--mute:#6b6a76;--line:#e7e4dc;--accent:#5b4bdb;--accent2:#e0568b;--tint:#efecff;--code:#15141c;--codefg:#e9e7f5}
+@media (prefers-color-scheme:dark){:root{--bg:#0f0e14;--panel:#17161f;--ink:#ecebf3;--mute:#9a98a8;--line:#2a2836;--accent:#9b8cff;--accent2:#ff7fac;--tint:#221f3a}}
+*{box-sizing:border-box}html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.7 -apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,sans-serif}
+a{color:var(--accent)}
+.top{padding:44px 24px 34px;text-align:center;border-bottom:1px solid var(--line);background:radial-gradient(900px 300px at 50% -80px,var(--tint),transparent),var(--bg)}
+.top .tag{display:inline-block;padding:3px 12px;border:1px solid var(--line);border-radius:99px;font-size:13px;color:var(--mute);background:var(--panel)}
+.top h1{font-size:clamp(28px,5vw,44px);line-height:1.15;margin:14px auto 0;max-width:900px;letter-spacing:-.02em;background:linear-gradient(90deg,var(--accent),var(--accent2));-webkit-background-clip:text;background-clip:text;color:transparent}
+.layout{display:grid;grid-template-columns:250px minmax(0,1fr) 210px;gap:36px;max-width:1360px;margin:0 auto;padding:32px 24px 90px}
+nav.docs,nav.toc{position:sticky;top:20px;align-self:start;max-height:calc(100vh - 40px);overflow:auto;font-size:14px}
+nav b{display:block;margin:14px 0 6px;color:var(--mute);font-weight:600;text-transform:uppercase;letter-spacing:.08em;font-size:11.5px}
+nav b:first-child{margin-top:0}
+nav a{display:block;padding:4px 10px;border-left:2px solid var(--line);color:var(--mute);text-decoration:none}
+nav a:hover,nav a.on{color:var(--accent);border-color:var(--accent)}
+nav a.on{font-weight:600}
+nav.toc a.l3{padding-left:22px;font-size:13px}
+main{min-width:0}main h2{font-size:27px;margin:44px 0 12px;letter-spacing:-.01em;padding-top:6px;border-top:1px solid var(--line)}
+main h1{display:none}main h3{font-size:20px;margin:30px 0 8px}main h4{font-size:16px;margin:22px 0 6px}
+main p,main li{max-width:78ch}p{margin:0 0 14px}ul,ol{padding-left:24px;margin:0 0 16px}li{margin:4px 0}
+code{font:13.5px ui-monospace,SFMono-Regular,Menlo,monospace;background:var(--tint);padding:2px 6px;border-radius:6px}
+.cb{position:relative;margin:14px 0 20px}
+pre{background:var(--code);color:var(--codefg);padding:16px 18px;border-radius:14px;overflow:auto;margin:0;line-height:1.55;box-shadow:0 8px 24px -14px #0008}
+pre code{background:none;padding:0;color:inherit;font-size:13px}
+.cb button{position:absolute;top:8px;right:8px;font:12px inherit;padding:3px 9px;border-radius:8px;border:1px solid #fff3;background:#ffffff14;color:#e9e7f5;cursor:pointer}
+.cb button:hover{background:#ffffff2a}
+.cb .lbl{position:absolute;top:8px;left:14px;font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:#b9b5d6}
+.cb.mm pre{padding-top:34px}
+.tw{overflow-x:auto;margin:14px 0 22px;border:1px solid var(--line);border-radius:14px;background:var(--panel)}
+table{border-collapse:collapse;width:100%;font-size:14.5px}th,td{text-align:left;padding:9px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--mute);background:var(--tint)}tr:last-child td{border-bottom:0}
+blockquote{margin:16px 0;padding:10px 18px;border-left:4px solid var(--accent);background:var(--tint);border-radius:0 12px 12px 0}blockquote p{margin:6px 0}
+hr{border:0;border-top:1px solid var(--line);margin:30px 0}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;margin:18px 0}
+.card{display:block;padding:16px 18px;border:1px solid var(--line);border-radius:14px;background:var(--panel);text-decoration:none;color:var(--ink)}
+.card:hover{border-color:var(--accent)}.card b{display:block;color:var(--accent);margin-bottom:2px}.card span{color:var(--mute);font-size:14px}
+.pager{display:flex;justify-content:space-between;gap:12px;margin-top:56px;padding-top:20px;border-top:1px solid var(--line);font-size:14px}
+footer{text-align:center;color:var(--mute);font-size:13px;padding:28px;border-top:1px solid var(--line)}
+details.mob{display:none;margin:0 24px 16px;border:1px solid var(--line);border-radius:12px;background:var(--panel);padding:8px 14px}
+@media(max-width:1100px){.layout{grid-template-columns:230px minmax(0,1fr)}nav.toc{display:none}}
+@media(max-width:820px){.layout{grid-template-columns:1fr;padding-top:16px}nav.docs{display:none}details.mob{display:block}}
+</style></head><body>
+<header class="top"><span class="tag">migration-agent docs</span><h1>What is built, what is verified, and what is left</h1></header>
+<details class="mob"><summary>All docs</summary><a href="index.html">Overview</a><b>Start here</b><a href="README.html">migration-agent documentation</a><a href="user-guide.html">User guide</a><a href="architecture.html">Architecture</a><a href="api-reference.html">API reference</a><a href="deployment.html">Deployment guide</a><a href="threat-model.html">Threat model (D-06)</a><b>Phase 2: migrate</b><a href="phase2-architecture.html">Phase 2 architecture: the migrate/ package</a><a href="phase2-plan.html">Phase 2 implementation plan: Migrate &amp; Prove Equivalence</a><b>Roadmap</b><a class="on" href="remaining-work.html">What is built, what is verified, and what is left</a><b>Product and platform</b><a href="product-architecture.html">Product architecture and roadmap: from CLI engine to hosted service</a><a href="platform-contract.html">Platform contract (hosted product)</a><a href="phase0-results.html">Phase 0 interim results (2026-11-09)</a><a href="operations-runbook.html">Operations runbook</a><b>Security</b><a href="security/security-overview-draft.html">Security overview (customer-facing DRAFT)</a><a href="security/threat-model-hosted.html">Threat model update: hosted product</a><a href="security/data-handling-and-retention.html">Data handling and retention policy (draft)</a><a href="security/pentest-2026-11-09.html">Hostile security review, 2026-11-09: findings and status</a><a href="security/incident-response.html">Incident response outline</a><a href="security/secure-sdlc.html">Secure development lifecycle</a><a href="security/soc2-readiness.html">SOC 2 readiness checklist</a><a href="security/subprocessors.html">Subprocessor list (TEMPLATE)</a><b>Hand-built guides</b><a href="../developer-handbook.html">Developer handbook</a><a href="../user-guide-app.html">Product user guide</a><a href="../tutorial.html">CLI tutorial</a></details>
+<div class="layout"><nav class="docs" aria-label="Documentation"><a href="index.html">Overview</a><b>Start here</b><a href="README.html">migration-agent documentation</a><a href="user-guide.html">User guide</a><a href="architecture.html">Architecture</a><a href="api-reference.html">API reference</a><a href="deployment.html">Deployment guide</a><a href="threat-model.html">Threat model (D-06)</a><b>Phase 2: migrate</b><a href="phase2-architecture.html">Phase 2 architecture: the migrate/ package</a><a href="phase2-plan.html">Phase 2 implementation plan: Migrate &amp; Prove Equivalence</a><b>Roadmap</b><a class="on" href="remaining-work.html">What is built, what is verified, and what is left</a><b>Product and platform</b><a href="product-architecture.html">Product architecture and roadmap: from CLI engine to hosted service</a><a href="platform-contract.html">Platform contract (hosted product)</a><a href="phase0-results.html">Phase 0 interim results (2026-11-09)</a><a href="operations-runbook.html">Operations runbook</a><b>Security</b><a href="security/security-overview-draft.html">Security overview (customer-facing DRAFT)</a><a href="security/threat-model-hosted.html">Threat model update: hosted product</a><a href="security/data-handling-and-retention.html">Data handling and retention policy (draft)</a><a href="security/pentest-2026-11-09.html">Hostile security review, 2026-11-09: findings and status</a><a href="security/incident-response.html">Incident response outline</a><a href="security/secure-sdlc.html">Secure development lifecycle</a><a href="security/soc2-readiness.html">SOC 2 readiness checklist</a><a href="security/subprocessors.html">Subprocessor list (TEMPLATE)</a><b>Hand-built guides</b><a href="../developer-handbook.html">Developer handbook</a><a href="../user-guide-app.html">Product user guide</a><a href="../tutorial.html">CLI tutorial</a></nav>
+<main><h1 id="what-is-built-what-is-verified-and-what-is-left">What is built, what is verified, and what is left</h1>
+<p>Last updated 2026-11-15. This page compares the code with every plan that defines the product:</p>
+<ul>
+<li>the design grill, <code>.lavish/migration-agent-grill.html</code> (Q1 to Q18, Phase 1: understand and verify);</li>
+<li>the implementation plan, <code>.lavish/migration-agent-impl-plan.html</code> (phases A to D, deliverables A-01 to D-08);</li>
+<li>the Phase 2 plan, <a href="phase2-plan.html">phase2-plan.md</a> (milestones M0 to M7) and the Phase 2 grill outcome in its section 14;</li>
+<li>the product roadmap, <a href="product-architecture.html">product-architecture.md</a> section 11 (hosted product, phases 0 to 3);</li>
+<li>the open security findings, <a href="security/pentest-2026-11-09.html">security/pentest-2026-11-09.md</a>.</li>
+</ul>
+<p>Words are literal. <strong>Built</strong> means the code exists and offline tests pass. <strong>Verified live</strong> means it also ran for
+real: a real Docker daemon, a real service. <strong>Unmeasured</strong> means it runs but nobody has scored its quality. Nothing
+here has run with a real model for Phase 2, and nothing has been hand-scored on a large real repository.</p>
+<h2 id="at-a-glance">At a glance</h2>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>Layer</th>
+<th>Built</th>
+<th>Verified live</th>
+<th>Main gap</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Phase 1: understand, verify, approve (grill Q1 to Q18; plan A to D)</td>
+<td>all 4 phases, A-01 to D-08</td>
+<td>ran on 3 small open-source repos with a real model</td>
+<td>accuracy on real repositories is unmeasured</td>
+</tr>
+<tr>
+<td>Phase 2: migrate and prove equivalence (M0 to M7)</td>
+<td>all 8 milestones, plus the additions below</td>
+<td>the sandbox, build, record, equivalence, fuzz, composite and 3 codemods ran on a real Docker daemon on the three eval fixtures</td>
+<td>no stage has ever run with a real model</td>
+</tr>
+<tr>
+<td>Hosted product (backend, web, deploy; roadmap phases 1 and 2)</td>
+<td>API, worker, web UI, compose stack</td>
+<td>never run end to end</td>
+<td>Docker stack, Postgres paths, CI never exercised</td>
+</tr>
+<tr>
+<td>Commercial (roadmap phase 3)</td>
+<td>billing seam only</td>
+<td>no</td>
+<td>pricing, billing, SSO, SOC 2, legal</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="phase-1-plan-against-code">Phase 1: plan against code</h2>
+<p>Every grill decision (Q1 to Q18) and every implementation-plan deliverable has code and tests.</p>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>Plan item</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Phase A: scaffolding, ingestion with zip-bomb and secret handling, tree-sitter, manifests, config, inventory, audit log, graph schema with stable IDs, sandbox baseline, walking skeleton, eval harness (A-01 to A-11)</td>
+<td>built</td>
+</tr>
+<tr>
+<td>Phase B: LLM layer with tiers, cache, retries and budget guard; chunk planner; module analyzer; merger with checkpoints; cross-reference; coverage checker; gap filler; business rules; renderer; evidence verifier; graph visualizer; <code>analyze</code> (B-01 to B-12)</td>
+<td>built</td>
+</tr>
+<tr>
+<td>Phase C: blind Verifier, finding classes, resolutions, targeted re-analysis, comments, review UI and server, quote verification, changelog (C-01 to C-09)</td>
+<td>built</td>
+</tr>
+<tr>
+<td>Phase D: extra route and schema extractors (Spring, Flask, FastAPI, Django, Rails, ASP.NET, Gin; Flyway, Alembic, Prisma, TypeORM, OpenAPI, proto), large-codebase handling, Docker packaging, incremental re-analysis, error recovery, threat model and red team, end-to-end tests, docs (D-01 to D-08)</td>
+<td>built</td>
+</tr>
+<tr>
+<td>Approval gate between the phases (<code>decide</code>, <code>status</code>, <code>approve</code>, migration contract)</td>
+<td>built (added for Phase 2)</td>
+</tr>
+</tbody>
+</table></div>
+<p>Not done, and not code:</p>
+<ul>
+<li><strong>Accuracy is unmeasured.</strong> The plan's own Phase 0 gate (5 to 10 real repositories of 50k to 500k lines,
+  hand-scored precision, evidence validity and coverage, cost per 1k lines) has not run. The only real runs are three
+  repositories of 1.8k to 4.3k lines, each in one chunk, on two different models, with nothing hand-scored. No node
+  reached <code>high</code> confidence. This is the largest open question for the whole product.</li>
+<li><strong>Scale is tested on synthetic repositories only</strong> (D-02 asks for a real 2,000-file repository).</li>
+<li><strong>The Verifier has not run against real documentation.</strong></li>
+<li>The signed, versioned release (D-03) needs CI, and CI has never run (see the platform section).</li>
+</ul>
+<h2 id="phase-2-plan-against-code">Phase 2: plan against code</h2>
+<p>M0 to M7 are built. What changed in the pass that produced this page:</p>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>Item</th>
+<th>Before</th>
+<th>Now</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Real Docker daemon</td>
+<td>never run</td>
+<td>the express-crud fixture ran end to end (below); django-lite and spring-lite build and start</td>
+</tr>
+<tr>
+<td>Cut-over in the review UI</td>
+<td>CLI only</td>
+<td>a Cut-over tab: every readiness check, the approval and whether its hashes still match, and an approve button</td>
+</tr>
+<tr>
+<td>Reviewer precision</td>
+<td>always <code>n/a</code></td>
+<td>humans accept or dismiss each reviewer finding (<code>slice review-finding</code>, or the Slice tab); precision is accepted over marked</td>
+</tr>
+<tr>
+<td>Latency comparison</td>
+<td>not built</td>
+<td>every equivalence run records per-case timings and flags cases much slower on the new service (advisory)</td>
+</tr>
+<tr>
+<td>Differential fuzzing</td>
+<td>not built</td>
+<td><code>equivalence fuzz</code> mutates recorded HTTP cases and compares legacy with new (advisory)</td>
+</tr>
+<tr>
+<td>Supply chain</td>
+<td>warning only</td>
+<td>every build records lockfile hashes and a CycloneDX SBOM; lockfiles generated by the build instead of committed are flagged</td>
+</tr>
+<tr>
+<td>Authenticated services</td>
+<td>every case answered 401</td>
+<td>a service declares <code>request_headers</code> (e.g. <code>X-API-Token: "{secret:API_TOKEN}"</code>); the runner injects the per-run synthetic secret into every request, and a case can override or remove a header</td>
+</tr>
+<tr>
+<td>Seeding in-memory databases</td>
+<td>declared in the spec, never executed</td>
+<td><code>seed_requests</code> are replayed after every <code>harness up</code> (legacy, new, and both services of the composite); a seed that fails stops <code>up</code></td>
+</tr>
+<tr>
+<td>Comparing from the same state</td>
+<td>state skew between a used legacy and a fresh new service</td>
+<td><code>equivalence</code> and <code>equivalence fuzz</code> restart both harness services first (<code>--no-reset</code> to keep state)</td>
+</tr>
+<tr>
+<td>Timestamps</td>
+<td>rows seeded at different moments always differed</td>
+<td>two ISO-8601 timestamps within 5 minutes are equal everywhere (recording, equivalence, fuzz, composite); hours apart, or zoned against naive, is still a difference</td>
+</tr>
+<tr>
+<td>Codemods</td>
+<td>OpenRewrite Maven only; jscodeshift stub; nothing had run</td>
+<td>OpenRewrite for Maven and Gradle, django-upgrade with pyupgrade, and lebab for JavaScript; Maven, Python and JavaScript ran live</td>
+</tr>
+</tbody>
+</table></div>
+<p>What the live runs found. Every one of these passed all offline tests before it was fixed:</p>
+<ol>
+<li>The allowlisting proxy (Squid) crashed on start, so every build that used a package mirror failed with <code>EAI_AGAIN</code>.</li>
+<li>Its log directory was not writable by Squid's own user.</li>
+<li>Its access log was unreadable, so the egress audit file was empty.</li>
+<li>Squid's ICMP helper logged a <code>FATAL</code> on every start (disabled).</li>
+<li>The strangler router never started: a tmpfs over the job's working directory hid the image's own <code>/app/proxy.py</code>.
+   The schema probe had the same bug. The backend now refuses any job whose tmpfs would mask a path its command uses.</li>
+<li>Codemod jobs had no writable <code>HOME</code> or package cache, <code>/tmp</code> is mounted <code>noexec</code> (tool binaries must be started
+   through their interpreter), Maven ignores <code>HTTPS_PROXY</code>, and <code>js-codemod</code> on npm ships none of the transforms the
+   adapter named. A tool crash was also indistinguishable from "no changes".</li>
+<li>The spring-lite fixture did not compile (<code>Member.getId()</code> was missing); Phase 1 only ever read it.</li>
+<li>Authenticated services could not be tested at all: the sandbox generated a random API token per run but nothing
+   sent it, and the documented <code>seed_requests</code> replay did not exist. express-crud's 24 recorded cases were nearly all
+   <code>401</code>. Header injection, seed replay, restart-before-compare and the timestamp rule fix this: the cases now record
+   14 <code>200</code>s, 8 <code>400</code>s, a <code>404</code> and a <code>204</code>, and the identity port is 24 of 24 equivalent with zero fuzz divergences.</li>
+</ol>
+<h3 id="what-the-live-runs-covered">What the live runs covered</h3>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>Fixture</th>
+<th>What ran on a real daemon</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>express-crud</td>
+<td>build in the sandbox with npm through the proxy; start; API seeds replayed with the synthetic token; 24 authenticated cases recorded twice; an identity port built and started as the new service; equivalence 24 of 24; latency recorded; 90 fuzz variants with no divergence; composite with the router: flip a slice, 15 cases pass through the router, roll back; then a seeded 404-to-410 change was caught (1 regression)</td>
+</tr>
+<tr>
+<td>django-lite</td>
+<td>build with pip through the proxy; start (the offline graph has no HTTP cases, so nothing to record)</td>
+</tr>
+<tr>
+<td>spring-lite</td>
+<td>build with Maven through the proxy; start Spring Boot with H2; 6 cases recorded, 2 runtime findings</td>
+</tr>
+<tr>
+<td>codemods</td>
+<td>django-upgrade and pyupgrade rewrote <code>force_text</code> and <code>class A(object)</code>; lebab rewrote <code>var</code>, concatenation and property shorthand; OpenRewrite changed the Java version in a <code>pom.xml</code></td>
+</tr>
+</tbody>
+</table></div>
+<p><code>MA_LIVE_E2E=1 .venv/bin/python -m pytest -q tests/test_p2_live_e2e.py</code> repeats the express-crud run (about 2
+minutes; needs three images locally and access to registry.npmjs.org). 35 Docker backend tests, including live
+ones for the sandbox, the proxy and the masking guard, run whenever a daemon is available.</p>
+<h3 id="still-not-done-in-phase-2">Still not done in Phase 2</h3>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>Gap</th>
+<th>Why it is still open</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>No stage has run with a real model</strong>: target-fit model layer, test generation, code generation, review, equivalence triage, slice naming</td>
+<td>needs an API key and spend; the offline proposer only produces shallow cases (mostly 401 and 400 answers). Everything above used <code>--offline</code></td>
+</tr>
+<tr>
+<td>Quality of generated code is unmeasured</td>
+<td>follows from the line above; the eval baselines are hand-written reference runs, not agent output</td>
+</tr>
+<tr>
+<td><strong>Subtle behaviour changes are only caught if a case reaches them</strong></td>
+<td>a second seeded change (<code>price &lt;= 0</code> became <code>price &lt; 0</code>, so a zero price is accepted) was <strong>not</strong> caught: the offline-proposed cases never send a price, and the fuzzer only mutates fields already present in recorded bodies. Boundary cases are what the model proposer is for, and it has never run</td>
+</tr>
+<tr>
+<td>The eval's hidden reference suite does not agree with the live legacy service</td>
+<td>checked live: 0 of 9 of <code>eval/targets/express-crud__fastify-ts/expected_cases</code> pass. They assume a pre-seeded database and case ordering, some are meant to be unauthenticated, and they were derived from source, not from a recording. Not reconciled yet (a case can now drop the injected token with an empty header value)</td>
+</tr>
+<tr>
+<td>No nightly real-model eval run</td>
+<td>same</td>
+</tr>
+<tr>
+<td><code>eval/targets/</code>: the <code>django-lite__fastapi</code> and <code>express-crud__go-chi</code> pairs</td>
+<td>only more scorer fixtures; no Go toolchain here and no libmap table for Django to FastAPI</td>
+</tr>
+<tr>
+<td>gRPC and message characterization cases return <code>not_implemented</code></td>
+<td>needs gRPC clients and broker stubs in the runner image</td>
+</tr>
+<tr>
+<td>gVisor (<code>runsc</code>) never tried</td>
+<td>not installed on the machine used (the backend uses it automatically when Docker lists it)</td>
+</tr>
+<tr>
+<td>OpenRewrite through Gradle never ran</td>
+<td>Maven did; the Gradle init-script route is untested</td>
+</tr>
+<tr>
+<td>In-memory sqlite or no database: each service keeps a private database in the composite</td>
+<td>inherent: it cannot be shared. Use postgres or mysql to test a shared database</td>
+</tr>
+<tr>
+<td>Images referenced by tag, not digest</td>
+<td>each run records the digest it used in <code>runs/RUN-*/meta.json</code>; pinning is a deployment step</td>
+</tr>
+<tr>
+<td>Lockfile <em>hash verification against the mirror</em></td>
+<td>hashes and an SBOM are recorded; refusing a package whose hash differs needs a mirror that publishes them</td>
+</tr>
+<tr>
+<td>CI never ran (<code>startup_failure</code>), so <code>eval-phase2</code> and the Docker tests are not exercised in CI</td>
+<td>a GitHub-side problem, not fixable from the code</td>
+</tr>
+<tr>
+<td>Phase 2 on the hosted platform</td>
+<td>decided against (P2-Q13): it executes code, so it is CLI and self-hosted only</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="hosted-product-what-remains">Hosted product: what remains</h2>
+<p>Source: product-architecture section 11 and the pentest. The backend, worker, web app and compose stack exist and are
+tested on SQLite with a fake engine; the Docker stack and the Postgres paths have never run.</p>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>Area</th>
+<th>Open item</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Security</td>
+<td><strong>F5 (High):</strong> the worker holds database credentials and a model key where hostile input is parsed; design documented, not built. <strong>F4 (High):</strong> Postgres row-level security written but never executed. Postgres-side audit immutability unverified</td>
+</tr>
+<tr>
+<td>Tenant-safe core (roadmap phase 1)</td>
+<td>GitHub App for private repositories; S3 object storage wired; ingress with TLS; secret manager; monitoring, alerting and error tracking; retention auto-purge; fair scheduler and per-provider concurrency limits; multi-provider failover</td>
+</tr>
+<tr>
+<td>Reviewable product (roadmap phase 2)</td>
+<td>user-docs upload and Verifier screens in the web app; changelog page; exports (Markdown, PDF, JSON); audit-log UI; onboarding; status page; docs site; server-side graph indexing for graphs over 400 nodes; pending-invitation UI; OIDC login in the web app; browser end-to-end tests</td>
+</tr>
+<tr>
+<td>Operations</td>
+<td>the full stack built and run once; backups restore-tested; CI green on the three workflows</td>
+</tr>
+<tr>
+<td>Accounts</td>
+<td>e-mail verification, password reset, MFA, account deletion</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="commercial-roadmap-phase-3">Commercial (roadmap phase 3)</h2>
+<p>Not started, and gated on real cost numbers from the Phase 0 runs: pricing, a billing provider behind the existing
+<code>BillingProvider</code> seam, plans, limits and invoices; a public security page; data-processing terms and subprocessor
+agreements; SOC 2 Type I preparation (a readiness checklist exists); SSO. Later in the roadmap: a self-hosted
+bring-your-own-key tier, more languages, CI integration (analyse on merge, drift alerts), and an API with webhooks.</p>
+<h2 id="recommended-order">Recommended order</h2>
+<ol>
+<li><strong>Run the plan's Phase 0 gate with a real model</strong>: 5 to 10 real repositories, hand-score a sample. Until this exists
+   every claim about quality and every price is a guess, and it unblocks everything below.</li>
+<li><strong>Run Phase 2 with a real model on the three fixtures</strong> (the live test already covers everything except the model),
+   then on one real service you can build. Read the generated code; record the human-edit rate and cost per slice.</li>
+<li>Get CI green, so the Docker tests, the Phase 2 eval gate and the signed release run on every change.</li>
+<li>Close F5 (worker isolation) and run the hosted stack once end to end, including Postgres and RLS (F4).</li>
+<li>Finish the web screens that the CLI already has (approval, Phase 1 gate, user-docs upload, exports).</li>
+<li>Only then decide pricing and billing.</li>
+</ol><div class="pager"><a href="phase2-plan.html">&larr; Phase 2 implementation plan: Migrate &amp; Prove Equivalence</a><a href="product-architecture.html">Product architecture and roadmap: from CLI engine to hosted service &rarr;</a></div></main>
+<nav class="toc" aria-label="On this page"><b>On this page</b><a class="l2" href="#at-a-glance">At a glance</a><a class="l2" href="#phase-1-plan-against-code">Phase 1: plan against code</a><a class="l2" href="#phase-2-plan-against-code">Phase 2: plan against code</a><a class="l3" href="#what-the-live-runs-covered">What the live runs covered</a><a class="l3" href="#still-not-done-in-phase-2">Still not done in Phase 2</a><a class="l2" href="#hosted-product-what-remains">Hosted product: what remains</a><a class="l2" href="#commercial-roadmap-phase-3">Commercial (roadmap phase 3)</a><a class="l2" href="#recommended-order">Recommended order</a></nav></div>
+<footer>Generated from <code>docs/remaining-work.md</code> by <code>scripts/build_docs_html.py</code>. Edit the Markdown, not this file.</footer>
+<script>
+(function(){
+ document.querySelectorAll('.cb').forEach(function(b){var btn=document.createElement('button');btn.textContent='Copy';
+  btn.addEventListener('click',function(){var t=b.querySelector('code').innerText;
+   (navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(function(){btn.textContent='Copied';setTimeout(function(){btn.textContent='Copy'},1400)},function(){btn.textContent='Press Ctrl/Cmd+C'});});
+  b.appendChild(btn);});
+ var links=[].slice.call(document.querySelectorAll('nav.toc a'));if(!links.length||!('IntersectionObserver' in window))return;
+ var map={};links.forEach(function(a){map[a.getAttribute('href').slice(1)]=a});
+ var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){links.forEach(function(a){a.classList.remove('on')});var a=map[e.target.id];if(a)a.classList.add('on');}})},{rootMargin:'0px 0px -75% 0px'});
+ document.querySelectorAll('main h2[id],main h3[id]').forEach(function(h){io.observe(h)});
+})();
+</script></body></html>

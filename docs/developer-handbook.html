@@ -228,7 +228,7 @@ footer{text-align:center;color:var(--mute);font:13px var(--sans);padding:32px;bo
 <h3>Honest status and maturity</h3>
 <div class="tw"><table>
 <tr><th>Part</th><th>State</th><th>Evidence and caveats</th></tr>
-<tr><td>Engine (<code>src/migration_agent</code>)</td><td><span class="b ok">real, tested</span></td><td>Version <code>0.2.0</code> in <code>pyproject.toml</code>. 1166 tests collected at the root (1159 pass, 7 skip without Docker). Hand-built eval repos with regression gates. The hard, differentiated part (evidence checks, derived confidence, blind Verifier, budget and cache).</td></tr>
+<tr><td>Engine (<code>src/migration_agent</code>)</td><td><span class="b ok">real, tested</span></td><td>Version <code>0.2.0</code> in <code>pyproject.toml</code>. 1197 tests collected at the root (1195 pass, 2 skip: the opt-in live end-to-end test and a release test that needs the <code>build</code> package). Hand-built eval repos with regression gates. The hard, differentiated part (evidence checks, derived confidence, blind Verifier, budget and cache).</td></tr>
 <tr><td>Quality at real scale</td><td><span class="b warn">unproven</span></td><td>Eval repos are tiny stand-ins (8, 11, 18 files). Phase 0 ran 3 small OSS repos, once each, one chunk each, nothing hand-scored; <strong>no node reached <code>high</code> confidence</strong>; runs were on different models so are not comparable. Chunking, cross-references and rate limits at scale are untested on real code.</td></tr>
 <tr><td>Backend (<code>backend/</code>)</td><td><span class="b ok">built</span> <span class="b warn">SQLite-tested only</span></td><td>All contract endpoints, worker, queue, billing seam. About 258 tests collected, all on SQLite with a fake engine (one test uses the real engine offline). Postgres paths (<code>SKIP LOCKED</code>, RLS, JSONB, migrations 0002/0004) were written but <strong>never executed</strong>.</td></tr>
 <tr><td>Web (<code>web/</code>)</td><td><span class="b ok">built</span></td><td>All pages, mock mode, 5 Vitest files. Verified manually in a headless browser against the real backend. No Playwright e2e, no OIDC login flow, no token refresh.</td></tr>
@@ -314,7 +314,7 @@ footer{text-align:center;color:var(--mute);font:13px var(--sans);padding:32px;bo
 <div class="tw"><table>
 <tr><th>Path</th><th>What it is</th><th>Notes</th></tr>
 <tr><td><code>src/migration_agent/</code></td><td>The engine and CLI. Pip-installable (hatchling).</td><td>~74 tracked files. Sub-packages: <code>analyze/ extract/ graph/ ingest/ llm/ migrate/ review/ review_ui/ sandbox/ verify/ viz/ templates/</code> plus <code>cli.py service.py storage.py pipeline.py project.py render.py audit.py config_env.py dotenv.py evalharness.py</code>.</td></tr>
-<tr><td><code>tests/</code></td><td>Engine tests (about 84 files at root, incl. the <code>test_p2_*</code> Phase 2 modules), <code>e2e/</code> (CLI journey on replayed LLM), <code>redteam/</code> (hostile inputs), <code>fixtures/</code>, <code>synth_repo.py</code> (large synthetic repo generator).</td><td>1166 tests collected. <code>pyproject.toml</code> sets <code>testpaths=["tests"]</code>, <code>pythonpath=["src"]</code>.</td></tr>
+<tr><td><code>tests/</code></td><td>Engine tests (about 84 files at root, incl. the <code>test_p2_*</code> Phase 2 modules), <code>e2e/</code> (CLI journey on replayed LLM), <code>redteam/</code> (hostile inputs), <code>fixtures/</code>, <code>synth_repo.py</code> (large synthetic repo generator).</td><td>1197 tests collected. <code>pyproject.toml</code> sets <code>testpaths=["tests"]</code>, <code>pythonpath=["src"]</code>.</td></tr>
 <tr><td><code>eval/</code></td><td>Hand-labelled reference repos (<code>repos/express-crud</code>, <code>spring-lite</code>, <code>django-lite</code>, each with <code>expected.json</code>) and <code>redteam/payloads.json</code>.</td><td>Scored by <code>migration_agent.evalharness</code>.</td></tr>
 <tr><td><code>backend/</code></td><td>Hosted API and worker. Own <code>pyproject.toml</code> and venv (<code>backend/.venv</code>).</td><td><code>app/</code> (35 files), <code>migrations/</code> (Alembic 0001-0004), <code>tests/</code>, <code>NOTES.md</code>, <code>README.md</code>.</td></tr>
 <tr><td><code>web/</code></td><td>Next.js app (App Router, TypeScript strict, Tailwind 4).</td><td><code>app/</code> routes, <code>components/</code>, <code>lib/</code> (API client, SSE, mock), <code>tests/</code>, <code>NOTES.md</code>.</td></tr>
@@ -1597,7 +1597,7 @@ def stats(ctx: ProjectCtx = Depends(project_ctx)):
 <tr><td>Data</td><td>No retention auto-purge; backups never restore-tested; S3 store skeleton; results read whole per request.</td></tr>
 <tr><td>Web</td><td>No OIDC flow, no e2e browser tests, no user-docs UI, no changelog view, canvas cap of 400 nodes.</td></tr>
 <tr><td>Process</td><td>CI never ran; Docker, Postgres and real S3 never exercised; no independent security test; no billing.</td></tr>
-<tr><td>Phase 2</td><td>Never run against a real Docker daemon or a real model; live Docker tests always skipped on the authoring machine; images are tags, not digests; eval baselines are hand-written reference runs; gRPC and message cases are <code>not_implemented</code>; OpenRewrite is Maven only and jscodeshift is a stub; reviewer precision is always <code>n/a</code>; no Cut-over tab in the review UI; CLI and self-hosted only (see 14.7).</td></tr>
+<tr><td>Phase 2</td><td>Never run with a real model (the live runs used <code>--offline</code>, whose cases are shallow and miss boundary changes); gVisor and OpenRewrite through Gradle never ran; images are tags, not digests; eval baselines are hand-written reference runs and the hidden reference suite disagrees with the live legacy service; gRPC and message cases are <code>not_implemented</code>; CLI and self-hosted only (see 14.7).</td></tr>
 </table></div>
 </div>
 
@@ -1695,7 +1695,7 @@ def stats(ctx: ProjectCtx = Depends(project_ctx)):
 
 <section class="chap" id="s14">
 <h2><span class="n">14</span>The Phase 1 gate and Phase 2: migrate and prove equivalence</h2>
-<p class="lead">Added after the rest of this handbook was written. Sources: <code>docs/phase2-plan.md</code>, <code>docs/phase2-architecture.md</code>, <code>docs/user-guide.md</code> section 9, <code>docs/threat-model.md</code> section 9 and <code>CHANGELOG.md</code>. Phase 2 is implemented and covered by offline tests; it has <strong>not</strong> run against a real Docker daemon or a real model.</p>
+<p class="lead">Added after the rest of this handbook was written. Sources: <code>docs/phase2-plan.md</code>, <code>docs/phase2-architecture.md</code>, <code>docs/user-guide.md</code> section 9, <code>docs/threat-model.md</code> section 9 and <code>CHANGELOG.md</code>. Phase 2 is implemented and covered by offline tests. It has run on a <strong>real Docker daemon</strong> on the eval fixtures, always with <code>--offline</code>, and has <strong>not</strong> run with a real model. Everything still open: <code>docs/remaining-work.md</code>.</p>
 
 <div class="sub" id="p1gate">
 <h3>14.1 The Phase 1 exit gate (approval)</h3>
@@ -1720,6 +1720,7 @@ def stats(ctx: ProjectCtx = Depends(project_ctx)):
 <li><strong>Generation loop</strong> per slice: context pack, validated model edits, commit in <code>target_code/</code>, sandbox build, unit tests plus the characterization suite against the new service, fresh-session review, then <code>awaiting_human</code>. Failures feed a fix iteration up to <code>--max-iterations</code> (4); then the slice is <code>blocked</code>. Every step is a file under <code>slices/SLICE-NNNN/iterations/K/</code>, so a killed run resumes and loses at most one model call.</li>
 <li><strong>Equivalence</strong> classifies each difference as <code>match</code>, <code>noise</code>, <code>intended_divergence</code>, <code>regression</code> or <code>unknown</code>. Regressions become fix requests that the next <code>generate</code> picks up; triage can also produce <code>legacy_bug</code> (a decision for you), <code>harness_issue</code> (a mask proposal) and <code>spec_ambiguity</code> (blocks the slice).</li>
 <li><strong>You approve each slice.</strong> <code>approve-slice</code> is refused unless the contract gate passes, the build and suite are green, the equivalence report has no regression or unknown diff, <code>target_code</code> HEAD is unchanged since that run, and all blockers are cleared.</li>
+<li><strong>Advisory checks beside the gate.</strong> Every equivalence run records per-case latency on both sides and flags cases where the new service is much slower; <code>equivalence fuzz</code> mutates recorded HTTP cases and compares both services (<code>migrate/differential.py</code>). Neither blocks approval; <code>cutover</code> shows them as warnings.</li>
 <li><strong>Cut-over is a plan, not a deployment.</strong> <code>cutover</code> checks readiness and writes a deterministic <code>cutover/plan.md</code>; <code>--approve</code> pins hashes of the contract, plan, code and every equivalence artifact.</li>
 </ul>
 </div>
@@ -1767,24 +1768,38 @@ def stats(ctx: ProjectCtx = Depends(project_ctx)):
 </ul>
 </div>
 
-<div class="sub" id="p2tests">
-<h3>14.6 Testing and eval for Phase 2</h3>
+<div class="sub" id="p2auth">
+<h3>14.6 Authenticated and stateful services</h3>
+<p>Found by the first live run: the sandbox generated a random API token per run and nothing sent it, so every recorded case of a token-protected service was a <code>401</code>, and the documented seed replay did not exist. What the harness does now (<code>migrate/harness.py</code>):</p>
 <ul>
-<li><strong>Offline by construction.</strong> Unit and integration tests use a scripted docker CLI (<code>FakeExecBackend</code> or a fake <code>docker</code> binary) and fake model clients. Files: <code>tests/test_p2_*.py</code>, helpers <code>tests/p2_*_helpers.py</code>, <code>tests/phase1_helpers.py</code>, <code>tests/phase2_helpers.py</code>. Live Docker tests (<code>test_p2_exec_docker.py</code>) skip without a daemon, which is why 7 tests skip.</li>
+<li><strong><code>request_headers</code></strong> on a service, e.g. <code>X-API-Token: "{secret:API_TOKEN}"</code>. <code>request_headers_for()</code> resolves <code>{secret:NAME}</code> from the values written at <code>harness up</code> (NAME must be in <code>synthetic_secrets</code>) and <code>run_cases_in_network</code> passes them as the runner's <code>extra_headers</code>. A case header overrides an injected one case-insensitively, and an empty value removes it (<code>harness_runner/wire.py: merge_headers</code>), so a "no token" case is expressible.</li>
+<li><strong><code>seed_requests</code></strong> (a JSON file in the legacy source) is replayed by <code>replay_seeds()</code> after every <code>up</code>: for <code>legacy</code>, <code>new</code>, and directly against both services of the composite. A seed must answer below 400 or one of its <code>expect_status</code>; a failure stops <code>up</code> and tears the harness down.</li>
+<li><strong>Same state before comparing.</strong> <code>equivalence</code> and <code>equivalence fuzz</code> call <code>harness.restart()</code> on each harness-mode side first (<code>--no-reset</code> to keep state), so both start from the same seeded data.</li>
+<li><strong>Timestamps.</strong> <code>json_equal</code> in <code>harness_runner/jsonpath.py</code> treats two ISO-8601 timestamps within 300 s as equal: two instances seeded moments apart never agree on "now". Hours apart, or zoned against naive, still differs. One place, so recording, equivalence, fuzzing and the composite agree.</li>
+</ul>
+</div>
+
+<div class="sub" id="p2tests">
+<h3>14.7 Testing and eval for Phase 2</h3>
+<ul>
+<li><strong>Offline by construction.</strong> Unit and integration tests use a scripted docker CLI (<code>FakeExecBackend</code> or a fake <code>docker</code> binary) and fake model clients. Files: <code>tests/test_p2_*.py</code>, helpers <code>tests/p2_*_helpers.py</code>, <code>tests/phase1_helpers.py</code>, <code>tests/phase2_helpers.py</code>. The Docker backend tests (<code>test_p2_exec_docker.py</code>, including live ones for the sandbox, the proxy allowlist and the workdir-masking guard) run against the real daemon whenever one is available. <code>tests/test_p2_live_e2e.py</code> is the opt-in end-to-end trial on the express-crud fixture (<code>MA_LIVE_E2E=1</code>, about 3 minutes, needs three images locally and registry.npmjs.org): authenticated recording, an identity port as the new service, equivalence, fuzzing, the composite with the router, and a seeded regression that must be caught.</li>
 <li><strong>Phase 1 gate tests:</strong> <code>test_approval.py</code>, <code>test_decisions.py</code>, <code>test_contract_source_hash.py</code>, <code>test_coverage_exclusions_persist.py</code>.</li>
 <li><strong>Eval.</strong> <code>evalharness.score_migration</code> and <code>compare_migration</code> score a migration run against the three <code>eval/targets/</code> pairs; <code>scripts/eval_phase2.py</code> is the gate in CI job <code>eval-phase2</code>. The baselines are hand-written reference runs, not agent output, and there is no nightly real-model run.</li>
-<li><strong>Run it:</strong> <code>PYTHONPATH=src python -m pytest -q</code> (about 2 minutes: 1159 passed, 7 skipped).</li>
+<li><strong>Run it:</strong> <code>PYTHONPATH=src python -m pytest -q</code> (about 2 minutes: 1195 passed, 2 skipped).</li>
+<li><strong>The hidden reference suite does not agree with the live legacy service</strong> (0 of 9 express-crud cases pass: it assumes pre-seeded state and ordering and was derived from source). Reconcile it before trusting the eval pairs as a measurement.</li>
 </ul>
 </div>
 
 <div class="sub" id="p2limits">
-<h3>14.7 Known gaps and rules for contributors</h3>
+<h3>14.8 Known gaps and rules for contributors</h3>
 <ul>
-<li>Not run against a real Docker daemon or a real model; fixtures never built in Docker; images (runner, router, proxy, codemods) are tags, not digests.</li>
-<li>gRPC and message characterization cases return <code>not_implemented</code>. OpenRewrite supports Maven only, jscodeshift is a stub, codemod versions are pinned but never run. Mirror resolution of new dependencies is a hook only; no lockfile hash checks or SBOM per run.</li>
-<li>With <code>sqlite</code> or <code>none</code> DB engines the composite gives each service a private database (<code>db_shared: false</code>).</li>
-<li>Reviewer precision is always <code>n/a</code>; there is no Cut-over tab in the review UI.</li>
+<li><strong>No stage has run with a real model</strong>; quality of generated code is unmeasured. The offline proposer&rsquo;s cases miss boundary changes (a seeded <code>price &lt;= 0</code> to <code>price &lt; 0</code> change went unnoticed), and the fuzzer only mutates fields already in recorded bodies.</li>
+<li>Images (runner, router, proxy, codemods) are tags, not digests (each run records the digest it used). gVisor and OpenRewrite through Gradle have not run.</li>
+<li>gRPC and message characterization cases return <code>not_implemented</code>. Lockfile hashes and a CycloneDX SBOM are recorded per build (<code>migrate/supplychain.py</code>) but a package whose hash differs is not refused.</li>
+<li>With in-memory <code>sqlite</code> or <code>none</code> DB engines the composite gives each service a private database (<code>db_shared: false</code>): an in-memory database cannot be shared. Use postgres or mysql to test a shared one.</li>
+<li>Reviewer precision needs your verdicts (<code>slice review-finding</code>); the Cut-over tab exists in the review UI.</li>
 <li><strong>Phase 2 is CLI and self-hosted only (decision P2-Q13).</strong> The hosted worker must not run it. Do not add Phase 2 stages to the hosted job path without redoing the threat model.</li>
+<li><strong>Rules the live runs taught:</strong> never put a tmpfs workdir over a path the command uses (the backend now refuses it); <code>/tmp</code> is <code>noexec</code>, so tools installed there are started through their interpreter; Maven ignores <code>HTTPS_PROXY</code>; npm needs a writable <code>HOME</code>; a tool that exits 0 on failure needs its output checked.</li>
 <li>Change <code>migrate/models.py</code> only additively; never fork <code>MigrationContract</code>; never pass real secrets or model keys into a container; never pull images from the exec backend.</li>
 </ul>
 </div>

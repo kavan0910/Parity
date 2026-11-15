@@ -96,7 +96,7 @@ footer{text-align:center;color:var(--mute);font-size:13px;padding:32px;border-to
 <pre><code>python -m venv .venv &amp;&amp; . .venv/bin/activate
 pip install ".[llm]"        # the [llm] extra adds LiteLLM for real model calls
 migration-agent --version   # migration-agent, version 0.2.0</code></pre>
-<p>For development: <code>pip install -e ".[dev,llm]"</code> then <code>PYTHONPATH=src python -m pytest -q</code> (1159 tests pass, 7 skipped; live Docker tests skip without a daemon).</p>
+<p>For development: <code>pip install -e ".[dev,llm]"</code> then <code>PYTHONPATH=src python -m pytest -q</code> (1195 tests pass, 2 skipped; the Docker tests run when a daemon is present).</p>
 <h3>API keys</h3>
 <p>Copy <code>.env.example</code> to <code>.env</code> and fill in a key. The CLI loads it at start-up and never overrides variables already set in your shell. <code>.env</code> is git-ignored; never commit it.</p>
 <div class="tw"><table>
@@ -227,7 +227,7 @@ migration-agent approve orders.migration --by "Jane Doe"    # refused while any 
 
 <section id="phase2">
 <h2><span class="n">6</span>Phase 2: migrate and prove equivalence</h2>
-<div class="note"><strong>Status:</strong> implemented and covered by offline unit and integration tests. It has <strong>not</strong> yet run against a real Docker daemon or a real model, so treat the first real runs as a trial. Phase 2 is CLI and self-hosted only; the hosted platform does not run it.</div>
+<div class="note"><strong>Status:</strong> implemented and covered by offline tests, and run on a real Docker daemon on the three sample services (build, start, record, compare, fuzz, the strangler router, codemods), always with <code>--offline</code>. It has <strong>not</strong> run with a real model, so the quality of generated code is unmeasured: treat the first real runs as a trial. Phase 2 is CLI and self-hosted only; the hosted platform does not run it.</div>
 <p>Phase 2 turns the approved understanding into a new service and shows, case by case, that it behaves like the old one. The running legacy service is the oracle: expected outputs are <em>recorded</em> from it, never written by the model.</p>
 <div class="cards">
   <div class="card"><b>Code runs, only in sandboxes</b>Legacy builds, generated code, test runners and the router run in disposable Docker containers: no capabilities, non-root, read-only root, no network during tests, images never pulled.</div>
@@ -242,6 +242,14 @@ migration-agent approve orders.migration --by "Jane Doe"    # refused while any 
 <li>Docker, git, and the images your harness and target need, already pulled (Phase 2 never pulls). <code>migration-agent doctor PROJECT</code> checks the contract, sandbox, git and budget.</li>
 <li>A project budget: <code>target init --budget-usd N</code>. Every model call is capped by what remains, across sessions.</li>
 </ul>
+<h3>If your service needs a token or starts empty</h3>
+<p>The sandbox generates a random value for each name in <code>synthetic_secrets</code> every time a service starts. Tell the runner to send it, and give an in-memory database some data, in <code>harness/harness.yaml</code>:</p>
+<pre><code>legacy:
+  synthetic_secrets: [API_TOKEN]
+  request_headers:
+    X-API-Token: "{secret:API_TOKEN}"     # sent on every request; a case can override it or send none with ""
+seed_requests: harness/seed/requests.json  # replayed after every `harness up`; a failing seed stops it</code></pre>
+<p>Without this a token-protected service answers <code>401</code> to every case and you compare two error pages.</p>
 <h3>The commands in order</h3>
 <pre><code>migration-agent contract check orders.migration
 migration-agent target init orders.migration --runtime 21 --framework spring-boot@3.3 --build maven --budget-usd 25
@@ -263,12 +271,13 @@ migration-agent cutover orders.migration --approve --by alice   # when every sli
 <tr><td><code>harness ...</code></td><td>Builds and starts legacy, new and composite services in the sandbox; <code>flip</code> and <code>unflip</code> route a slice to the new service</td></tr>
 <tr><td><code>tests generate|record|coverage</code></td><td>Characterization cases; expected values come from the legacy service, with noise masks from the double recording</td></tr>
 <tr><td><code>generate</code></td><td>Per slice: model edits (validated and jailed to <code>target_code/</code>), sandbox build, tests, fresh-session review, then <code>awaiting_human</code>; resumable after a crash</td></tr>
-<tr><td><code>equivalence</code></td><td>Runs the cases against legacy and new and classifies each difference as <code>match</code>, <code>noise</code>, <code>intended_divergence</code>, <code>regression</code> or <code>unknown</code></td></tr>
+<tr><td><code>equivalence</code></td><td>Restarts both services (same seeded data), runs the cases against legacy and new and classifies each difference as <code>match</code>, <code>noise</code>, <code>intended_divergence</code>, <code>regression</code> or <code>unknown</code>; also records latency (advisory)</td></tr>
+<tr><td><code>equivalence fuzz</code></td><td>Mutates recorded HTTP cases (query values, JSON fields, body shape) and compares both services; advisory, never blocks approval</td></tr>
 <tr><td><code>config map|set|schema-check</code></td><td>Maps configuration (secrets as references only) and checks declared schema changes on synthetic data</td></tr>
-<tr><td><code>cutover</code></td><td>Readiness gate and a deterministic <code>cutover/plan.md</code>; <code>--approve</code> pins hashes of everything</td></tr>
+<tr><td><code>cutover</code></td><td>Readiness gate and a deterministic <code>cutover/plan.md</code>; <code>--approve</code> pins hashes of everything; fuzz, latency and lockfile findings appear as warnings</td></tr>
 <tr><td><code>metrics</code></td><td>Cost per slice, iterations to green, equivalence %, human-edit rate; no data shows <code>n/a</code></td></tr>
 </table></div>
-<p>The review UI gains <strong>Target fit</strong>, <strong>Plan</strong>, <strong>Slice</strong> and <strong>Comments</strong> tabs once Phase 2 files exist. There is no cut-over tab; use the CLI. The full reference is section 9 of the user guide, with design in <code>phase2-plan.md</code> and a code map in <code>phase2-architecture.md</code>.</p>
+<p>The review UI gains <strong>Target fit</strong>, <strong>Plan</strong>, <strong>Slice</strong> (with Accept and Dismiss buttons on reviewer findings, which feed reviewer precision), <strong>Cut-over</strong> and <strong>Comments</strong> tabs once Phase 2 files exist. The full reference is section 9 of the user guide, with design in <code>phase2-plan.md</code> and a code map in <code>phase2-architecture.md</code>.</p>
 </section>
 
 <section id="ops">
