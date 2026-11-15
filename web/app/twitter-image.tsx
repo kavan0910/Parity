@@ -1,6 +1,6 @@
 import { ImageResponse } from "next/og";
 
-export const alt = "Migration Agent: migrate a legacy app to the newest version or a different stack, with proof";
+export const alt = "Parity: migrate legacy apps, upgrade or replatform, and prove parity with the old app";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -11,11 +11,11 @@ export default function Image() {
       <div style={{ width: "100%", height: "100%", display: "flex", flexDirection: "column", justifyContent: "space-between", background: "#0a0a08", color: "#f5f3ec", padding: 72 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 14, fontSize: 30, color: "#5eead4" }}>
           <div style={{ width: 18, height: 18, borderRadius: 9, background: "#5eead4" }} />
-          migration agent
+          Parity
         </div>
         <div style={{ display: "flex", flexDirection: "column", gap: 22 }}>
-          <div style={{ fontSize: 76, lineHeight: 1.04, fontWeight: 600, letterSpacing: -2 }}>Upgrade or replatform your legacy app.</div>
-          <div style={{ fontSize: 38, color: "#a8a69b" }}>Then prove the new one behaves the same.</div>
+          <div style={{ fontSize: 76, lineHeight: 1.04, fontWeight: 600, letterSpacing: -2 }}>Migrate legacy apps.</div>
+          <div style={{ fontSize: 38, color: "#a8a69b" }}>Prove parity with the old app.</div>
         </div>
         <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
           {chips.map((c) => (

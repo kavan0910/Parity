@@ -138,10 +138,10 @@ def page(title: str, slug: str, body: str, toc: list, nav: str, prev_next: str, 
     lede = ("Generated from the Markdown in <code>docs/" + html.escape(slug) + ".md</code>." if slug != "index"
             else "All project documentation in one place.")
     return f"""<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>{html.escape(title)} | migration-agent docs</title><style>{CSS}</style></head><body>
+<title>{html.escape(title)} | Parity docs</title><style>{CSS}</style></head><body>
 <a class="skip" href="#main">Skip to the content</a>
 <header class="hero"><div class="hero-in">
-<div class="topbar"><span class="brand"><b>migration</b> agent / docs</span><button class="btn" id="theme" type="button" aria-label="Toggle light and dark theme">Toggle theme</button></div>
+<div class="topbar"><span class="brand"><b>Parity</b> / docs</span><button class="btn" id="theme" type="button" aria-label="Toggle light and dark theme">Toggle theme</button></div>
 <span class="eyebrow">{html.escape(group)}</span>
 <h1 style="max-width:none">{html.escape(title)}</h1>
 <p class="lede">{lede}</p>

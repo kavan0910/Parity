@@ -4,7 +4,7 @@
 > owner first. Items in brackets are decisions or facts not yet established. We do not claim certifications.
 
 ## What this service does with your code
-migration-agent reads your repository to build an evidence-backed understanding document. It never executes your
+Parity reads your repository to build an evidence-backed understanding document. It never executes your
 code. Analysis happens in an isolated worker; excerpts of your code are sent to an AI model provider to produce
 the analysis (see "AI model provider").
 

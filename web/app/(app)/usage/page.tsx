@@ -32,7 +32,7 @@ export default function UsagePage() {
 
   return (
     <>
-      <title>Usage and plan · Migration Agent</title>
+      <title>Usage and plan · Parity</title>
       <PageHeader eyebrow={workspace?.name} title="Usage and plan">What your workspace has consumed, and the limits it runs under.</PageHeader>
 
       <section aria-labelledby="plan-h" className="rise rise-1 mb-10">

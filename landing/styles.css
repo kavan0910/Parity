@@ -1,4 +1,4 @@
-/* migration agent landing page. Tokens follow the design system: Tailwind type and radius scale,
+/* Parity landing page. Tokens follow the design system: Tailwind type and radius scale,
    spacing tokens (2,4,8,12,16,24,32,40,48,64,80,96), flat dark backgrounds from the approved set. */
 :root, [data-theme="dark"] {
   color-scheme: dark;

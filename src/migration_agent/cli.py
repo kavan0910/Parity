@@ -10,7 +10,7 @@ from .project import Project
 @click.group()
 @click.version_option(package_name="migration-agent")
 def main() -> None:
-    """Migrate a legacy app to a newer version or a different stack, and prove it behaves the same.
+    """Parity: migrate a legacy app to a newer version or a different stack, and prove parity with the old app.
 
     Steps: understand (init, ingest, extract, analyze, verify, review), approve (decide, status, approve), then
     migrate, prove and cut over (target, plan, harness, tests, generate, equivalence, cutover). Understanding never

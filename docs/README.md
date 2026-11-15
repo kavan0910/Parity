@@ -1,6 +1,8 @@
-# migration-agent documentation
+# Parity documentation
 
-**migration-agent migrates a legacy app to the newest version of its stack, or to a different technology, and proves the
+*Parity is the product name; the command-line tool and Python package are still called `migration-agent`.*
+
+**Parity migrates a legacy app to the newest version of its stack, or to a different technology, and proves the
 new app behaves like the old one.** That is the MVP: a legacy app goes in; a migrated app, an equivalence report and a
 cut-over plan come out. The five steps are understand, approve, migrate, prove and cut over; understanding the legacy
 app is step 1 of the migration, not the product. Phase 1 is steps 1 and 2, Phase 2 is steps 3 to 5.

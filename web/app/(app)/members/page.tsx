@@ -51,7 +51,7 @@ export default function MembersPage() {
 
   return (
     <>
-      <title>Members · Migration Agent</title>
+      <title>Members · Parity</title>
       <PageHeader eyebrow={workspace?.name} title="Members">People who can see and work on this workspace&apos;s projects.</PageHeader>
       {members.loading && !members.data ? <LoadingBlock label="Loading members" rows={4} /> : members.error ? <ErrorState error={members.error} onRetry={members.reload} /> : members.data?.items.length === 0 ? <EmptyState title="No members" /> : (
         <Card className="rise rise-1 mb-10 overflow-x-auto">

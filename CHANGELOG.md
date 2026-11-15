@@ -90,11 +90,18 @@ The version lives in `pyproject.toml` only.
   workdir-masking guard.
 - Docs: `docs/remaining-work.md` (what is built, verified and left, against every plan).
 
+### Changed: product name and headline
+- The product is now called **Parity** ("Migrate legacy apps. Prove parity."). Updated in prose, every HTML page, both
+  landing pages, the web app (UI, metadata, social image, JSON-LD) and the CLI help. The command-line tool, the Python
+  package (`migration_agent`), the Docker tags and the `MA_*` environment variables keep their names. Title is now
+  "Parity: Legacy App Migration, Upgrade or Replatform, Proven" (59 characters). Parity is a working name: check
+  trademark and domain availability before publishing.
+
 ### Changed: landing page SEO and impact
 - Both landing pages: paraphrased title and H1 ("Legacy App Migration: Upgrade or Replatform, With Proof"; "Upgrade or
   replatform your legacy app, and prove it still works the same"), title under 60 characters and description under 160,
   canonical, Open Graph and Twitter tags, JSON-LD (Organization, WebSite, WebPage, SoftwareApplication, HowTo, FAQPage), one
-  H1 and an unbroken heading outline, an impact section made only of measured numbers, a manual-versus-migration-agent
+  H1 and an unbroken heading outline, an impact section made only of measured numbers, a manual-versus-Parity
   comparison, one section per migration path, `robots.txt` and `sitemap.xml`.
 - Web app: generated 1200x630 social image, manifest and icon, `noindex` for the signed-in pages, and all SEO text in
   one module (`web/lib/site.ts`) that the visible FAQ and the structured data both render from.

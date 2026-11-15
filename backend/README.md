@@ -1,4 +1,4 @@
-# migration-agent backend
+# Parity backend
 
 FastAPI + SQLAlchemy 2 + Pydantic v2 service and DB-backed worker for the hosted product. Implements
 `docs/platform-contract.md` sections 3 to 6. Billing is a seam only (`app/billing.py`): no payment code.

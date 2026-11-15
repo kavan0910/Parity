@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Migration Agent: Web App User Guide</title>
-<meta name="description" content="End-user guide to the Migration Agent hosted web app and its CLI: projects, runs, the graph explorer, findings review, members, limits and honest expectations.">
+<title>Parity: Web App User Guide</title>
+<meta name="description" content="End-user guide to the Parity hosted web app and its CLI: projects, runs, the graph explorer, findings review, members, limits and honest expectations.">
 <style>
 :root{
   color-scheme:light dark;
@@ -169,12 +169,12 @@ footer{border-top:1px solid var(--line);padding:30px 20px;text-align:center;colo
 <header class="hero">
   <div class="hero-in">
     <div class="topbar">
-      <span class="brand"><b>migration</b> agent / user guide</span>
+      <span class="brand"><b>Parity</b> / user guide</span>
       <button class="btn" id="theme" type="button" aria-label="Toggle light and dark theme">Toggle theme</button>
     </div>
     <span class="eyebrow">Legacy app migration &middot; web app and CLI</span>
     <h1>Migrate the legacy app <em>you have</em> to the stack you want.</h1>
-    <p class="lede">Migration Agent takes an existing legacy application and migrates it to the newest version of its stack, or to a different technology, and proves the new app behaves like the old one. This guide covers the hosted web app, which runs step 1 of that migration (understanding the legacy app), page by page, with the matching command-line steps for everything after it. It also tells you plainly what the tool can and cannot see.</p>
+    <p class="lede">Parity takes an existing legacy application and migrates it to the newest version of its stack, or to a different technology, and proves the new app behaves like the old one. This guide covers the hosted web app, which runs step 1 of that migration (understanding the legacy app), page by page, with the matching command-line steps for everything after it. It also tells you plainly what the tool can and cannot see.</p>
     <div class="chips">
       <span class="chip"><b>Goal</b> migrate a legacy app, with proof</span><span class="chip"><b>This app</b> step 1: understand</span><span class="chip"><b>Status</b> hosted platform in development</span>
       <span class="chip"><b>Billing</b> not enabled</span>
@@ -243,7 +243,7 @@ footer{border-top:1px solid var(--line);padding:30px 20px;text-align:center;colo
 <section id="what">
 <h2><span class="n">01</span>What the product does, and who it is for</h2>
 <div class="call"><span class="t">The MVP</span><p><strong>Legacy app in, migrated app out, with proof.</strong> Point the tool at an existing application, choose the target (a newer version of the same stack, or a different technology), and get a migrated application, an equivalence report against the running legacy app, and a cut-over plan. Targets covered today: Java 8 to 21, Spring Boot 2 to 3, Django 3 to 5, Express to Fastify, JavaScript to Go. The migration has five steps: <strong>understand, approve, migrate, prove, cut over</strong>. Understanding the legacy app is step 1, not the goal.</p></div>
-<p>Migration Agent migrates a legacy application in five steps. This web app runs the first: it reads the source code of the legacy service and produces two things, an <strong>understanding document</strong> (readable prose organised into fixed sections such as endpoints, data model, business rules and quirks) and a <strong>knowledge graph</strong> of the things it found. Every claim in both points at a file, a line range and a <strong>verbatim quote</strong> from your code, and the quote is machine-checked against the real file before the claim is kept. That map is what the later steps (approve, migrate, prove, cut over, in the command-line tool) are built on.</p>
+<p>Parity migrates a legacy application in five steps. This web app runs the first: it reads the source code of the legacy service and produces two things, an <strong>understanding document</strong> (readable prose organised into fixed sections such as endpoints, data model, business rules and quirks) and a <strong>knowledge graph</strong> of the things it found. Every claim in both points at a file, a line range and a <strong>verbatim quote</strong> from your code, and the quote is machine-checked against the real file before the claim is kept. That map is what the later steps (approve, migrate, prove, cut over, in the command-line tool) are built on.</p>
 <p>A second pass, the <strong>blind Verifier</strong>, compares that code-derived document with the documentation your team already has (requirements, wikis, runbooks) and lists where they disagree. You decide who is right; some of your answers trigger a targeted re-analysis, which produces a new graph version.</p>
 
 <div class="cards">
@@ -1115,7 +1115,7 @@ migration-agent changelog orders.migration               # regenerate docs/chang
 </div>
 
 <footer>
-  Migration Agent user guide &middot; written for the hosted platform (0.3.0, in development) and the CLI. Statements here were checked against the web app, backend and engine source in this repository; where the app and the server disagree, this guide says so.
+  Parity user guide &middot; written for the hosted platform (0.3.0, in development) and the CLI. Statements here were checked against the web app, backend and engine source in this repository; where the app and the server disagree, this guide says so.
 </footer>
 
 <script>

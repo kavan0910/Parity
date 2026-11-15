@@ -56,11 +56,10 @@ export default function Landing() {
             <div>
               <p className="eyebrow rise mb-5">Legacy application migration and modernisation</p>
               <h1 className="display rise rise-1 text-[3.1rem] sm:text-7xl">
-                Upgrade or replatform your <em className="text-accent">legacy app</em>, and prove it still works the same.
+                Migrate legacy apps. <em className="text-accent">Prove parity.</em>
               </h1>
               <p className="rise rise-2 mt-6 max-w-xl text-lg text-muted">
-                Migration Agent takes the application you already run and migrates it, one slice at a time, to a current version of its stack or to a different technology.
-                It records how your running app behaves and shows, case by case, that the new one answers the same way.
+                Upgrade to the latest version or move to a new stack, one slice at a time. Parity records how your running app behaves and shows, case by case, that the new one answers the same way.
               </p>
               <div className="rise rise-3 mt-8 flex flex-wrap gap-3">
                 <LinkButton href="/signup" variant="primary" className="min-h-12 px-6 text-base">Start a migration</LinkButton>
@@ -164,11 +163,11 @@ export default function Landing() {
           </dl>
           <p className="mt-4 max-w-2xl text-xs text-muted">Measured on our reference apps with no AI model in the migration steps. Treat these as a regression guide, not a benchmark. Accuracy on large real repositories is not measured yet.</p>
 
-          <h3 className="display mt-14 text-3xl">Rewriting by hand versus migrating with Migration Agent</h3>
+          <h3 className="display mt-14 text-3xl">Rewriting by hand versus migrating with Parity</h3>
           <div className="mt-5 overflow-x-auto rounded-2xl border border-line">
             <table className="w-full min-w-[640px] text-left text-sm">
-              <caption className="sr-only">Manual legacy rewrite compared with Migration Agent</caption>
-              <thead className="border-b border-line bg-surface-2 font-mono text-[11px] uppercase text-muted"><tr><th scope="col" className="px-4 py-3 font-normal">Question</th><th scope="col" className="px-4 py-3 font-normal">Manual rewrite</th><th scope="col" className="px-4 py-3 font-normal text-accent">Migration Agent</th></tr></thead>
+              <caption className="sr-only">Manual legacy rewrite compared with Parity</caption>
+              <thead className="border-b border-line bg-surface-2 font-mono text-[11px] uppercase text-muted"><tr><th scope="col" className="px-4 py-3 font-normal">Question</th><th scope="col" className="px-4 py-3 font-normal">Manual rewrite</th><th scope="col" className="px-4 py-3 font-normal text-accent">Parity</th></tr></thead>
               <tbody>
                 {[
                   ["Do we know what the app does?", "Reverse-engineered from memory and stale docs.", "A map where every claim cites a file and line, checked against your own docs."],

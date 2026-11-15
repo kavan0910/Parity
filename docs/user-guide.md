@@ -1,11 +1,11 @@
 # User guide
 
-**migration-agent migrates a legacy app to the newest version of its stack, or to a different technology, and proves the
+**Parity migrates a legacy app to the newest version of its stack, or to a different technology, and proves the
 new app behaves like the old one.** The MVP is: legacy app in; migrated app, equivalence report and cut-over plan out.
 The migration has five steps: understand, approve, migrate, prove, cut over. This guide covers all of them: sections 1
 to 8 are steps 1 and 2 (understand and approve), section 9 is steps 3 to 5 (migrate, prove, cut over).
 
-To start, migration-agent reads a legacy service's source code and produces an **evidence-backed understanding document**
+To start, Parity reads a legacy service's source code and produces an **evidence-backed understanding document**
 (`docs/understanding.latest.md`) plus a **knowledge graph** (components, endpoints, data entities, business rules,
 ...). Every claim cites file and line range with a verbatim quote. A **blind Verifier** then compares the document
 with the documentation your team already has and reports contradictions, so humans can resolve them. A human then

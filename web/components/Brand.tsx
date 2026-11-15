@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 
 export function Logo({ href = "/", className }: { href?: string; className?: string }) {
   return (
-    <Link href={href} className={`inline-flex items-center gap-2.5 font-mono text-[15px] font-semibold ${className ?? ""}`} aria-label="Migration Agent home">
+    <Link href={href} className={`inline-flex items-center gap-2.5 font-mono text-[15px] font-semibold ${className ?? ""}`} aria-label="Parity home">
       <svg width="26" height="26" viewBox="0 0 26 26" fill="none" aria-hidden="true">
         <rect x="1" y="1" width="24" height="24" rx="6" stroke="currentColor" strokeWidth="1.6" />
         <circle cx="7.5" cy="8" r="2" fill="var(--accent)" />
@@ -12,7 +12,7 @@ export function Logo({ href = "/", className }: { href?: string; className?: str
         <circle cx="12.5" cy="18" r="2" fill="currentColor" />
         <path d="M9.2 9 16 9.4M8.4 9.9l3 6.4M17 11.3l-3.5 5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
       </svg>
-      migration agent
+      Parity
     </Link>
   );
 }

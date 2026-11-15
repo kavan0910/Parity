@@ -254,7 +254,7 @@ real customers will matter more than breadth of features. **[Inferred]** I have 
 ## 15. Decisions needed from the owner
 
 1. **Who is the first customer?** (agency doing modernisation, in-house platform team, acquirer doing diligence?)
-2. **Name:** decided. Keep "migration-agent": the product is the migration (legacy app in, migrated app out, with proof). Understanding the legacy app is step 1 of it.
+2. **Name:** decided. The product is called **Parity**: legacy app in, migrated app out, with proof that the two behave the same. (The command-line tool and the Python package keep the name `migration-agent`.) Understanding the legacy app is step 1 of it.
 3. **Open-core or closed?** Is the CLI free and public, with the hosted service as the paid product?
 4. **Hosting preference and budget** (single cloud, region, data-residency promises).
 5. **Data policy you are willing to promise** (retention period, model provider terms, BYO key).

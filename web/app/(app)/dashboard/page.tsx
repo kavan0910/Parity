@@ -18,7 +18,7 @@ export default function Dashboard() {
   const open = items.reduce((a, p) => a + (p.open_findings ?? 0), 0);
   return (
     <>
-      <title>Migrations · Migration Agent</title>
+      <title>Migrations · Parity</title>
       <PageHeader eyebrow={workspace?.name ?? "Workspace"} title="Your migrations" actions={canCreate && <LinkButton href="/projects/new" variant="primary">Migrate an app</LinkButton>}>
         Each project is one legacy app you want to move to a newer version or a different stack. This app runs step 1, understanding the legacy app; approval and the migration itself run in the command-line tool.
       </PageHeader>

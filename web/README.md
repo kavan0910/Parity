@@ -1,4 +1,4 @@
-# Migration Agent web app
+# Parity web app
 
 Next.js 16 (App Router), React 19, TypeScript strict, Tailwind CSS 4. No UI framework; a small set of accessible primitives lives in `components/ui.tsx`.
 All backend access goes through one module, `lib/api.ts`, which follows `docs/platform-contract.md` section 3.

@@ -9,7 +9,7 @@ import { HOME_DESCRIPTION, HOME_TITLE, KEYWORDS, SITE_NAME, SITE_URL } from "@/l
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
-  title: { default: HOME_TITLE, template: "%s · Migration Agent" },
+  title: { default: HOME_TITLE, template: "%s · Parity" },
   description: HOME_DESCRIPTION,
   applicationName: SITE_NAME,
   keywords: KEYWORDS,

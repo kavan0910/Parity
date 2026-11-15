@@ -1,11 +1,11 @@
 /** Single source for everything search engines and social cards read. The page renders from the same data. */
 export const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3100").replace(/\/$/, "");
-export const SITE_NAME = "Migration Agent";
+export const SITE_NAME = "Parity";
 
 // <title> <= 60 characters, description <= 160.
-export const HOME_TITLE = "Legacy App Migration: Upgrade or Replatform, With Proof";
+export const HOME_TITLE = "Parity: Legacy App Migration, Upgrade or Replatform, Proven";
 export const HOME_DESCRIPTION =
-  "Upgrade or replatform legacy apps: Java 8 to 21, Spring Boot 2 to 3, Django 3 to 5, Express to Fastify, JavaScript to Go. Verified against your running app.";
+  "Parity migrates legacy apps to the latest version or a new stack, then proves parity with the old app. Java 8 to 21, Spring Boot 3, Django 5, Fastify, Go.";
 export const KEYWORDS = [
   "legacy application migration", "legacy code modernization", "application modernization tool", "replatform legacy app",
   "upgrade Java 8 to Java 21", "Spring Boot 2 to 3 migration", "Django 3 to 5 upgrade", "Express to Fastify migration",
@@ -44,7 +44,7 @@ export const STEPS = [
 ] as const;
 
 export const FAQ = [
-  { q: "What is Migration Agent?", a: "A tool that takes an existing legacy application and migrates it to the newest version of its stack, or to a different technology, then checks that the new app behaves like the old one. Understanding the legacy code is step 1 of five: understand, approve, migrate, prove, cut over." },
+  { q: "What is Parity?", a: "A tool that takes an existing legacy application and migrates it to the newest version of its stack, or to a different technology, then checks that the new app behaves like the old one. Understanding the legacy code is step 1 of five: understand, approve, migrate, prove, cut over." },
   { q: "Which migrations does it support?", a: "Java 8 to 21 and Spring Boot 2 to 3 are the first-class path. Library and API-risk tables also cover Django 3 to 5, Express to Fastify and JavaScript to Go. Other moves are not covered yet." },
   { q: "How does it prove the new app behaves like the old one?", a: "The running legacy app is the oracle. Test inputs are run against it twice, noise is masked, and its answers become the expected results. The same cases then run against the new app, both starting from the same data, and every difference is listed. The model proposes inputs but never writes an expected answer." },
   { q: "Does it change my code?", a: "No. Your source is copied into a project folder and analysed there; the migrated app is written to its own folder, never into your repository." },

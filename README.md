@@ -1,4 +1,8 @@
-# migration-agent
+# Parity
+
+> **Migrate legacy apps. Prove parity.** Parity is the product name (a working name: check trademark and domain before
+> you ship it). The command-line tool and the Python package keep the name `migration-agent`
+> (`pip install`, `migration-agent --help`, `import migration_agent`), so every command in these docs is unchanged.
 
 **Migrate a legacy app to the newest version of its stack, or to a different technology, and prove that the new app
 behaves like the old one.**

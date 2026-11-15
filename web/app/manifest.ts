@@ -2,8 +2,8 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "Migration Agent",
-    short_name: "Migration Agent",
+    name: "Parity",
+    short_name: "Parity",
     description: "Migrate a legacy app to the newest version or a different stack, and prove the new one behaves like the old one.",
     start_url: "/",
     display: "standalone",
