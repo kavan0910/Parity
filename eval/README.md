@@ -78,7 +78,9 @@ script offline: no model, no network, no Docker. Current result: all three pairs
 
 The baseline is not a measurement of the agent. The `recorded/` runs are hand-written reference migrations with
 hand-written results (`run_kind: reference`). They exercise the scorer and the regression gate. The hidden
-expectations were derived from the legacy source and have not been checked against a live legacy recording. The
+expectations were derived from the legacy source; checked live against the express-crud legacy service they do not
+agree (0 of 9 cases pass; see `eval/targets/README.md`) and are not reconciled. The
 canaries are not planted in `eval/repos/` (that would change the Phase 1 graphs); a live runner must overlay them.
-No real-model run of Phase 2 exists yet, nightly or otherwise, and the CI runs of this repository have so far ended
+No real-model run of Phase 2 exists yet, nightly or otherwise (the fixtures have run on a real Docker daemon with
+`--offline`: `tests/test_p2_live_e2e.py`), and the CI runs of this repository have so far ended
 in `startup_failure` (see `docs/operations-runbook.md` section 10).

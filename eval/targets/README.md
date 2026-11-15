@@ -54,6 +54,11 @@ PYTHONPATH=src python scripts/eval_phase2.py --update-baseline  # after an inten
 ## Honest status
 
 The `recorded/` runs are hand-written reference migrations with hand-written results: they exercise the scorer and
-the regression gate, they are not agent output. The hidden expectations are derived from the legacy source and have
-not been checked against a live legacy recording yet. The canaries are not planted in `eval/repos/` (that would change
-the Phase 1 graphs and eval scores); a live runner must overlay them. No nightly real-model run exists yet.
+the regression gate, they are not agent output. The canaries are not planted in `eval/repos/` (that would change the
+Phase 1 graphs and eval scores); a live runner must overlay them. No nightly real-model run exists yet.
+
+The hidden expectations were derived from the legacy source and, when finally checked against the live legacy service
+(2026-11-15), **do not agree with it**: 0 of the 9 `express-crud__fastify-ts` cases pass. They assume a pre-seeded
+database and a case order, some are written to be unauthenticated, and the runner did not send the synthetic API token
+at all until `request_headers` was added (a case can now drop an injected header with an empty value). They have not
+been reconciled. The `django-lite__fastapi` and `express-crud__go-chi` pairs from the plan are not built.

@@ -6,8 +6,9 @@ instructions are in [user-guide.md](user-guide.md) section 9; security controls 
 [threat-model.md](threat-model.md) section 9.
 
 Status: milestones M0 to M7 are implemented and tested offline (unit and integration tests with a scripted docker
-CLI and fake model clients). Nothing here has run against a real Docker daemon or a real model yet. See the
-"Implementation status" section at the top of the plan.
+CLI and fake model clients). They have also run on a real Docker daemon on the eval fixtures, without a model: see
+the "Implementation status" section at the top of the plan and [remaining-work.md](remaining-work.md) for what has and
+has not run live.
 
 ## Module map
 
@@ -40,15 +41,17 @@ All Phase 2 code lives in `src/migration_agent/migrate/`. Each module's docstrin
 | `targetrepo.py` | M4 | | `target_code/` as a hardened local git repo: `init_repo`, `commit_iteration`, `diff`, `human_commits` |
 | `codegen.py` | M4 | | Edit schema, path jail, build-file allowlist, exact apply, secret scan, dependency check, context pack |
 | `reviewer.py` | M4 | | Fresh-session `code_review` task plus deterministic static deny checks |
-| `codemods/` | M4 | | `run_codemods`; adapters: OpenRewrite (Maven), django-upgrade + pyupgrade, jscodeshift (stub) |
+| `codemods/` | M4 | | `run_codemods`; adapters: OpenRewrite (Maven and Gradle), django-upgrade + pyupgrade, lebab (JavaScript); optional per-adapter `image_for(spec)` and `cache` (mounted at `/cache`) |
 | `slice_runner.py` | M4 | `generate` | Per-slice loop: context -> codegen -> apply -> commit -> build -> tests -> review -> human |
 | `equivalence.py` | M5, M6 | `equivalence [run]`, `equivalence composite`, `equivalence approve-mask` | Legacy vs new diffs, classification, triage, fix requests, masks, composite runs |
+| `differential.py` | M5 | `equivalence fuzz` | Latency summary (p50/p95, slower cases) recorded by every equivalence run; differential fuzzing of recorded HTTP cases (deterministic mutations, legacy asked twice to mask noise); both advisory |
 | `approvals.py` | M5 | `approve-slice`, `reject-slice`, `slice comment|decide|accept-observed` | Comments, slice decisions, git inspection, approval gate `approval_blockers` |
 | `configmap.py` | M6 | `config map`, `config set` | Config keys -> target convention; secrets as references only |
 | `schemacompat.py` | M6 | `config schema-check`, `config schema-blockers` | Legacy schema vs what the new service expects; declared expand/contract changes; blind spots |
 | `router/` | M6 | | Package data: stdlib reverse proxy (`proxy.py`), `schema_probe.py`, `Dockerfile` |
 | `cutover.py` | M7 | `cutover [--approve]` | Readiness gate, deterministic `cutover/plan.md`, `cutover/approval.json` with hashes |
 | `metrics.py` | M7 | `metrics` | `compute_metrics(project)`: derived from existing files only |
+| `supplychain.py` | M7 | | Per-build lockfile sha256 hashes, build-generated-lockfile and unpinned-dependency warnings, CycloneDX SBOM; written by `harness build`, read by `cutover` |
 | `prompts/` | M2-M5 | | `target_fit.md`, `test_gen.md`, `plan.md`, `codegen.md`, `codegen_fix.md`, `code_review.md`, `equiv_triage.md` |
 
 Outside `migrate/`: `service.py` (Phase 2 stages for `run_stage`, `metrics()`), `review_ui/server.py` and `page.py`
@@ -307,4 +310,6 @@ Per module: `tests/test_p2_<module>.py` (contract, models, ledger, state, cli, t
 recorder, harness, harness_runner, exec_docker, codegen, codemods, reviewer, slice_runner, equivalence, approvals,
 configmap, schemacompat, router, cutover, metrics, review_ui, service_stages, eval, integration) and
 `tests/redteam/test_p2_exec_sandbox.py`. Live tests in `test_p2_exec_docker.py`, `test_p2_router.py` and
-`test_p2_integration.py` skip when `docker info` fails; on the authoring machine they have always skipped.
+`test_p2_integration.py` skip when `docker info` fails and run against the real daemon otherwise. `test_p2_live_e2e.py` is the
+opt-in end-to-end trial (`MA_LIVE_E2E=1`); `test_p2_differential.py`, `test_p2_supplychain.py` and `test_p2_seed.py` cover
+fuzzing and latency, lockfiles and the SBOM, and request headers and seeds.

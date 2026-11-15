@@ -12,7 +12,8 @@ That is **Phase 1** (sections 1 to 8). Phase 1 never executes the code it analys
 analysis, a slice plan, characterization tests recorded from the running legacy service, a sandboxed generation loop,
 equivalence checks legacy vs new, per-slice approvals, an optional strangler router, and a final cut-over approval.
 Phase 2 does build and run code, but only inside network-isolated Docker containers (section 9.1). Phase 2 is
-implemented and tested offline; it has not yet run against a real Docker daemon or a real model.
+implemented and tested offline, and has run on a real Docker daemon on the eval fixtures; it has not yet run with a real
+model (section 9).
 
 ## 1. Install
 
@@ -314,8 +315,10 @@ Phase 2 turns the approved understanding into a new service and shows, case by c
 one. The running legacy service is the oracle: expected outputs are recorded from it, never written by the model
 (except for behaviour you decided to `fix`, and only after you approve the corrected expectation).
 
-Status: implemented and covered by offline unit and integration tests. It has **not** run against a real Docker
-daemon or a real model yet. Treat the first real runs as a trial. Design: [phase2-plan.md](phase2-plan.md); code map:
+Status: implemented and covered by offline unit and integration tests. It has run on a real Docker daemon on the three
+eval fixtures (build, start, record, equivalence, fuzzing, the strangler router and three codemods), always with
+`--offline`: **no stage has run with a real model yet**, so the quality of generated code is unmeasured. Treat the first
+real runs on your own service as a trial. What has and has not run: [remaining-work.md](remaining-work.md). Design: [phase2-plan.md](phase2-plan.md); code map:
 [phase2-architecture.md](phase2-architecture.md).
 
 Phase 2 is CLI and self-hosted only. The hosted platform does not run it (section 9.11).
@@ -359,8 +362,9 @@ Threat model: [threat-model.md](threat-model.md) section 9.
   * `python:3.12.7-alpine3.20` (in-network case runner, router and schema probe);
   * `ubuntu/squid:6.6-24.04_beta` (egress proxy, only when a mirror is configured; override with `proxy_image`);
   * database and stub images named in `harness.yaml`;
-  * codemod images when the codemods apply: `maven:3.9-eclipse-temurin-21` (OpenRewrite), `python:3.12-slim`
-    (django-upgrade + pyupgrade).
+  * codemod images when the codemods apply: `maven:3.9-eclipse-temurin-21` (OpenRewrite, Maven),
+    `gradle:8.10-jdk21` (OpenRewrite, Gradle), `python:3.12-slim` (django-upgrade + pyupgrade), `node:20-alpine`
+    (lebab, JavaScript).
 * **Package mirror (optional).** List mirror hosts in `<project>/harness/mirror.json`:
   ```json
   {"hosts": ["nexus.corp.example"], "ports": [443], "runtime": "auto"}
@@ -408,14 +412,35 @@ legacy:
   healthcheck: {path: /api/products}
   env: {PORT: "3000"}
   synthetic_secrets: [API_TOKEN]            # random value per `harness up`
+  request_headers:                          # added to EVERY request the runner sends to this service
+    X-API-Token: "{secret:API_TOKEN}"       # {secret:NAME} = the random value generated for NAME at `harness up`
 db:
   engine: sqlite                            # sqlite | postgres | mysql | none
   # image, command, migrate, seed for server engines
+seed_requests: harness/seed/requests.json   # HTTP seeds replayed after every `harness up` (in-memory databases)
 stubs: []                                   # stub servers for external systems
 # new: {...}        optional; default derived from target/target.yaml
 # router: {image: "ma-router:1", port: 8080}
 # schema_check: {...}                       # for `config schema-check`
 ```
+
+**Authenticated services.** The sandbox generates a random value for each `synthetic_secrets` name every time the
+harness starts. `request_headers` tells the case runner to send it: `{secret:NAME}` is replaced by that value, and the
+header goes on every request (recording, seeds, equivalence, fuzzing, the composite). Without it a service that
+requires a token answers `401` to everything, and you would be comparing two error pages. A case can override an
+injected header with its own value (compared case-insensitively) or send none by giving the header an empty value
+(`"headers": {"X-API-Token": ""}`), which is how a "missing token" case is written. The value never reaches a case
+file or a report.
+
+**Seeds for in-memory databases.** A service whose database lives in its process starts empty. `seed_requests` names
+an HTTP seed file in the legacy source tree, `{"requests": [{"method", "path", "body"?, "headers"?, "query"?,
+"expect_status"?: [codes]}]}` (up to 200). It is replayed after every `harness up`, for `legacy`, for `new`, and
+directly against both services of the composite. A seed must answer below 400 (or one of its `expect_status`); a seed
+that fails stops `harness up` and removes the containers, because every later case would be meaningless.
+
+Timestamps: two ISO-8601 timestamps no more than 5 minutes apart compare equal everywhere (recording, equivalence,
+fuzzing, the composite), because two instances seeded moments apart never agree on "now". Hours apart, or a zoned
+timestamp against a naive one, is still a difference.
 
 ### 9.4 What Phase 2 writes in the project folder
 
@@ -527,10 +552,26 @@ migration-agent equivalence orders.migration --slice SLICE-0001             # in
 migration-agent equivalence orders.migration --all --triage --max-usd 1     # cheap model explains unknown diffs
 migration-agent equivalence orders.migration --slice SLICE-0001 --legacy-url http://127.0.0.1:8080 --new-url http://127.0.0.1:8081
 ```
-`equivalence PROJECT ...` is the same as `equivalence run PROJECT ...`. Results: `slices/SLICE-NNNN/equivalence.json`
-and `equivalence/report.md`. Regressions and `new_bug` triage become fix requests that the next `generate` run
+`equivalence PROJECT ...` is the same as `equivalence run PROJECT ...`. In harness mode both services are restarted
+first, which re-runs the seeds, so each starts from the same data (`--no-reset` keeps their state; with
+`--legacy-url`/`--new-url` nothing is restarted). Results: `slices/SLICE-NNNN/equivalence.json` and
+`equivalence/report.md`, which also carries an advisory **latency** summary (p50 and p95 per side, and the cases where
+the new service is more than x2 and 50 ms slower; sandbox timings are noisy, so it is a smoke signal, not a
+benchmark). Regressions and `new_bug` triage become fix requests that the next `generate` run
 picks up. A `legacy_bug` becomes a decision for you; a `harness_issue` becomes a mask proposal; a `spec_ambiguity`
 blocks the slice until answered.
+
+**Differential fuzzing (advisory).** Recorded cases only cover what was recorded. `equivalence fuzz` applies a fixed set
+of mutations to each recorded HTTP case (empty, long, numeric-edge and unicode query values; JSON fields set to null,
+a wrong type, empty or removed; another body shape; an unknown field or parameter), asks legacy twice so its own noise
+is masked, and reports where the new service answers differently.
+```bash
+migration-agent equivalence fuzz orders.migration --slice SLICE-0001 --max-variants 8   # exit 1 on a high-severity divergence
+```
+Results: `equivalence/fuzz/SLICE-NNNN.json` and `equivalence/report.md`. A divergence is `high` when one side answers
+5xx and the other does not, or the status class differs. It never blocks `approve-slice`; `cutover` lists it as a
+warning. It mutates only fields that already exist in recorded bodies, so it will not invent a boundary the cases never
+reached.
 
 **9. Review and approve each slice** (section 9.6 and 9.8).
 
@@ -601,6 +642,11 @@ You may edit `target_code/` yourself and commit with git. A commit after the equ
 makes approval wait for a new equivalence run. The agent never overwrites uncommitted edits: `generate` refuses a
 dirty tree. Human commits count in the human-edit metric.
 
+Reviewer findings: mark each finding the reviewer raised as a real problem or as noise with
+`migration-agent slice review-finding PROJECT SLICE-NNNN K:I (--accept|--dismiss) --by NAME [--note T]` (`K` is the
+iteration, `I` the finding's position; the Slice tab has the same buttons). Your verdicts are stored in
+`slices/SLICE-NNNN/review_marks.json` and are what `metrics` uses for reviewer precision.
+
 Comments: `migration-agent slice comment PROJECT ITEM_ID --text "..." [--file F --line N] [--by NAME]`, where
 `ITEM_ID` is a `SLICE-`, `CT-`, `EQ-`, `RISK-` or graph id and `--file` a `target_code`-relative path.
 `migration-agent generate PROJECT --slice SLICE-NNNN --from-comments` runs a fix iteration with the unprocessed
@@ -611,8 +657,10 @@ comments and reopens `awaiting_human`, `rejected` or `approved` slices.
 `migration-agent review PROJECT` shows extra tabs once Phase 2 files exist (`target/fit_report.json`,
 `plan/migration_plan.json` or `slices/`): **Target fit** (risks, resolve), **Plan** (slices, status, estimate,
 equivalence %), **Slice** (state, iterations, build and test results, git diff, review findings, equivalence diffs,
-blockers, approve and reject buttons, mask approvals) and **Comments**. There is no cut-over tab; use the CLI. The
-same loopback, token and Origin checks apply.
+blockers, approve and reject buttons, mask approvals, Accept/Dismiss buttons on each reviewer finding), **Cut-over**
+(every readiness check with its detail, warnings, the approval and whether its hashes still match, and an approve
+button that stays disabled until the project is ready) and **Comments**. The same loopback, token and Origin checks
+apply.
 
 ### 9.9 Cut-over
 
@@ -622,6 +670,13 @@ unknown diffs; a full-suite run on the current `target_code` HEAD that covers ev
 report for strangler projects, else the newest equivalence run covering all slices); a clean `target_code/`; no
 coverage gaps; no open config entries; no schema blockers and no incompatible schema report; findings and risks
 accepted; spend within the project budget.
+
+Warnings (never blockers): differential-fuzzing divergences, cases the new service answers much slower than legacy,
+and supply-chain findings from the last build of each service. Every `harness build` writes
+`runs/RUN-NNNN/supply_chain.json` and `sbom.cdx.json` (CycloneDX 1.5) with the sha256 of each lockfile, and warns about
+a manifest with no lockfile, a lockfile the build generated instead of the source containing it (commit it, or the next
+build may resolve other versions) and unpinned dependencies. The SBOM lists what the lockfiles name; a package whose hash
+differs from the lockfile is not refused (the sandbox only allows the mirror hosts you configured).
 
 `cutover/plan.md` is deterministic: route-flip order, rollback per step, config and secret checklist (names only),
 schema steps, monitoring per endpoint, open risks. `cutover --approve --by NAME` re-checks readiness and writes
@@ -636,8 +691,8 @@ The tool does not deploy anything. The cut-over plan is for your team to execute
 `metrics` derives everything from the audit log, slice files, recordings and `target_code` git history: cost per
 slice, per node and per 1k legacy lines; cache hit rate; iterations to green; build success on the first try;
 characterization pass rate; equivalence %; unknown-diff rate; mask additions; human-edit rate; wall-clock split model
-vs exec; runtime findings. A metric without data shows `n/a`, never 0. Reviewer precision is always `n/a` today
-because nothing records which review findings a human accepted.
+vs exec; runtime findings. A metric without data shows `n/a`, never 0. Reviewer precision is the share of reviewer
+findings you marked that you accepted (`slice review-finding`, or the Slice tab); it is `n/a` until you mark some.
 
 ### 9.11 Hosted platform
 

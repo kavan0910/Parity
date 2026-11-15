@@ -13,12 +13,12 @@
 | [operations-runbook.md](operations-runbook.md) | Operators of the hosted stack | Deploy, backup/restore, rotation, on-call; Phase 2 is not part of the hosted stack |
 | [product-architecture.md](product-architecture.md) | Owner | Hosted product design (its "Phase 1/2/3" are product phases, not the migration phases) |
 | [phase0-results.md](phase0-results.md) | Everyone | First runs on real repositories; accuracy not yet measured |
+| [remaining-work.md](remaining-work.md) | Everyone | What is built, what ran for real, and what is left, against every plan (grill, implementation plan, Phase 2 plan, roadmap) |
 | `eval/README.md` (repository root) | Contributors | Eval fixtures, Phase 1 scoring, Phase 2 target pairs, gate and baseline |
 
 HTML versions of these pages are in `html/` (built by `scripts/build_docs_html.py`). The hand-built pages
 `developer-handbook.html` (chapter 14), `tutorial.html` (sections 5 and 6) and `user-guide-app.html` (CLI table and
-"Not available yet") are maintained separately. They were last updated for the Phase 1 approval gate and Phase 2 on
-2026-11-14; update them by hand whenever the markdown pages change in substance. The hosted app guide documents the
+"Not available yet") are maintained separately. They were last updated on 2026-11-15 (Phase 1 approval gate, Phase 2, the live Docker findings); update them by hand whenever the markdown pages change in substance. The hosted app guide documents the
 web app only: approval and Phase 2 are CLI features.
 
 These files are published alongside the tool: they are included in the source distribution (`sdist`) and live

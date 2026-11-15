@@ -30,6 +30,7 @@ OUT = DOCS / "html"
 GROUPS = [
     ("Start here", ["README", "user-guide", "architecture", "api-reference", "deployment", "threat-model"]),
     ("Phase 2: migrate", ["phase2-architecture", "phase2-plan"]),
+    ("Roadmap", ["remaining-work"]),
     ("Product and platform", ["product-architecture", "platform-contract", "phase0-results", "operations-runbook"]),
     ("Security", ["security/security-overview-draft", "security/threat-model-hosted", "security/data-handling-and-retention",
                   "security/pentest-2026-11-09", "security/incident-response", "security/secure-sdlc",

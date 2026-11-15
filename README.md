@@ -39,25 +39,25 @@ Safety properties:
 * **Phase 1** is implemented and has run on three small open-source repos ([docs/phase0-results.md](docs/phase0-results.md)).
   Its accuracy on large real repositories is **unmeasured**: nothing has been hand-scored yet.
 * **Phase 2** is implemented (milestones M0 to M7) and covered by offline unit and integration tests: the full suite
-  is **1159 passed, 7 skipped** (`.venv/bin/python -m pytest -q`; 6 of the skips are live Docker tests). It has
-  **not run against a real Docker daemon or a real model yet**. The Docker backend is tested against a scripted
-  docker CLI, the model against fake and offline clients.
+  is **1195 passed, 2 skipped** (`.venv/bin/python -m pytest -q`; the 2 skips are the opt-in live end-to-end
+  test and a release test that needs the `build` package). It has **run on a real Docker daemon** but **never with a real model**:
+  the sandbox built and started all three legacy fixtures; for express-crud it also recorded 24 cases from the
+  running service, ran an identity port as the new service through equivalence, fuzzing and the strangler router (and
+  caught a seeded regression); and three codemods rewrote real code. The first live runs found and fixed seven bugs
+  that every offline test had missed (see [CHANGELOG.md](CHANGELOG.md)). Repeat it with `MA_LIVE_E2E=1 .venv/bin/python -m pytest -q tests/test_p2_live_e2e.py`.
 * The Phase 2 eval baselines (`eval/targets/baseline.json`) score **hand-written reference runs**, not agent output.
   They test the scorer and the regression gate, not migration quality.
-* Known gaps reported in the code:
-  * In the composite (strangler) harness, `sqlite` or `none` databases are private per service, so the composite does
-    not test a shared database in that case.
-  * Reviewer precision is always n/a: nothing records which review findings a human accepted.
-  * Codemod tool and recipe versions (OpenRewrite, django-upgrade, pyupgrade) are pinned in code but have never run.
-    OpenRewrite supports Maven only; the jscodeshift adapter is a stub.
+* Known gaps (full list with reasons: [docs/remaining-work.md](docs/remaining-work.md)):
+  * No Phase 2 stage has run with a real model, so the quality of generated code is unmeasured.
   * gRPC and message characterization cases return `not_implemented`.
-  * Mirror resolution of new dependencies is a hook only (warning); no lockfile hash checks or SBOM per run.
-  * Runner, router, proxy and codemod images are referenced by tag, not digest.
-  * `doctor` does not check image presence or mirror reachability.
+  * gVisor and OpenRewrite through Gradle have not run; images are referenced by tag (each run records its digest).
+  * Lockfile hashes and an SBOM are recorded per build, but a package whose hash differs is not refused.
+  * In the composite (strangler) harness, in-memory `sqlite` or `none` databases are private per service.
+  * Two eval pairs from the plan (`django-lite__fastapi`, `express-crud__go-chi`) are not built.
 * Phase 2 is CLI/self-hosted only. The hosted platform below runs Phase 1 stages only.
 * CI runs of this repository have so far ended in `startup_failure`; no CI job is verified.
 
-Details: [docs/phase2-plan.md](docs/phase2-plan.md) ("Implementation status"), [CHANGELOG.md](CHANGELOG.md) (known gaps).
+Details: [docs/phase2-plan.md](docs/phase2-plan.md) ("Implementation status"), [docs/remaining-work.md](docs/remaining-work.md) (what is left), [CHANGELOG.md](CHANGELOG.md).
 
 ## Quick start: Phase 1
 

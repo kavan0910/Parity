@@ -219,8 +219,13 @@ model has no exec or network tools (decision P2-Q6); it returns edits that the o
 | T36 | Repudiation / Tampering | Approval given on stale evidence (code changed after the equivalence run, report edited after cut-over approval) | Slice approval requires the `target_code` HEAD of the last equivalence run and records commit and report hashes; cut-over approval records sha256 of the contract and `cutover/plan.md`, HEAD (or a tree hash) and a digest over every equivalence artifact; `verify_approval` reports stale approvals; both are refused while readiness fails | `test_human_commit_after_equivalence_forces_rerun`, `test_agent_commit_after_equivalence_also_stale`, `test_approve_refused_while_not_ready`, `test_approve_writes_hashes_and_verifies`, `test_tree_hash_without_git` |
 | T37 | Spoofing / Tampering | Phase 2 writes through the review server from another origin, or with crafted ids | `/api/p2/*` POST routes share the existing loopback, token, Host and Origin checks, JSON-only, 64 KB cap; ids validated; comment text redacted; slice approval goes through the same `approval_blockers` gate | `test_post_routes_keep_hardening`, `test_comment_happy_path_redaction_and_unknown`, `test_approve_refused_mask_then_approve` |
 
-Not implemented: lockfile hash verification and an SBOM per run, the hosted-mode credential-free exec runner
-(Phase 2 is CLI/self-hosted only, P2-Q13), and scanning of the router and runner images.
+| T38 | DoS / Tampering | A job's tmpfs at its working directory hides files of the image it runs (found live: the router and the schema probe died because `/app` was masked) | The Docker backend refuses a job whose workdir would get a tmpfs that masks a path used in its command; the router and probe use `/tmp` | `test_workdir_tmpfs_may_not_mask_a_path_the_command_uses`, `test_router_and_schema_probe_jobs_do_not_use_app_as_workdir` |
+| T39 | Info disclosure | A service's synthetic secret (sent as a request header by the runner) reaches a case file, report or log | `request_headers` placeholders resolve only to names in `synthetic_secrets`; the value is written only to the per-run runner config under `runs/RUN-NNNN/work/` and `harness/synthetic_secrets.json` (0600); case files and reports hold the placeholder, never the value; the values are random per run and not real credentials | `test_p2_seed.py` |
+| T40 | Repudiation | A build pulls different dependency versions than last time, or an unreviewed lockfile appears | Every build records lockfile sha256 hashes and a CycloneDX SBOM; a lockfile the build generated instead of the source containing it is flagged and reported by `cutover` | `test_p2_supplychain.py` |
+
+Not implemented: refusing a package whose hash differs from the lockfile (hashes and an SBOM are recorded, not
+enforced; that needs a mirror that publishes them), the hosted-mode credential-free exec runner (Phase 2 is
+CLI/self-hosted only, P2-Q13), and scanning of the router and runner images.
 
 Residual risks (Phase 2 execution):
 
@@ -241,12 +246,14 @@ Residual risks (Phase 2 execution):
 7. `harness/synthetic_secrets.json` (0600) holds the random values of the running harness so the recorder can call
    it. They are not real credentials but should not be committed.
 8. The egress proxy image (`ubuntu/squid`) is a trusted component with `SETUID/SETGID`; pin it by digest.
-9. Docker was not available on the authoring machine: the backend is tested against a scripted docker CLI, and the
-   live tests (network canary, fork bomb, disk fill, read-only rootfs) are skipped until a daemon is present.
+9. The live tests (network canary, fork bomb, disk fill, read-only rootfs, the egress proxy allowlist) have run on
+   Docker Desktop (linux/arm64, runc) and pass. gVisor has not been tried, and other engines or hosts may differ.
+   The offline suite alone missed seven bugs in the sandbox that the first live run exposed (CHANGELOG).
 10. The reviewer and static deny checks are pattern-based and the model reviewer has never run against a real model.
     They reduce, not remove, the chance that malicious generated code is approved. The human diff review is the
     final control.
-11. Deterministic codemods (OpenRewrite, django-upgrade, pyupgrade) download recipes and tools from the mirror at
-    build time. Their versions are pinned in code but have never been run; their images are tags, not digests.
+11. Deterministic codemods (OpenRewrite, django-upgrade, pyupgrade, lebab) download recipes and tools from the mirror
+    at build time. Their versions are pinned in code and the Maven, Python and JavaScript ones have run in the sandbox
+    (OpenRewrite through Gradle has not); their images are tags, not digests (each run records the digest it used).
 12. With `db.engine` `sqlite` or `none` the composite gives each service its own database, so cross-service schema
     coupling is not exercised by the composite suite.

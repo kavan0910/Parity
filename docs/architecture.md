@@ -143,8 +143,9 @@ Phase 2 starts from the approved migration contract (`docs/migration_contract.js
 [phase2-architecture.md](phase2-architecture.md). Plan and decisions: [phase2-plan.md](phase2-plan.md). Threat
 model: [threat-model.md](threat-model.md) section 9.
 
-Status: implemented (M0 to M7) and tested offline with a scripted docker CLI and fake model clients. Not yet run
-against a real Docker daemon or a real model.
+Status: implemented (M0 to M7) and tested offline with a scripted docker CLI and fake model clients. It has run on a
+real Docker daemon on the eval fixtures, with `--offline` (no model); it has not run with a real model. See
+[remaining-work.md](remaining-work.md).
 
 ### Components
 
