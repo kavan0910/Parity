@@ -17,13 +17,15 @@ const STEPS = [
   { n: "05", t: "Cut over", d: "Move traffic slice by slice, with a plan you approve.", where: "cli" },
 ] as const;
 
-export function MigrationJourney({ done = 0, compact = false, className }: { done?: number; compact?: boolean; className?: string }) {
+export function MigrationJourney({ done = 0, compact = false, className, level = 2 }: { done?: number; compact?: boolean; className?: string; level?: 2 | 3 }) {
+  const H = (level === 2 ? "h2" : "h3") as "h2" | "h3";
+  const S = (level === 2 ? "h3" : "h4") as "h3" | "h4";
   return (
     <section aria-label="The migration journey" className={cx("rounded-2xl border border-line-strong bg-surface p-5 sm:p-6", className)}>
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
           <p className="eyebrow">The goal</p>
-          <h2 className="display mt-1 text-2xl sm:text-3xl">Legacy app in, migrated app out, with proof.</h2>
+          <H className="display mt-1 text-2xl sm:text-3xl">Legacy app in, migrated app out, with proof.</H>
         </div>
         <ul className="flex flex-wrap gap-1.5" aria-label="Supported migrations">
           {TARGETS.map((t) => (
@@ -42,7 +44,7 @@ export function MigrationJourney({ done = 0, compact = false, className }: { don
                   {isDone ? "done" : s.where === "app" ? "in this app" : "CLI beta"}
                 </span>
               </div>
-              <h3 className="mt-3 font-semibold">{s.t}</h3>
+              <S className="mt-3 font-semibold">{s.t}</S>
               {!compact && <p className="mt-1 text-sm text-muted">{s.d}</p>}
             </li>
           );

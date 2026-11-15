@@ -1,7 +1,15 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { Logo, ThemeToggle } from "@/components/Brand";
 import { ConfidenceMeter, LinkButton, TypeGlyph } from "@/components/ui";
 import { MigrationJourney, TARGETS } from "@/components/MigrationJourney";
+import { FAQ, HOME_DESCRIPTION, HOME_TITLE, PATHS, jsonLd } from "@/lib/site";
+
+export const metadata: Metadata = {
+  title: { absolute: HOME_TITLE },
+  description: HOME_DESCRIPTION,
+  alternates: { canonical: "/" },
+};
 
 const CODE = [
   [16, "def cancel(registration):"],
@@ -22,12 +30,17 @@ const PROOF = [
 export default function Landing() {
   return (
     <div className="min-h-dvh">
+      {jsonLd().map((d, i) => (
+        <script key={i} type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(d).replace(/</g, "\\u003c") }} />
+      ))}
       <header className="sticky top-0 z-30 border-b border-line bg-bg/85 backdrop-blur">
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-3 px-4 sm:px-6">
           <Logo />
           <nav aria-label="Primary" className="flex items-center gap-1">
             <a href="#mvp" className="hidden rounded-lg px-3 py-2 text-sm hover:bg-surface-2 sm:block">The MVP</a>
             <a href="#how" className="hidden rounded-lg px-3 py-2 text-sm hover:bg-surface-2 sm:block">How it works</a>
+            <a href="#paths" className="hidden rounded-lg px-3 py-2 text-sm hover:bg-surface-2 sm:block">Migrations</a>
+            <a href="#faq" className="hidden rounded-lg px-3 py-2 text-sm hover:bg-surface-2 sm:block">FAQ</a>
             <a href="#status" className="hidden rounded-lg px-3 py-2 text-sm hover:bg-surface-2 sm:block">What you get</a>
             <a href="#honest" className="hidden rounded-lg px-3 py-2 text-sm hover:bg-surface-2 sm:block">Measured</a>
             <ThemeToggle />
@@ -41,9 +54,9 @@ export default function Landing() {
         <section className="dotgrid border-b border-line">
           <div className="mx-auto grid max-w-6xl gap-12 px-4 pb-20 pt-14 sm:px-6 lg:grid-cols-[1.05fr_1fr] lg:pt-24">
             <div>
-              <p className="eyebrow rise mb-5">Legacy app migration</p>
+              <p className="eyebrow rise mb-5">Legacy application migration and modernisation</p>
               <h1 className="display rise rise-1 text-[3.1rem] sm:text-7xl">
-                Migrate your legacy app to the <em className="text-accent">newest version</em>, or to a different stack.
+                Upgrade or replatform your <em className="text-accent">legacy app</em>, and prove it still works the same.
               </h1>
               <p className="rise rise-2 mt-6 max-w-xl text-lg text-muted">
                 Migration Agent takes the application you already run and migrates it, one slice at a time, to a current version of its stack or to a different technology.
@@ -111,12 +124,12 @@ export default function Landing() {
           </div>
         </section>
 
-        <section id="how" className="border-y border-line bg-surface-2">
+        <section id="how" aria-labelledby="how-h" className="border-y border-line bg-surface-2">
           <div className="mx-auto max-w-6xl scroll-mt-20 px-4 py-20 sm:px-6">
             <p className="eyebrow mb-3">How the migration works</p>
             <h2 className="display max-w-3xl text-4xl sm:text-5xl">Five steps from the app you have to the app you want.</h2>
             <p className="mt-4 max-w-2xl text-muted">Understanding the legacy app is step 1, not the goal: you cannot migrate safely what you cannot describe. Everything after it is built on that approved map.</p>
-            <MigrationJourney className="mt-10" />
+            <MigrationJourney level={3} className="mt-10" />
             <div className="mt-6 grid gap-4 md:grid-cols-2">
               <div className="rounded-2xl border border-line bg-surface p-6">
                 <p className="eyebrow mb-2">Why the map comes first</p>
@@ -130,9 +143,66 @@ export default function Landing() {
           </div>
         </section>
 
-        <section className="mx-auto max-w-6xl px-4 py-20 sm:px-6">
+        <section id="impact" aria-labelledby="impact-h" className="mx-auto max-w-6xl scroll-mt-20 px-4 py-20 sm:px-6">
+          <p className="eyebrow mb-3">Impact</p>
+          <h2 id="impact-h" className="display max-w-3xl text-4xl sm:text-5xl">Less guesswork, no silent regressions, and a bill you control.</h2>
+          <p className="mt-4 max-w-2xl text-muted">Migrations fail quietly: behaviour drifts and nobody notices until production. Here is what changes, with the numbers we have actually measured.</p>
+          <dl className="mt-10 grid gap-px overflow-hidden rounded-2xl border border-line bg-line sm:grid-cols-2 lg:grid-cols-3">
+            {[
+              ["24 / 24", "recorded cases matched between the old and the new Express app in the sandbox trial; a deliberately changed status code was caught."],
+              ["90", "fuzz variants compared between old and new in that trial, with no difference on identical code."],
+              ["100%", "of cited evidence is checked against a real file and line range before it can steer the migration."],
+              ["$0.077", "to map Spring PetClinic (4,297 lines) in 51 seconds, with a hard budget that stops a run gracefully."],
+              ["5", "migration paths covered: Java 8 to 21, Spring Boot 2 to 3, Django 3 to 5, Express to Fastify, JavaScript to Go."],
+              ["0", "changes to your repository. Your source is copied; the new app is written to its own folder."],
+            ].map(([v, l]) => (
+              <div key={l} className="bg-surface p-6">
+                <dt className="display text-5xl tnum text-accent">{v}</dt>
+                <dd className="mt-2 text-sm text-muted">{l}</dd>
+              </div>
+            ))}
+          </dl>
+          <p className="mt-4 max-w-2xl text-xs text-muted">Measured on our reference apps with no AI model in the migration steps. Treat these as a regression guide, not a benchmark. Accuracy on large real repositories is not measured yet.</p>
+
+          <h3 className="display mt-14 text-3xl">Rewriting by hand versus migrating with Migration Agent</h3>
+          <div className="mt-5 overflow-x-auto rounded-2xl border border-line">
+            <table className="w-full min-w-[640px] text-left text-sm">
+              <caption className="sr-only">Manual legacy rewrite compared with Migration Agent</caption>
+              <thead className="border-b border-line bg-surface-2 font-mono text-[11px] uppercase text-muted"><tr><th scope="col" className="px-4 py-3 font-normal">Question</th><th scope="col" className="px-4 py-3 font-normal">Manual rewrite</th><th scope="col" className="px-4 py-3 font-normal text-accent">Migration Agent</th></tr></thead>
+              <tbody>
+                {[
+                  ["Do we know what the app does?", "Reverse-engineered from memory and stale docs.", "A map where every claim cites a file and line, checked against your own docs."],
+                  ["Did anything change in behaviour?", "Found by users, after release.", "Every difference between old and new listed, case by case, before cut-over."],
+                  ["Can we move gradually?", "Often a big-bang switch.", "Slice by slice, with a router and a rollback per step."],
+                  ["What will it cost?", "Unknown until it is over.", "Estimated before each run, capped with a hard budget."],
+                  ["Who decides?", "Whoever merges last.", "You approve the map, every slice and the cut-over."],
+                ].map(([q, a, b]) => (
+                  <tr key={q} className="border-b border-line last:border-0"><th scope="row" className="px-4 py-3 font-medium">{q}</th><td className="px-4 py-3 text-muted">{a}</td><td className="px-4 py-3">{b}</td></tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section id="paths" aria-labelledby="paths-h" className="border-y border-line bg-surface-2">
+          <div className="mx-auto max-w-6xl scroll-mt-20 px-4 py-20 sm:px-6">
+            <p className="eyebrow mb-3">Migration paths</p>
+            <h2 id="paths-h" className="display max-w-3xl text-4xl sm:text-5xl">Upgrade to the latest version, or move to a different stack.</h2>
+            <p className="mt-4 max-w-2xl text-muted">Deterministic tools do the mechanical rewrite first, so the AI model is left only with the parts that need judgement, and every result is compared with the running app.</p>
+            <div className="mt-10 grid gap-4 md:grid-cols-2">
+              {PATHS.map((p) => (
+                <article key={p.id} id={p.id} className="rounded-2xl border border-line-strong bg-surface p-6">
+                  <h3 className="display text-2xl">{p.name}</h3>
+                  <p className="mt-2 text-sm text-muted">{p.text}</p>
+                </article>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section aria-labelledby="step1-h" className="mx-auto max-w-6xl px-4 py-20 sm:px-6">
           <p className="eyebrow mb-3">Step 1 in detail: understand the legacy app</p>
-          <h2 className="display max-w-3xl text-4xl sm:text-5xl">A map of what the app does that you can check, not a summary you have to trust.</h2>
+          <h2 id="step1-h" className="display max-w-3xl text-4xl sm:text-5xl">A map of what the app does that you can check, not a summary you have to trust.</h2>
           <div className="mt-12 grid gap-12 lg:grid-cols-2">
             <figure aria-label="A claim linked to the lines of code that prove it">
               <div className="rounded-2xl border border-line-strong bg-surface p-5 shadow-[var(--shadow)]">
@@ -213,6 +283,19 @@ export default function Landing() {
             ))}
           </dl>
           <p className="mt-8 max-w-2xl text-sm text-muted">Labels are small and hand written: treat these as a regression guide, not a benchmark. The first live run of the migration sandbox found seven bugs that every offline test had missed; all are fixed. Nothing here is certified or audited.</p>
+        </section>
+
+        <section id="faq" aria-labelledby="faq-h" className="mx-auto max-w-4xl scroll-mt-20 px-4 py-20 sm:px-6">
+          <p className="eyebrow mb-3">FAQ</p>
+          <h2 id="faq-h" className="display text-4xl sm:text-5xl">Questions about migrating a legacy app</h2>
+          <div className="mt-8 divide-y divide-line rounded-2xl border border-line bg-surface">
+            {FAQ.map((f) => (
+              <details key={f.q} className="group px-5 py-4">
+                <summary className="cursor-pointer list-none font-medium"><h3 className="inline text-base">{f.q}</h3></summary>
+                <p className="mt-2 text-sm text-muted">{f.a}</p>
+              </details>
+            ))}
+          </div>
         </section>
 
         <section className="px-4 pb-24 sm:px-6">
