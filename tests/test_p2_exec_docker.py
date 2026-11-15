@@ -218,6 +218,22 @@ def test_long_logs_are_capped(proj):
     assert (proj.root / "runs/RUN-0001/logs/stdout.txt").stat().st_size < 1_100_000
 
 
+def test_workdir_tmpfs_may_not_mask_a_path_the_command_uses(proj):
+    """Found live: the router job had workdir /app, so a tmpfs hid the image's /app/proxy.py and it crashed."""
+    fd = FakeDocker()
+    res = fd.backend(proj).run(job(command=["python", "/app/proxy.py"], workdir="/app", mounts=[]))
+    assert res.exit_code is None and "would mask /app/proxy.py" in res.error and not [c for c in fd.calls if c[0] == "run"]
+    ok = fd.backend(proj).run(job(run_id="RUN-0002", command=["python", "/app/proxy.py"], workdir="/tmp", mounts=[]))
+    assert ok.exit_code == 0
+
+
+def test_router_and_schema_probe_jobs_do_not_use_app_as_workdir():
+    import inspect
+    from migration_agent.migrate import harness, schemacompat
+    assert 'workdir="/app"' not in inspect.getsource(harness._Stack.router)
+    assert 'workdir="/app"' not in inspect.getsource(schemacompat)
+
+
 # ------------------------------------------------------------------ availability
 def test_available_false_without_cli(proj):
     fd = FakeDocker(cli=False)
@@ -334,3 +350,35 @@ def test_live_rootfs_is_read_only_and_user_not_root(proj):
     b = _live_backend(proj)
     res = b.run(_live_job(["sh", "-c", "id -u; touch /etc/x && echo WROTE || echo ro"]))
     assert "WROTE" not in res.stdout_tail and res.stdout_tail.splitlines()[0] != "0"
+
+
+MIRROR_PROXY_IMAGE = "ubuntu/squid:6.6-24.04_beta"
+MIRROR_CLIENT_IMAGE = "python:3.12.7-alpine3.20"
+_PROBE = ("import urllib.request as u\n"
+          "o = u.build_opener(u.ProxyHandler({'https': 'http://egress-proxy:3128', 'http': 'http://egress-proxy:3128'}))\n"
+          "for url in ('https://example.com/', 'http://registry.example.test:8080/'):\n"
+          "    try:\n        o.open(url, timeout=15); print('REACHED', url)\n"
+          "    except Exception as e:\n        print('DENIED', url, e)\n"
+          "try:\n    u.build_opener(u.ProxyHandler({})).open('https://example.com/', timeout=6); print('DIRECT-REACHED')\n"
+          "except Exception:\n    print('NO-DIRECT-ROUTE')\n")
+
+
+@LIVE
+def test_live_mirror_proxy_stays_up_denies_others_and_logs(proj):
+    """Regression for two bugs only a real daemon shows: squid died on start ("Cannot open '/dev/stdout'") so every
+    mirror build failed with EAI_AGAIN, and its access log was unreadable. Needs no internet: the probe only
+    requests hosts that are NOT on the allowlist."""
+    b = DockerBackend(proj, config=ExecConfig(hosts=["registry.npmjs.org"], ports=[443]))
+    for img in (MIRROR_PROXY_IMAGE, MIRROR_CLIENT_IMAGE):
+        if b.docker(["image", "inspect", img]).returncode != 0:
+            pytest.skip(f"{img} not present locally (pulls are disabled)")
+    job = ExecJob(run_id="RUN-0007", image=MIRROR_CLIENT_IMAGE, command=["python", "-c", _PROBE], phase="build",
+                  network="mirror", limits=Limits(timeout_s=90, memory_mb=256, pids=64, disk_mb=16))
+    res = b.run(job)
+    out = res.stdout_tail
+    assert res.exit_code == 0, (res.error, res.stderr_tail)
+    assert "REACHED" not in out.replace("DIRECT-REACHED", "") and out.count("DENIED") == 2
+    assert "403" in out and "NO-DIRECT-ROUTE" in out and "DIRECT-REACHED" not in out
+    egress = (proj.root / "runs" / "RUN-0007" / "reports" / "egress.log").read_text()
+    assert "FATAL" not in egress and "Terminated abnormally" not in egress
+    assert "TCP_DENIED" in egress                                                 # proxy ran and logged the denials

@@ -52,6 +52,14 @@ from .policy import PolicyViolation, check_argv, check_job, scan_mount_target
 
 DEFAULT_PROXY_IMAGE = "ubuntu/squid:6.6-24.04_beta"   # TODO: pin by digest (docker buildx imagetools inspect)
 PROXY_ALIAS = "egress-proxy"
+# tail -F (backgrounded) streams the tmpfs logs to `docker logs`; `exec squid` keeps squid as PID 1, so the
+# container exits (and the alias disappears) the moment squid dies.
+# The log files are pre-created world-readable: squid would create them 0640 proxy:proxy, which the tail running as
+# root (all capabilities dropped, so no DAC override) could not read.
+PROXY_COMMAND = ("touch /var/log/squid/access.log /var/log/squid/cache.log && "
+                 "chmod 666 /var/log/squid/access.log /var/log/squid/cache.log && "
+                 "{ tail -F /var/log/squid/access.log /var/log/squid/cache.log 2>/dev/null & } && "
+                 "exec squid -f /etc/squid/squid.conf -N -d 1")
 PROXY_PORT = 3128
 REPORTS_TARGET = "/reports"
 MAX_REPORT_BYTES = 5_000_000
@@ -149,8 +157,11 @@ def render_squid_conf(hosts: list[str], ports: list[int]) -> str:
         "cache deny all",
         "via off",
         "forwarded_for delete",
-        "access_log stdio:/dev/stdout",
-        "cache_log stdio:/dev/stderr",
+        # Squid drops to the `proxy` user, which cannot open /dev/stdout (a root-owned pipe): it dies with
+        # "FATAL: Cannot open '/dev/stdout'". Log to the tmpfs instead; the container command tails both files.
+        "access_log stdio:/var/log/squid/access.log",
+        "cache_log /var/log/squid/cache.log",
+        "pinger_enable off",     # the ICMP helper cannot open sockets without capabilities and logs a scary FATAL
         "pid_filename /var/run/squid/squid.pid",
         "coredump_dir /tmp",
         "",
@@ -411,6 +422,10 @@ class DockerBackend:
         argv += ["--workdir", job.workdir]
         targets = [m.target.rstrip("/") for m in job.mounts] + [t.rstrip("/") for _, t, _ in extra_mounts]
         if not any(job.workdir.rstrip("/") == t or job.workdir.startswith(t + "/") for t in targets):
+            masked = [a for a in job.command if isinstance(a, str) and a.startswith(job.workdir.rstrip("/") + "/")]
+            if masked:      # a tmpfs over the workdir hides the image's own files there (found live: /app/proxy.py)
+                raise PolicyViolation([f"workdir {job.workdir} gets a tmpfs, which would mask {masked[0]}; "
+                                       "use a different workdir (e.g. /tmp)"])
             argv += ["--tmpfs", f"{job.workdir}:rw,nosuid,nodev,size={lim.disk_mb}m"]
         for t in extra_tmpfs:
             bad = scan_mount_target(t) if not t.startswith(("/var/run/", "/run/")) else []
@@ -613,12 +628,12 @@ class DockerBackend:
         r = self.docker(["run", "--detach", "--name", proxy, "--pull", "never", "--network", "bridge",
                          "--read-only", "--cap-drop", "ALL", "--cap-add", "SETUID", "--cap-add", "SETGID",
                          "--security-opt", "no-new-privileges:true", "--pids-limit", "128", "--memory", "256m",
-                         "--tmpfs", "/var/run/squid:rw,size=8m", "--tmpfs", "/var/log/squid:rw,size=32m",
-                         "--tmpfs", "/var/spool/squid:rw,size=32m", "--tmpfs", "/tmp:rw,size=16m",
+                         "--tmpfs", "/var/run/squid:rw,size=8m,mode=1777", "--tmpfs", "/var/log/squid:rw,size=32m,mode=1777",
+                         "--tmpfs", "/var/spool/squid:rw,size=32m,mode=1777", "--tmpfs", "/tmp:rw,size=16m",
                          "--label", "ma.managed=1", "--label", f"ma.project={self.project_tag}",
                          "--label", f"ma.run={job.run_id}", "--label", "ma.role=egress-proxy",
                          "--mount", f"type=bind,source={conf},target=/etc/squid/squid.conf,readonly",
-                         "--entrypoint", "squid", proxy_id, "-f", "/etc/squid/squid.conf", "-N", "-d", "1"],
+                         "--entrypoint", "sh", proxy_id, "-c", PROXY_COMMAND],
                         timeout=60)
         if r.returncode != 0:
             raise _BackendError(f"cannot start egress proxy: {(r.stderr or '').strip()[:200]}")

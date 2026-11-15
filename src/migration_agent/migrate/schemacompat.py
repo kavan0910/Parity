@@ -902,7 +902,7 @@ def _sqlite_run(project, spec, b, specs: list[ChangeSpec], report: SchemaCompatR
             return None
     img = ensure_router_image(project, spec, b)
     probe = _job(project, img["image"], ["python", "/app/schema_probe.py"], limits=spec.router.limits,
-                 workdir="/app", stage="introspect")
+                 workdir="/tmp", stage="introspect")      # NOT /app: a tmpfs there would mask /app/schema_probe.py
     mounts = [ws_mount]
     apply: list[str] = []
     if sql_files:

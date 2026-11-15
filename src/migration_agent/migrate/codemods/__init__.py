@@ -2,18 +2,18 @@
 
     results = run_codemods(project, spec, backend=None)    # list[CodemodResult], applied ones committed
 
-Adapters: openrewrite.OpenRewriteAdapter (Java 8 -> 21, Boot 2 -> 3), django_upgrade.DjangoUpgradeAdapter
-(django-upgrade + pyupgrade), jscodeshift.JscodeshiftAdapter (stub). Interface and runner in base.py.
+Adapters: openrewrite.OpenRewriteAdapter (Java 8 -> 21, Boot 2 -> 3; Maven and Gradle), django_upgrade.DjangoUpgradeAdapter
+(django-upgrade + pyupgrade), lebab.LebabAdapter (JS to JS modernisation; alias JscodeshiftAdapter). Interface and runner in base.py.
 Results are recorded in migration/codemods.json by the slice runner, so applied codemods run once.
 """
 from __future__ import annotations
 
 from .base import Adapter, CodemodResult, run_codemod, tree_changes
 from .django_upgrade import DjangoUpgradeAdapter
-from .jscodeshift import JscodeshiftAdapter
+from .lebab import JscodeshiftAdapter, LebabAdapter
 from .openrewrite import OpenRewriteAdapter
 
-ADAPTERS = (OpenRewriteAdapter, DjangoUpgradeAdapter, JscodeshiftAdapter)
+ADAPTERS = (OpenRewriteAdapter, DjangoUpgradeAdapter, LebabAdapter)
 
 
 def run_codemods(project, spec, *, backend=None, adapters=None) -> list[CodemodResult]:
@@ -27,4 +27,4 @@ def run_codemods(project, spec, *, backend=None, adapters=None) -> list[CodemodR
 
 
 __all__ = ["Adapter", "CodemodResult", "run_codemod", "run_codemods", "tree_changes", "ADAPTERS",
-           "OpenRewriteAdapter", "DjangoUpgradeAdapter", "JscodeshiftAdapter"]
+           "OpenRewriteAdapter", "DjangoUpgradeAdapter", "LebabAdapter", "JscodeshiftAdapter"]

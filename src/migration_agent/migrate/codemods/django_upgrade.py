@@ -33,8 +33,12 @@ class DjangoUpgradeAdapter:
             return "django_upgrade: target.framework has no Django version (e.g. django@5.0)"
         py = _ver(spec.target.runtime) or (3, 10)
         files = "find . -name '*.py' -not -path './.venv/*' -not -path './node_modules/*' -print0"
+        # Both tools exit 1 when they rewrite files, so exit codes are ignored; a crash (traceback, missing module)
+        # is detected from stderr and fails the job instead of looking like "no changes".
         script = (f"pip install --no-cache-dir --disable-pip-version-check {DJANGO_UPGRADE} {PYUPGRADE} "
                   f"--target /tmp/tools >/dev/null && export PYTHONPATH=/tmp/tools PATH=/tmp/tools/bin:$PATH && "
-                  f"({files} | xargs -0 -r python -m django_upgrade --target-version {dj[0]}.{dj[1]} || true) && "
-                  f"({files} | xargs -0 -r python -m pyupgrade --py{py[0]}{py[1]}-plus || true)")
+                  f"({files} | xargs -0 -r python -m django_upgrade --target-version {dj[0]}.{dj[1]} 2>>/tmp/codemod.err || true) && "
+                  f"({files} | xargs -0 -r python -m pyupgrade --py{py[0]}{py[1]}-plus 2>>/tmp/codemod.err || true); "
+                  f"if grep -qE 'Traceback|No module named|SyntaxError' /tmp/codemod.err 2>/dev/null; then "
+                  f"head -c 2000 /tmp/codemod.err >&2; exit 1; fi")
         return ["sh", "-c", script]

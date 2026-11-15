@@ -12,6 +12,8 @@ runs/RUN-NNNN/codemod.patch, applies the changed text files into target_code/ an
         def applies(self, spec) -> tuple[bool, str]          # (applies?, why / why not)
         def command(self, spec) -> list[str] | str           # argv, or a reason string = skip
         image: str                                           # container image (pin by digest in production)
+        def image_for(self, spec) -> str                     # optional: per-spec image (OpenRewrite + Gradle)
+        cache: str                                           # optional: project-relative cache dir mounted at /cache
 """
 from __future__ import annotations
 
@@ -137,8 +139,15 @@ def run_codemod(project, adapter: Adapter, spec, *, backend=None) -> CodemodResu
     ws = lay.run_work(run_id) / "app"
     lay.ensure(ws)
     _copy_tree(root, ws)
-    job = ExecJob(run_id=run_id, image=adapter.image, command=cmd, phase="build", network="mirror",
-                  workdir="/work/app", mounts=[Mount(source=lay.rel(ws), target="/work/app", read_only=False)],
+    image = adapter.image_for(spec) if hasattr(adapter, "image_for") else adapter.image
+    mounts = [Mount(source=lay.rel(ws), target="/work/app", read_only=False)]
+    cache = getattr(adapter, "cache", "")
+    if cache:                                   # shared package cache, same convention as `harness build`
+        cdir = lay.ensure(Path(project.root) / cache)
+        os.chmod(cdir, 0o777)
+        mounts.append(Mount(source=cache, target="/cache", read_only=False))
+    job = ExecJob(run_id=run_id, image=image, command=cmd, phase="build", network="mirror",
+                  workdir="/work/app", mounts=mounts,
                   limits=Limits(timeout_s=1800, memory_mb=4096), labels={"stage": "codemod", "codemod": adapter.name})
     res = b.run(job)
     if not res.ok:

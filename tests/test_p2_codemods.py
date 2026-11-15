@@ -5,7 +5,7 @@ from migration_agent.migrate import slice_runner as sr
 from migration_agent.migrate import targetrepo
 from migration_agent.migrate.codegen import OfflineCodegenLLM
 from migration_agent.migrate.codemods import (
-    DjangoUpgradeAdapter, JscodeshiftAdapter, OpenRewriteAdapter, run_codemod, run_codemods, tree_changes,
+    DjangoUpgradeAdapter, JscodeshiftAdapter, LebabAdapter, OpenRewriteAdapter, run_codemod, run_codemods, tree_changes,
 )
 from migration_agent.migrate.exec.fake import FakeExecBackend, FakeOutcome
 from migration_agent.migrate.models import TargetSpec
@@ -35,9 +35,17 @@ def test_adapters_select_recipes_and_commands():
     a = OpenRewriteAdapter()
     assert a.applies(JAVA)[0]
     cmd = a.command(JAVA)
-    assert cmd[0] == "mvn" and any("UpgradeToJava21" in c and "UpgradeSpringBoot_3_0" in c for c in cmd)
+    assert cmd[0] == "sh" and "UpgradeToJava21,org.openrewrite.java.spring.boot3.UpgradeSpringBoot_3_0" in cmd[2]
+    assert "mvn -B -q" in cmd[2] and "-s /tmp/settings.xml" in cmd[2] and "egress-proxy" in cmd[2]   # Maven ignores HTTPS_PROXY
+    assert "-Dmaven.repo.local=/cache/m2" in cmd[2] and a.cache == "harness/cache/m2"
+    assert "-Dhttps.proxyHost=egress-proxy" in cmd[2] and "/tmp/.m2/settings.xml" in cmd[2]
     gradle = JAVA.model_copy(update={"target": JAVA.target.model_copy(update={"build": "gradle"})})
-    assert isinstance(a.command(gradle), str) and "Maven only" in a.command(gradle)
+    gcmd = a.command(gradle)
+    assert gcmd[0] == "sh" and "rewriteRun" in gcmd[2] and "UpgradeToJava21" in gcmd[2]
+    assert "org.openrewrite.gradle.RewritePlugin" in gcmd[2] and a.image_for(gradle).startswith("gradle:")
+    assert a.image_for(JAVA) == a.image
+    ant = JAVA.model_copy(update={"target": JAVA.target.model_copy(update={"build": "ant"})})
+    assert isinstance(a.command(ant), str) and "Maven and Gradle only" in a.command(ant)
     assert not a.applies(DJANGO)[0]
     d = DjangoUpgradeAdapter()
     assert d.applies(DJANGO)[0] and not d.applies(JAVA)[0]
@@ -45,7 +53,19 @@ def test_adapters_select_recipes_and_commands():
     assert "--target-version 5.0" in script and "--py312-plus" in script
     js = TargetSpec.model_validate({"kind": "version_upgrade", "source": {"language": "javascript"},
                                     "target": {"language": "javascript"}})
-    assert JscodeshiftAdapter().applies(js)[0] and isinstance(JscodeshiftAdapter().command(js), str)
+    jc = JscodeshiftAdapter().command(js)          # JscodeshiftAdapter is the old name of LebabAdapter
+    assert JscodeshiftAdapter is LebabAdapter and LebabAdapter().name == "lebab"
+    assert LebabAdapter().applies(js)[0] and jc[0] == "sh" and "lebab@" in jc[2] and "--transform let,template" in jc[2]
+    assert "node /tmp/tools/node_modules/lebab/bin/index.js" in jc[2]          # /tmp is noexec: started via node
+    assert "lebab failed on" in jc[2] and "exit 1" in jc[2]                      # a failed file fails the job
+    assert "Traceback|No module named" in DjangoUpgradeAdapter().command(DJANGO)[2]
+    move = js.model_copy(update={"kind": "framework_move",
+                                 "source": js.source.model_copy(update={"framework": "express@4"}),
+                                 "target": js.target.model_copy(update={"framework": "fastify@5"})})
+    assert isinstance(JscodeshiftAdapter().command(move), str)
+    go = TargetSpec.model_validate({"kind": "language_move", "source": {"language": "javascript"},
+                                    "target": {"language": "go"}})
+    assert isinstance(JscodeshiftAdapter().command(go), str)
 
 
 def test_skipped_when_backend_unavailable(tmp_path, tmp_path_factory):

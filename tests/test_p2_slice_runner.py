@@ -378,8 +378,9 @@ def test_in_place_seeds_from_legacy_src(tmp_path, tmp_path_factory):
     assert (lay.target_code / "src" / "server.js").read_text() == "// original unredacted\n"
     assert not (lay.target_code / ".env").exists()
     assert "seed target_code from legacy_src/" in git(p, "log", "--format=%s")
-    # jscodeshift stub is reported (skipped), never run on the host
-    assert [m["name"] for m in rep.codemods] == ["jscodeshift"] and rep.codemods[0]["status"] == "skipped"
+    # the JS codemod (lebab) runs only through the exec backend (here the scripted fake: success, no changes),
+    # never on the host
+    assert [m["name"] for m in rep.codemods] == ["lebab"] and rep.codemods[0]["status"] == "no_changes"
 
 
 def test_in_place_without_legacy_src_seeds_from_code_with_warning(tmp_path, tmp_path_factory):
