@@ -151,7 +151,7 @@ iframe { width: 100%; height: 72vh; border: 1px solid var(--border); border-radi
     var tabList = [["doc", "Document"], ["check", "To check"], ["map", "Map"], ["approval", "Approval"]];
     if (S.p2) {
       if (S.p2.fit && S.p2.fit.exists) tabList.push(["fit", "Target fit"]);
-      if (S.p2.plan) { tabList.push(["plan", "Plan"]); tabList.push(["slice", "Slice"]); }
+      if (S.p2.plan) { tabList.push(["plan", "Plan"]); tabList.push(["slice", "Slice"]); tabList.push(["cutover", "Cut-over"]); }
       tabList.push(["p2comments", "Comments"]);
     }
     tabList.push(["more", "More"]);
@@ -472,13 +472,61 @@ iframe { width: 100%; height: 72vh; border: 1px solid var(--border); border-radi
     if (d.fix_requests.requests.length) { body.appendChild(el("h3", { text: "Fix requests" })); body.appendChild(table(["EQ", "Case", "Field", "Reason", "Status"], d.fix_requests.requests.map(function (r) { return [r.eq_id, r.case_id, r.field, r.reason, r.status]; }))); }
     if (d.decisions.decisions.length) { body.appendChild(el("h3", { text: "Decisions" })); body.appendChild(table(["Kind", "Ref", "Status", "Choice", "Question / note"], d.decisions.decisions.map(function (x) { return [x.kind, x.ref, x.status, x.choice, x.question || x.note]; }))); }
     if (d.masks.length) { body.appendChild(el("h3", { text: "Masks" })); body.appendChild(table(["EQ", "Case", "Mask", "Status", "By"], d.masks.map(function (m) { return [m.eq_id, m.case_id, m.mask, m.status, m.approved_by || m.proposed_by]; }))); }
-    if (d.review.length) { body.appendChild(el("h3", { text: "Reviewer findings" })); body.appendChild(pre(d.review)); }
+    if (d.review.length) {
+      body.appendChild(el("h3", { text: "Reviewer findings" }));
+      body.appendChild(el("p", { cls: "muted", text: "Mark each finding: accepted (a real problem) or dismissed (noise). Your verdicts feed reviewer precision in the metrics." }));
+      d.review.forEach(function (f, idx) {
+        var key = d.review_iteration + ":" + idx, mk = (d.review_marks || {})[key];
+        var c = el("div", { cls: "card" });
+        c.appendChild(pre(f));
+        if (mk) c.appendChild(el("p", { cls: "muted", text: "Marked " + mk.status + " by " + mk.by }));
+        if (d.review_iteration != null) {
+          ["accepted", "dismissed"].forEach(function (st) {
+            var b = el("button", { type: "button", text: st === "accepted" ? "Accept finding" : "Dismiss finding" });
+            b.addEventListener("click", function () {
+              var who = by.value.trim(); if (!who) { toast("Enter your name above first"); return; }
+              post("/api/p2/review-mark", { slice_id: sid, iteration: d.review_iteration, index: idx, status: st, by: who, note: note.value }).then(function () { toast("Marked " + st); return load().then(function () { tab = "slice"; renderAll(); }); }).catch(fail);
+            });
+            c.appendChild(b);
+          });
+        }
+        body.appendChild(c);
+      });
+    }
     if (d.slice.blockers.length) { body.appendChild(el("h3", { text: "Plan blockers" })); body.appendChild(list(d.slice.blockers)); }
 
     body.appendChild(el("h3", { text: "Comments" }));
     body.appendChild(commentList(d.comments));
     var items = [sid].concat(d.cases.map(function (c) { return c.id; }), eq ? eq.diffs.map(function (x) { return x.id; }) : []);
     body.appendChild(commentForm(items, function () { return load().then(function () { tab = "slice"; renderAll(); }); }));
+  }
+
+  function renderCutover() {
+    var w = wrap();
+    w.appendChild(el("h2", { cls: "title", text: "Cut-over" }));
+    w.appendChild(el("p", { cls: "lead", text: "Every check must pass before the cut-over plan can be approved. The tool deploys nothing: the plan (cutover/plan.md) is for your team to execute." }));
+    var host = el("div"); w.appendChild(host);
+    host.appendChild(el("p", { cls: "muted", text: "Loading readiness..." }));
+    api("/api/p2/cutover").then(function (c) {
+      host.textContent = "";
+      host.appendChild(el("p", { cls: c.ready ? "added" : "removed", text: c.ready ? "Ready for cut-over approval." : c.blockers.length + " blocker(s)." }));
+      host.appendChild(table(["Check", "Result", "Detail"], c.checks.map(function (k) { return [k.name, k.ok ? "pass" : "FAIL", k.detail + (k.blockers.length ? " | " + k.blockers.join("; ") : "")]; })));
+      if (c.warnings.length) { host.appendChild(el("h3", { text: "Warnings" })); host.appendChild(list(c.warnings, "warnings")); }
+      if (c.full_suite) { host.appendChild(el("h3", { text: "Full-suite evidence" })); host.appendChild(pre(c.full_suite)); }
+      host.appendChild(el("h3", { text: "Approval" }));
+      if (c.approval) {
+        host.appendChild(el("p", { cls: c.approval_check.valid ? "added" : "removed", text: "Approved by " + c.approval.approved_by + " at " + c.approval.approved_at + (c.approval_check.valid ? " (hashes still match)" : " (STALE: " + c.approval_check.mismatches.join(", ") + ")") }));
+      } else host.appendChild(el("p", { cls: "muted", text: "Not approved yet." }));
+      var by = input("Your name", "Your name", 64), note = input("Note (optional)", "Note");
+      var ok = el("button", { type: "button", cls: "primary", text: "Approve cut-over plan" });
+      if (!c.ready) ok.disabled = true;
+      ok.addEventListener("click", function () {
+        if (!by.value.trim()) { toast("Enter your name first"); return; }
+        post("/api/p2/cutover-approve", { by: by.value.trim(), note: note.value }).then(function () { toast("Cut-over approved"); renderCutover(); }).catch(fail);
+      });
+      var card = el("div", { cls: "card" }); card.appendChild(by); card.appendChild(note); card.appendChild(el("div", { cls: "row" }, [ok]));
+      host.appendChild(card);
+    }).catch(function (e) { host.textContent = ""; host.appendChild(el("p", { cls: "removed", text: e.message })); });
   }
 
   function renderP2Comments() {
@@ -493,7 +541,7 @@ iframe { width: 100%; height: 72vh; border: 1px solid var(--border); border-radi
     document.getElementById("pname").textContent = (S.project || "Project") + " review";
     renderTabs(); renderDrawer();
     if (tab === "check") renderCheck(); else if (tab === "map") renderMap(); else if (tab === "approval") renderApproval(); else if (tab === "more") renderMore();
-    else if (tab === "fit" && S.p2) renderFit(); else if (tab === "plan" && S.p2) renderPlan(); else if (tab === "slice" && S.p2) renderSlice();
+    else if (tab === "fit" && S.p2) renderFit(); else if (tab === "plan" && S.p2) renderPlan(); else if (tab === "slice" && S.p2) renderSlice(); else if (tab === "cutover" && S.p2) renderCutover();
     else if (tab === "p2comments" && S.p2) renderP2Comments(); else renderDoc();
   }
 

@@ -322,6 +322,53 @@ def resolve_decision(project, slice_id: str, ref: str, choice: str, by: str, not
     return d
 
 
+
+# ------------------------------------------------------------------ reviewer finding marks (precision)
+REVIEW_MARK_STATUSES = ("accepted", "dismissed")
+
+
+def review_marks_path(project, slice_id: str) -> Path:
+    return Phase2Layout(project).slice_dir(_check_slice(slice_id)) / "review_marks.json"
+
+
+def load_review_marks(project, slice_id: str) -> dict[str, dict]:
+    """{"K:I": {"status", "by", "note", "at"}}: a human's verdict on reviewer finding I of iteration K.
+
+    Kept apart from review.json (which is the reviewer's immutable output). Metrics read it: reviewer precision is
+    accepted / (accepted + dismissed) over the findings a human has marked.
+    """
+    data = read_json(review_marks_path(project, slice_id), None, None)
+    marks = (data or {}).get("marks") if isinstance(data, dict) else None
+    return marks if isinstance(marks, dict) else {}
+
+
+def mark_review_finding(project, slice_id: str, iteration: int, index: int, status: str, by: str,
+                        note: str = "") -> dict:
+    """Record that a reviewer finding was `accepted` (a real problem) or `dismissed` (noise)."""
+    _check_slice(slice_id)
+    if status not in REVIEW_MARK_STATUSES:
+        raise ApprovalError(f"status must be one of {', '.join(REVIEW_MARK_STATUSES)}")
+    by = _redact(by, 64)
+    if not by:
+        raise ApprovalError("--by is required")
+    path = Phase2Layout(project).slice_dir(slice_id) / "iterations" / str(int(iteration)) / "review.json"
+    data = _read_any(path)
+    findings = data.get("findings") if isinstance(data, dict) else None
+    if not isinstance(findings, list) or not (0 <= int(index) < len(findings)):
+        raise ApprovalError(f"{slice_id} iteration {iteration} has no reviewer finding #{index}")
+    key = f"{int(iteration)}:{int(index)}"
+    mark = {"status": status, "by": by, "note": _redact(note, 1000), "at": now_iso()}
+    path = review_marks_path(project, slice_id)
+    lay = Phase2Layout(project)
+    lay.ensure(lay.slice_dir(slice_id))
+    with file_lock(path):
+        marks = dict(load_review_marks(project, slice_id))
+        marks[key] = mark
+        atomic_write_json(path, {"schema_version": 1, "slice_id": slice_id, "marks": marks})
+    _audit(project, "review_finding_marked", slice=slice_id, key=key, status=status, by=by)
+    return {"key": key, **mark}
+
+
 # ------------------------------------------------------------------ git (target_code/)
 _GIT_CFG = ("-c", "core.hooksPath=/dev/null", "-c", "core.fsmonitor=false", "-c", "diff.external=",
             "-c", "core.pager=cat", "-c", "color.ui=false", "-c", "protocol.allow=never",
@@ -755,6 +802,26 @@ def register(groups) -> None:
         except ApprovalError as e:
             raise click.ClickException(str(e))
         click.echo(f"{slice_id}: {ref} -> {choice}")
+
+    @sg.command("review-finding")
+    @click.argument("project", type=click.Path(exists=True, path_type=Path))
+    @click.argument("slice_id")
+    @click.argument("finding", metavar="ITERATION:INDEX")
+    @click.option("--accept", "verdict", flag_value="accepted", help="A real problem.")
+    @click.option("--dismiss", "verdict", flag_value="dismissed", help="Noise or wrong.")
+    @click.option("--by", required=True)
+    @click.option("--note", default="")
+    def review_finding_cmd(project: Path, slice_id: str, finding: str, verdict: str | None, by: str,
+                           note: str) -> None:
+        """Mark a reviewer finding accepted or dismissed (feeds reviewer precision in `metrics`)."""
+        m = re.fullmatch(r"(\d+):(\d+)", finding or "")
+        if not m or not verdict:
+            raise click.ClickException("usage: slice review-finding PROJECT SLICE-NNNN K:I (--accept|--dismiss) --by NAME")
+        try:
+            mark_review_finding(_project(project), slice_id, int(m.group(1)), int(m.group(2)), verdict, by, note)
+        except ApprovalError as e:
+            raise click.ClickException(str(e))
+        click.echo(f"{slice_id}: finding {finding} {verdict}")
 
     @sg.command("comment")
     @click.argument("project", type=click.Path(exists=True, path_type=Path))

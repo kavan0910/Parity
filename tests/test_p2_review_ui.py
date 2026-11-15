@@ -83,7 +83,8 @@ def test_slice_view(ui):
 
 
 @pytest.mark.parametrize("route", ["/api/p2/comments", "/api/p2/approve-slice", "/api/p2/reject-slice",
-                                   "/api/p2/resolve-risk", "/api/p2/approve-mask"])
+                                   "/api/p2/resolve-risk", "/api/p2/approve-mask", "/api/p2/review-mark",
+                                   "/api/p2/cutover-approve"])
 def test_post_routes_keep_hardening(ui, route):
     s = ui["server"]
     assert req(s, "POST", route, {})[0] == 403                                          # no token
@@ -140,9 +141,36 @@ def test_reject_slice(ui):
     assert _post(ui, "/api/p2/reject-slice", {"slice_id": ui["s1"], "by": "alice", "reason": "again"})[0] == 409
 
 
+def test_review_finding_marks_via_ui_and_metrics(ui):
+    from migration_agent.migrate.metrics import compute_metrics
+    s1 = ui["s1"]
+    d = Phase2Layout(ui["p"]).slice_iterations(s1) / "1"
+    atomic_write_json(d / "review.json", {"findings": [{"kind": "a", "detail": "x"}, {"kind": "b", "detail": "y"}]})
+    st, sl = _get(ui, "/api/p2/slice?id=" + s1)
+    assert st == 200 and sl["review_iteration"] == 1 and sl["review_marks"] == {}
+    body = {"slice_id": s1, "iteration": 1, "index": 0, "status": "accepted", "by": "alice"}
+    assert _post(ui, "/api/p2/review-mark", body)[0] == 201
+    assert _post(ui, "/api/p2/review-mark", body | {"index": 1, "status": "dismissed"})[0] == 201
+    assert _post(ui, "/api/p2/review-mark", body | {"index": 9})[0] == 400              # no such finding
+    assert _post(ui, "/api/p2/review-mark", body | {"status": "maybe"})[0] == 400
+    assert _get(ui, "/api/p2/slice?id=" + s1)[1]["review_marks"]["1:0"]["status"] == "accepted"
+    row = next(r for r in compute_metrics(ui["p"])["slices"] if r["slice_id"] == s1)
+    assert row["reviewer"] == {"findings": 2, "marked": 2, "accepted": 1, "precision": 0.5}
+
+
+def test_cutover_tab_state_and_refused_approval(ui):
+    st, c = _get(ui, "/api/p2/cutover")
+    assert st == 200 and c["ready"] is False and c["blockers"] and c["approval"] is None
+    assert {k["name"] for k in c["checks"]} >= {"contract", "slices", "equivalence"}
+    st, out, _ = _post(ui, "/api/p2/cutover-approve", {"by": "alice"})
+    assert st == 409 and "cannot be approved" in out.decode()
+    assert not (Phase2Layout(ui["p"]).cutover_approval).exists()
+
+
 def test_page_renders_phase2_tabs_with_text_only():
     html = render_page("/tok")
-    for t in ('"Target fit"', '"Plan"', '"Slice"', "/api/p2/slice?id=", "/api/p2/approve-slice", "/api/p2/approve-mask",
+    for t in ('"Cut-over"', "/api/p2/cutover", "/api/p2/cutover-approve", "/api/p2/review-mark", "Accept finding",
+              '"Target fit"', '"Plan"', '"Slice"', "/api/p2/slice?id=", "/api/p2/approve-slice", "/api/p2/approve-mask",
               "/api/p2/resolve-risk", "/api/p2/reject-slice", "/api/p2/comments"):
         assert t in html
     phase2 = html.split("// ---- Phase 2 tabs")[1].split("function renderAll")[0]

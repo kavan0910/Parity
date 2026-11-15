@@ -10,8 +10,10 @@ migration/runtime_findings.json, plan/migration_plan.json and target_code/ git h
 per slice: commits between the previous approved tag and `slice/SLICE-NNNN/approved`).
 
 `compute_metrics(project) -> dict` is a pure read (UI / service.run_stage use it). A metric without data is None
-(rendered "n/a"), never 0: e.g. reviewer precision needs findings marked accepted by a human (a review finding dict
-with `"accepted": true` or `"status": "accepted"`), which nothing records yet.
+(rendered "n/a"), never 0: e.g. reviewer precision needs findings a human has marked, with
+`migration-agent slice review-finding PROJECT SLICE K:I --accept|--dismiss` (stored in
+slices/SLICE-NNNN/review_marks.json) or the review UI, or a finding dict with `"accepted": true` /
+`"status": "accepted"`. Precision = accepted / marked.
 
 Definitions:
   cost per slice / node / 1k legacy lines  sum of llm_call cost_usd tagged slice= ; legacy lines = text lines in code/
@@ -298,13 +300,22 @@ def compute_metrics(project) -> dict:
         agg["masks"] += masks
         # reviewer findings over all iterations
         rv_total = rv_marked = rv_acc = 0
-        for _k, p in its:
+        try:
+            from .approvals import load_review_marks
+            marks = load_review_marks(project, s.id)
+        except Exception:  # noqa: BLE001 - metrics never fail on a bad marks file
+            marks = {}
+        for k, p in its:
             data = _read(p / "review.json")
-            for f in (data.get("findings") if isinstance(data, dict) else None) or []:
+            for i, f in enumerate((data.get("findings") if isinstance(data, dict) else None) or []):
                 if not isinstance(f, dict):
                     continue
                 rv_total += 1
-                if "accepted" in f or "status" in f:
+                mk = marks.get(f"{k}:{i}") if isinstance(marks.get(f"{k}:{i}"), dict) else None
+                if mk and mk.get("status") in ("accepted", "dismissed"):
+                    rv_marked += 1
+                    rv_acc += 1 if mk["status"] == "accepted" else 0
+                elif "accepted" in f or "status" in f:
                     rv_marked += 1
                     rv_acc += 1 if (f.get("accepted") is True or f.get("status") == "accepted") else 0
         agg["rev_total"] += rv_total

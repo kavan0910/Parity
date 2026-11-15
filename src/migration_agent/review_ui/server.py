@@ -94,8 +94,22 @@ class _P2MaskIn(BaseModel):
     reason: str = Field(default="", max_length=MAX_TEXT)
 
 
+class _P2MarkIn(BaseModel):
+    slice_id: str = Field(min_length=1, max_length=32)
+    iteration: int = Field(ge=0, le=10000)
+    index: int = Field(ge=0, le=100000)
+    status: str = Field(min_length=1, max_length=16)
+    by: str = Field(min_length=1, max_length=64)
+    note: str = Field(default="", max_length=MAX_TEXT)
+
+
+class _P2CutoverIn(BaseModel):
+    by: str = Field(min_length=1, max_length=64)
+    note: str = Field(default="", max_length=MAX_TEXT)
+
+
 P2_POST_ROUTES = ("/api/p2/comments", "/api/p2/approve-slice", "/api/p2/reject-slice", "/api/p2/resolve-risk",
-                  "/api/p2/approve-mask")
+                  "/api/p2/approve-mask", "/api/p2/review-mark", "/api/p2/cutover-approve")
 _P2_MARKERS = ("target/fit_report.json", "plan/migration_plan.json", "slices")
 
 
@@ -396,6 +410,8 @@ class ReviewState:
             "iterations": _ap.iterations(self.project, slice_id),
             "build": raw("build.json"), "tests": raw("tests.json"),
             "review": _ap.review_findings(self.project, slice_id),
+            "review_iteration": int(it.name) if it is not None and it.name.isdigit() else None,
+            "review_marks": _ap.load_review_marks(self.project, slice_id),
             "diff": _ap.slice_diff(self.project, slice_id),
             "equivalence": (rep.model_dump(mode="json") | {"equivalence_pct": rep.equivalence_pct}) if rep else None,
             "run": meta.model_dump(mode="json") if meta else None,
@@ -450,6 +466,42 @@ class ReviewState:
             except FitError as e:
                 raise ApiError(404 if "not in" in str(e) else 400, str(e)[:300])
         return r.model_dump(mode="json")
+
+    def p2_review_mark(self, data: dict) -> dict:
+        from migration_agent.migrate import approvals as _ap
+        inp = _P2MarkIn.model_validate(data)
+        with self.lock:
+            try:
+                return _ap.mark_review_finding(self.project, inp.slice_id, inp.iteration, inp.index, inp.status,
+                                               redact_string(inp.by.strip()), redact_string(inp.note))
+            except _ap.ApprovalError as e:
+                raise ApiError(400, str(e)[:300])
+
+    def p2_cutover(self) -> dict:
+        """Cut-over readiness (every check), the approval and whether its hashes still match."""
+        from migration_agent.migrate import cutover as _co
+        with self.lock:
+            try:
+                rd = _co.readiness(self.project)
+                appr = _co.load_approval(self.project)
+                ver = _co.verify_approval(self.project)
+            except (_co.CutoverError, ValidationError, ValueError, OSError) as e:
+                raise ApiError(400, f"cut-over state: {type(e).__name__}: {str(e)[:200]}")
+        return {"ready": rd.ready, "checks": [c.model_dump(mode="json") for c in rd.checks],
+                "blockers": rd.blockers, "warnings": rd.warnings, "target_head": rd.target_head,
+                "full_suite": rd.full_suite.model_dump(mode="json") if rd.full_suite else None,
+                "approval": appr.model_dump(mode="json") if appr else None, "approval_check": ver,
+                "plan_exists": (self.project.root / "cutover" / "plan.md").is_file()}
+
+    def p2_cutover_approve(self, data: dict) -> dict:
+        from migration_agent.migrate import cutover as _co
+        inp = _P2CutoverIn.model_validate(data)
+        with self.lock:
+            try:
+                a = _co.approve(self.project, redact_string(inp.by.strip()), redact_string(inp.note))
+            except _co.CutoverError as e:
+                raise ApiError(409, str(e)[:2000])
+        return a.model_dump(mode="json")
 
     def p2_approve_mask(self, data: dict) -> dict:
         from migration_agent.migrate.equivalence import EquivalenceError, approve_mask
@@ -594,6 +646,8 @@ class Handler(BaseHTTPRequestHandler):
             return self._json(200, st.state())
         if route == "/api/diff":
             return self._json(200, st.diff(self._int(query, "a"), self._int(query, "b")))
+        if route == "/api/p2/cutover":
+            return self._json(200, st.p2_cutover())
         if route == "/api/p2/slice":
             sid = (query.get("id") or [""])[0]
             return self._json(200, st.p2_slice(sid))
@@ -658,7 +712,8 @@ class Handler(BaseHTTPRequestHandler):
         if route in P2_POST_ROUTES:
             handler = {"/api/p2/comments": st.p2_add_comment, "/api/p2/approve-slice": st.p2_approve_slice,
                        "/api/p2/reject-slice": st.p2_reject_slice, "/api/p2/resolve-risk": st.p2_resolve_risk,
-                       "/api/p2/approve-mask": st.p2_approve_mask}[route]
+                       "/api/p2/approve-mask": st.p2_approve_mask, "/api/p2/review-mark": st.p2_review_mark,
+                       "/api/p2/cutover-approve": st.p2_cutover_approve}[route]
             return self._json(201, handler(data))
         return self._json(201, st.add_resolution(data))
 
