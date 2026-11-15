@@ -187,7 +187,7 @@ footer{text-align:center;color:var(--mute);font:13px var(--sans);padding:32px;bo
 </head>
 <body>
 <header class="hero">
-  <span class="tag">Developer handbook &middot; engine 0.2.0 &middot; platform 0.3.0 (unreleased) &middot; written 2026-11-09</span>
+  <span class="tag">Developer handbook &middot; engine 0.2.0 &middot; platform and Phase 2 0.3.0 (unreleased) &middot; updated 2026-11-14</span>
   <h1>migration-agent: developer handbook</h1>
   <p>Read a legacy codebase without ever running it, produce an evidence-backed knowledge graph, and let humans review it. This handbook explains how the whole repository works so you can ship your first change on day one.</p>
   <div class="meta">Every statement was checked against the code at the time of writing. Items I could not verify are marked <span class="b warn">unverified</span> or <span class="b no">not built</span>. When this page and the code disagree, the code wins: please fix the page.</div>
@@ -210,7 +210,7 @@ footer{text-align:center;color:var(--mute);font:13px var(--sans);padding:32px;bo
 
 <div class="sub" id="what">
 <h3>One paragraph</h3>
-<p><strong>migration-agent</strong> reads a legacy service's source code (a directory, zip, tarball or public git URL) and produces an <strong>evidence-backed understanding document</strong> (<code>docs/understanding.latest.md</code>, 15 sections) plus a <strong>knowledge graph</strong> (components, endpoints, data entities, business rules, config, ...). Every claim carries a file, a line range and a verbatim quote that is re-checked against the real source. A second pass, the <strong>blind Verifier</strong>, compares that document with the documentation the team already has, <em>without ever seeing the code</em>, and reports contradictions. A human review loop (comments, resolutions, targeted re-analysis, changelog) refines the graph. It never executes or modifies the analysed code.</p>
+<p><strong>migration-agent</strong> reads a legacy service's source code (a directory, zip, tarball or public git URL) and produces an <strong>evidence-backed understanding document</strong> (<code>docs/understanding.latest.md</code>, 15 sections) plus a <strong>knowledge graph</strong> (components, endpoints, data entities, business rules, config, ...). Every claim carries a file, a line range and a verbatim quote that is re-checked against the real source. A second pass, the <strong>blind Verifier</strong>, compares that document with the documentation the team already has, <em>without ever seeing the code</em>, and reports contradictions. A human review loop (comments, resolutions, targeted re-analysis, changelog) refines the graph. In Phase 1 it never executes or modifies the analysed code. A person then approves the result (<code>decide</code>, <code>status</code>, <code>approve</code>), which writes a <strong>migration contract</strong>. <strong>Phase 2</strong> (chapter 14) starts from that contract: it plans slices, generates a new service in a sandbox and proves, case by case against the running legacy service, that it behaves the same.</p>
 <p>It exists in two shapes that share one engine: a <strong>CLI</strong> (<code>migration-agent</code>, pip-installable, state in one folder) and a <strong>hosted platform in development</strong> (FastAPI backend and worker, Next.js web app, docker-compose stack). The product owner's positioning note is that what it really delivers is <em>verified understanding of a legacy system</em>, more than "migration" (<code>product-architecture.md</code> section 1).</p>
 </div>
 
@@ -228,7 +228,7 @@ footer{text-align:center;color:var(--mute);font:13px var(--sans);padding:32px;bo
 <h3>Honest status and maturity</h3>
 <div class="tw"><table>
 <tr><th>Part</th><th>State</th><th>Evidence and caveats</th></tr>
-<tr><td>Engine (<code>src/migration_agent</code>)</td><td><span class="b ok">real, tested</span></td><td>Version <code>0.2.0</code> in <code>pyproject.toml</code>. 623 tests collected at the root. Hand-built eval repos with regression gates. The hard, differentiated part (evidence checks, derived confidence, blind Verifier, budget and cache).</td></tr>
+<tr><td>Engine (<code>src/migration_agent</code>)</td><td><span class="b ok">real, tested</span></td><td>Version <code>0.2.0</code> in <code>pyproject.toml</code>. 1166 tests collected at the root (1159 pass, 7 skip without Docker). Hand-built eval repos with regression gates. The hard, differentiated part (evidence checks, derived confidence, blind Verifier, budget and cache).</td></tr>
 <tr><td>Quality at real scale</td><td><span class="b warn">unproven</span></td><td>Eval repos are tiny stand-ins (8, 11, 18 files). Phase 0 ran 3 small OSS repos, once each, one chunk each, nothing hand-scored; <strong>no node reached <code>high</code> confidence</strong>; runs were on different models so are not comparable. Chunking, cross-references and rate limits at scale are untested on real code.</td></tr>
 <tr><td>Backend (<code>backend/</code>)</td><td><span class="b ok">built</span> <span class="b warn">SQLite-tested only</span></td><td>All contract endpoints, worker, queue, billing seam. About 258 tests collected, all on SQLite with a fake engine (one test uses the real engine offline). Postgres paths (<code>SKIP LOCKED</code>, RLS, JSONB, migrations 0002/0004) were written but <strong>never executed</strong>.</td></tr>
 <tr><td>Web (<code>web/</code>)</td><td><span class="b ok">built</span></td><td>All pages, mock mode, 5 Vitest files. Verified manually in a headless browser against the real backend. No Playwright e2e, no OIDC login flow, no token refresh.</td></tr>
@@ -252,7 +252,7 @@ footer{text-align:center;color:var(--mute);font:13px var(--sans);padding:32px;bo
 <h3>Design principles (the "why" behind most code)</h3>
 <ol>
 <li><strong>Evidence or it did not happen.</strong> Nodes and edges need file/line/quote evidence that is verified against <code>code/</code>; confidence is <em>derived</em> from evidence, never asserted by the model.</li>
-<li><strong>Read-only and non-executing.</strong> The source is copied once; nothing is run; the model only gets a path-jailed, read-only tool set.</li>
+<li><strong>Phase 1 is read-only and non-executing.</strong> The source is copied once; nothing is run; the model only gets a path-jailed, read-only tool set. <strong>Phase 2 relaxes this inside a boundary</strong>: legacy builds, generated code and test runners run only in disposable, locked-down Docker containers (14.3).</li>
 <li><strong>The folder is the state.</strong> One project folder holds inputs, intermediate results and outputs, so a run can be resumed, diffed, backed up and audited with ordinary tools. In the hosted product this folder is packed into one tar.gz per project.</li>
 <li><strong>Independent verification.</strong> The Verifier sees documentation and the generated document, never code; analysis never sees user docs. That separation is what makes a disagreement meaningful.</li>
 <li><strong>Human in the loop.</strong> Findings feed a review/resolve cycle that re-analyses only what is disputed.</li>
@@ -313,8 +313,8 @@ footer{text-align:center;color:var(--mute);font:13px var(--sans);padding:32px;bo
 <h3>Top level</h3>
 <div class="tw"><table>
 <tr><th>Path</th><th>What it is</th><th>Notes</th></tr>
-<tr><td><code>src/migration_agent/</code></td><td>The engine and CLI. Pip-installable (hatchling).</td><td>~74 tracked files. Sub-packages: <code>analyze/ extract/ graph/ ingest/ llm/ review/ review_ui/ sandbox/ verify/ viz/ templates/</code> plus <code>cli.py service.py storage.py pipeline.py project.py render.py audit.py config_env.py dotenv.py evalharness.py</code>.</td></tr>
-<tr><td><code>tests/</code></td><td>Engine tests (about 40 test modules at root), <code>e2e/</code> (CLI journey on replayed LLM), <code>redteam/</code> (hostile inputs), <code>fixtures/</code>, <code>synth_repo.py</code> (large synthetic repo generator).</td><td>623 tests collected. <code>pyproject.toml</code> sets <code>testpaths=["tests"]</code>, <code>pythonpath=["src"]</code>.</td></tr>
+<tr><td><code>src/migration_agent/</code></td><td>The engine and CLI. Pip-installable (hatchling).</td><td>~74 tracked files. Sub-packages: <code>analyze/ extract/ graph/ ingest/ llm/ migrate/ review/ review_ui/ sandbox/ verify/ viz/ templates/</code> plus <code>cli.py service.py storage.py pipeline.py project.py render.py audit.py config_env.py dotenv.py evalharness.py</code>.</td></tr>
+<tr><td><code>tests/</code></td><td>Engine tests (about 84 files at root, incl. the <code>test_p2_*</code> Phase 2 modules), <code>e2e/</code> (CLI journey on replayed LLM), <code>redteam/</code> (hostile inputs), <code>fixtures/</code>, <code>synth_repo.py</code> (large synthetic repo generator).</td><td>1166 tests collected. <code>pyproject.toml</code> sets <code>testpaths=["tests"]</code>, <code>pythonpath=["src"]</code>.</td></tr>
 <tr><td><code>eval/</code></td><td>Hand-labelled reference repos (<code>repos/express-crud</code>, <code>spring-lite</code>, <code>django-lite</code>, each with <code>expected.json</code>) and <code>redteam/payloads.json</code>.</td><td>Scored by <code>migration_agent.evalharness</code>.</td></tr>
 <tr><td><code>backend/</code></td><td>Hosted API and worker. Own <code>pyproject.toml</code> and venv (<code>backend/.venv</code>).</td><td><code>app/</code> (35 files), <code>migrations/</code> (Alembic 0001-0004), <code>tests/</code>, <code>NOTES.md</code>, <code>README.md</code>.</td></tr>
 <tr><td><code>web/</code></td><td>Next.js app (App Router, TypeScript strict, Tailwind 4).</td><td><code>app/</code> routes, <code>components/</code>, <code>lib/</code> (API client, SSE, mock), <code>tests/</code>, <code>NOTES.md</code>.</td></tr>
@@ -555,6 +555,10 @@ PROJECT_DIR=./svc.migration docker/run.sh ./svc analyze /project --offline</code
 <tr><td>changelog</td><td><code>changelog</code> (also auto after <code>resolve</code>)</td><td><code>review.changelog.generate_changelog</code></td><td><code>docs/changelog.md</code></td></tr>
 <tr><td>review</td><td><code>review [--port --no-browser]</code></td><td><code>review_ui.server.serve</code></td><td>comments / resolutions via the local server</td></tr>
 <tr><td>audit</td><td><code>audit [--format table|json]</code></td><td><code>audit.render_audit</code></td><td>read-only</td></tr>
+<tr><td>decide</td><td><code>decide ITEM_ID (--preserve|--fix) [--note]</code></td><td><code>review.decisions</code>, <code>review.docrender</code></td><td><code>feedback/decisions.json</code>, re-rendered <code>docs/understanding.latest.md</code></td></tr>
+<tr><td>status</td><td><code>status</code></td><td><code>review.approval.readiness</code></td><td>read-only (blockers, warnings, approval state)</td></tr>
+<tr><td>approve</td><td><code>approve --by NAME [--note]</code></td><td><code>review.approval.approve</code></td><td><code>feedback/approvals.json</code>, <code>docs/understanding.vN.approved.md</code>, <code>docs/migration_contract.json</code></td></tr>
+<tr><td>Phase 2 commands</td><td><code>contract</code>, <code>doctor</code>, <code>target</code>, <code>plan</code>, <code>harness</code>, <code>tests</code>, <code>generate</code>, <code>equivalence</code>, <code>approve-slice</code>, <code>config</code>, <code>cutover</code>, <code>metrics</code></td><td><code>migrate/*</code> (chapter 14)</td><td>Phase 2 folders (14.4)</td></tr>
 </table></div>
 <div class="gotcha"><p>CLI <code>render</code> builds a <em>facts-only</em> graph and saves it as a <strong>new snapshot</strong>, so running it after <code>analyze</code> adds a worse version on top. It is a debugging aid for extraction.</p></div>
 </div>
@@ -1327,7 +1331,7 @@ PROJECT_DIR=./svc.migration docker/run.sh ./svc analyze /project --offline</code
 <li>Actually running <code>test_pentest_postgres.py</code> with <code>TEST_DATABASE_URL</code>.</li>
 </ul>
 <h4>F5 target design (not built)</h4>
-<p>The runner holds no DB credentials and no model key; a supervisor starts one sandboxed process or container per job with a job-scoped expiring token; the runner talks only to a narrow internal API (fetch inputs, append events, upload artifacts for that one run) and to a model gateway applying the per-run budget and holding the real key; stronger isolation than a shared kernel (gVisor/Firecracker). Interim mitigations: non-root, read-only rootfs, dropped capabilities, internal network + proxy, the engine never executes customer code.</p>
+<p>The runner holds no DB credentials and no model key; a supervisor starts one sandboxed process or container per job with a job-scoped expiring token; the runner talks only to a narrow internal API (fetch inputs, append events, upload artifacts for that one run) and to a model gateway applying the per-run budget and holding the real key; stronger isolation than a shared kernel (gVisor/Firecracker). Interim mitigations: non-root, read-only rootfs, dropped capabilities, internal network + proxy, the hosted worker never runs Phase 2, so the engine never executes customer code there.</p>
 <h4>Other residuals</h4>
 <ul>
 <li>Signup 409 oracle if signup is opened; no e-mail verification, password reset or MFA.</li>
@@ -1593,6 +1597,7 @@ def stats(ctx: ProjectCtx = Depends(project_ctx)):
 <tr><td>Data</td><td>No retention auto-purge; backups never restore-tested; S3 store skeleton; results read whole per request.</td></tr>
 <tr><td>Web</td><td>No OIDC flow, no e2e browser tests, no user-docs UI, no changelog view, canvas cap of 400 nodes.</td></tr>
 <tr><td>Process</td><td>CI never ran; Docker, Postgres and real S3 never exercised; no independent security test; no billing.</td></tr>
+<tr><td>Phase 2</td><td>Never run against a real Docker daemon or a real model; live Docker tests always skipped on the authoring machine; images are tags, not digests; eval baselines are hand-written reference runs; gRPC and message cases are <code>not_implemented</code>; OpenRewrite is Maven only and jscodeshift is a stub; reviewer precision is always <code>n/a</code>; no Cut-over tab in the review UI; CLI and self-hosted only (see 14.7).</td></tr>
 </table></div>
 </div>
 
@@ -1687,9 +1692,106 @@ def stats(ctx: ProjectCtx = Depends(project_ctx)):
 </ul>
 </div>
 </section>
+
+<section class="chap" id="s14">
+<h2><span class="n">14</span>The Phase 1 gate and Phase 2: migrate and prove equivalence</h2>
+<p class="lead">Added after the rest of this handbook was written. Sources: <code>docs/phase2-plan.md</code>, <code>docs/phase2-architecture.md</code>, <code>docs/user-guide.md</code> section 9, <code>docs/threat-model.md</code> section 9 and <code>CHANGELOG.md</code>. Phase 2 is implemented and covered by offline tests; it has <strong>not</strong> run against a real Docker daemon or a real model.</p>
+
+<div class="sub" id="p1gate">
+<h3>14.1 The Phase 1 exit gate (approval)</h3>
+<p>Phase 1 ends when a person signs off on the understanding. Three commands implement it:</p>
+<div class="tw"><table>
+<tr><th>Command</th><th>Code</th><th>What it does</th></tr>
+<tr><td><code>decide PROJECT ITEM_ID (--preserve|--fix) [--note]</code></td><td><code>review/decisions.py</code>, <code>review/docrender.py</code></td><td>Stores a migration decision per quirk or suspected bug in <code>feedback/decisions.json</code> (default <em>preserve</em>), then re-renders the document offline; section 12 shows <code>Migration decision: ...</code>. Decisions are keyed by stable ID and survive re-analysis.</td></tr>
+<tr><td><code>status PROJECT</code></td><td><code>review/approval.py</code></td><td>Readiness: blockers (no graph or document, unmapped inventory, open or unresolved findings, pending re-analysis, unused comments, document differs from a fresh offline render) and warnings (deferred findings, Verifier never run, open questions, default decisions, low confidence). Approval state is <code>none</code>, <code>approved</code> or <code>stale</code>.</td></tr>
+<tr><td><code>approve PROJECT --by NAME [--note]</code></td><td><code>review/approval.py</code></td><td>Refused while any blocker exists (no <code>--force</code>). Appends to <code>feedback/approvals.json</code>, writes the read-only <code>docs/understanding.vN.approved.md</code> and <code>docs/migration_contract.json</code>, and logs an <code>approve</code> audit event.</td></tr>
+</table></div>
+<p>The approval pins the graph (sha256 of the snapshot file) and the document (sha256 of its text). Any later snapshot or document change makes it <code>stale</code>. <code>MigrationContract</code> (<code>verify/models.py</code>) is now schema 2 and adds <code>source_hash</code>, copied from <code>ingest_report.json</code>, which Phase 2 uses to check that the original source it imports is the one that was analysed.</p>
+<p>Other Phase 1 changes made for this gate: Verifier findings can be resolved as <code>deferred</code> (no re-analysis, does not block approval, listed in the contract); <code>analyze</code> persists gap-fill coverage exclusions in <code>facts/coverage_exclusions.json</code>, and readiness, approval, the offline re-render and targeted re-analysis all compute coverage through <code>analyze/coverage.project_coverage</code> so they agree; the review server returns readiness, approval and decisions from <code>/api/state</code> and gains token-protected <code>POST /api/decisions</code> and <code>POST /api/approve</code> plus an Approval tab.</p>
+<div class="gotcha"><p>Running <code>render</code>, <code>resolve</code> or <code>analyze</code> after approval creates a new snapshot and makes the approval stale. That is intended: the contract describes exactly one graph and one document.</p></div>
+</div>
+
+<div class="sub" id="p2overview">
+<h3>14.2 What Phase 2 does</h3>
+<div class="flow"><span>contract check</span><i>&rarr;</i><span>target init / fit</span><i>&rarr;</i><span>plan</span><i>&rarr;</i><span>harness import-source / build / up</span><i>&rarr;</i><span>tests generate / record</span><i>&rarr;</i><span>generate</span><i>&rarr;</i><span>equivalence</span><i>&rarr;</i><span>approve-slice</span><i>&rarr;</i><span>flip, composite</span><i>&rarr;</i><span>cutover</span></div>
+<ul>
+<li><strong>The running legacy service is the oracle.</strong> Expected outputs are recorded from it (twice, to derive noise masks), never written by the model, except for behaviour you decided to <code>fix</code>, and only after <code>tests approve-spec</code>.</li>
+<li><strong>Slices.</strong> The planner turns the approved graph into ordered slices (foundation, entry points, bootstrap); every in-scope node lands in exactly one slice and slice IDs are stable across re-planning.</li>
+<li><strong>Generation loop</strong> per slice: context pack, validated model edits, commit in <code>target_code/</code>, sandbox build, unit tests plus the characterization suite against the new service, fresh-session review, then <code>awaiting_human</code>. Failures feed a fix iteration up to <code>--max-iterations</code> (4); then the slice is <code>blocked</code>. Every step is a file under <code>slices/SLICE-NNNN/iterations/K/</code>, so a killed run resumes and loses at most one model call.</li>
+<li><strong>Equivalence</strong> classifies each difference as <code>match</code>, <code>noise</code>, <code>intended_divergence</code>, <code>regression</code> or <code>unknown</code>. Regressions become fix requests that the next <code>generate</code> picks up; triage can also produce <code>legacy_bug</code> (a decision for you), <code>harness_issue</code> (a mask proposal) and <code>spec_ambiguity</code> (blocks the slice).</li>
+<li><strong>You approve each slice.</strong> <code>approve-slice</code> is refused unless the contract gate passes, the build and suite are green, the equivalence report has no regression or unknown diff, <code>target_code</code> HEAD is unchanged since that run, and all blockers are cleared.</li>
+<li><strong>Cut-over is a plan, not a deployment.</strong> <code>cutover</code> checks readiness and writes a deterministic <code>cutover/plan.md</code>; <code>--approve</code> pins hashes of the contract, plan, code and every equivalence artifact.</li>
+</ul>
+</div>
+
+<div class="sub" id="p2trust">
+<h3>14.3 Trust change and sandbox</h3>
+<p>Phase 1 promised that nothing from the source is executed. Phase 2 keeps the promise that the model sees only redacted text, and relaxes the other one inside a boundary: <code>DockerBackend</code> (<code>migrate/exec/docker.py</code>) runs every legacy build, the legacy service, generated code, codemods, test runners, the router and schema probes.</p>
+<div class="tw"><table>
+<tr><th>Control</th><th>Detail</th></tr>
+<tr><td>Container hardening</td><td>Fixed-argv <code>docker run</code>, <code>--cap-drop ALL</code>, <code>no-new-privileges</code>, non-root, read-only rootfs, pids, memory, CPU and time limits, images never pulled, gVisor (<code>runsc</code>) when installed (<code>MA_EXEC_RUNTIME</code>).</td></tr>
+<tr><td>Network</td><td>Test jobs: <code>--network none</code> or an <code>--internal</code> Docker network. Build jobs: only mirror hosts from <code>harness/mirror.json</code> or <code>MA_MIRROR_HOSTS</code>, through a per-run allowlisting Squid proxy; no mirror means offline builds from <code>harness/cache/</code>.</td></tr>
+<tr><td>Policy checks</td><td><code>exec/policy.py</code> scans every job and argv before a container starts. <code>ExecJob</code> rejects secret-looking env values; required secrets get random synthetic values per run (<code>synthetic_secrets</code>).</td></tr>
+<tr><td><code>legacy_src/</code></td><td>The original, unredacted source (many builds fail on redacted files), imported by <code>harness import-source</code> after a check against the contract <code>source_hash</code>, mounted only into exec containers. The model's read-only tools stay rooted at <code>code/</code>. Credential files stay withheld.</td></tr>
+<tr><td>Generated code</td><td>Edits are path-jailed to <code>target_code/</code>, limited to a build-file allowlist, applied exactly, scanned for secrets and checked against the dependency allow/deny list; after the build a fresh model session plus static deny checks (undeclared outbound HTTP, <code>eval</code>/<code>exec</code>, shell spawning, reading credential-like env vars) review it.</td></tr>
+</table></div>
+<p>Threats T19 to T37 are in <code>docs/threat-model.md</code> section 9. Red-team tests: <code>tests/redteam/test_p2_exec_sandbox.py</code>.</p>
+</div>
+
+<div class="sub" id="p2code">
+<h3>14.4 Code map and project folders</h3>
+<p>All Phase 2 code is in <code>src/migration_agent/migrate/</code>; <code>migrate/cli.py</code> registers every command group on the top-level CLI with one line in <code>cli.py</code>. Each module docstring is the detailed reference.</p>
+<div class="tw"><table>
+<tr><th>Milestone</th><th>Modules</th><th>Commands</th></tr>
+<tr><td>M0 foundation</td><td><code>models.py</code>, <code>ids.py</code>, <code>paths.py</code>, <code>state.py</code>, <code>contract.py</code>, <code>ledger.py</code>, <code>exec/base.py</code>, <code>exec/fake.py</code></td><td><code>contract check|schema</code>, <code>doctor</code></td></tr>
+<tr><td>M1 exec sandbox</td><td><code>exec/docker.py</code>, <code>exec/policy.py</code>, <code>harness.py</code></td><td><code>harness import-source|build|up|down|status</code></td></tr>
+<tr><td>M2 target fit</td><td><code>target.py</code>, <code>fit.py</code>, <code>knowledge/libmap/*.yaml</code></td><td><code>target init|show|fit|resolve</code></td></tr>
+<tr><td>M3 characterization</td><td><code>casestore.py</code>, <code>testgen.py</code>, <code>recorder.py</code>, <code>harness_runner/</code></td><td><code>tests generate|record|run|coverage|mark-untestable|approve-spec</code></td></tr>
+<tr><td>M4 plan and generate</td><td><code>planner.py</code>, <code>targetrepo.py</code>, <code>codegen.py</code>, <code>reviewer.py</code>, <code>codemods/</code>, <code>slice_runner.py</code></td><td><code>plan</code>, <code>generate</code></td></tr>
+<tr><td>M5 equivalence and approvals</td><td><code>equivalence.py</code>, <code>approvals.py</code></td><td><code>equivalence</code>, <code>approve-slice</code>, <code>reject-slice</code>, <code>slice comment|decide|accept-observed</code></td></tr>
+<tr><td>M6 config, data, router</td><td><code>configmap.py</code>, <code>schemacompat.py</code>, <code>router/</code>, flip logic in <code>harness.py</code></td><td><code>config map|set|schema-check|schema-blockers</code>, <code>harness flip|unflip|routes</code>, <code>equivalence composite</code></td></tr>
+<tr><td>M7 cut-over and eval</td><td><code>cutover.py</code>, <code>metrics.py</code>, <code>evalharness.py</code></td><td><code>cutover</code>, <code>metrics</code></td></tr>
+</table></div>
+<p>Outside <code>migrate/</code>: <code>service.py</code> (stages <code>target_fit</code>, <code>plan</code>, <code>tests</code>, <code>generate</code>, <code>equivalence</code>, <code>cutover</code> for <code>run_stage</code>, and <code>metrics()</code>), <code>review_ui/server.py</code> and <code>page.py</code> (Target fit, Plan, Slice and Comments tabs, <code>/api/p2/*</code> routes), <code>scripts/eval_phase2.py</code> (CI gate, job <code>eval-phase2</code>), <code>eval/targets/</code> (three source and target pairs) and <code>eval/repos/*/harness/</code> (runnable fixtures).</p>
+<p>New folders appear lazily on first write (<code>Phase2Layout.ensure()</code> also bumps <code>project.json</code> <code>schema_version</code> to 2; v1 projects still load): <code>target/</code>, <code>plan/</code>, <code>legacy_src/</code>, <code>harness/</code>, <code>characterization/</code>, <code>target_code/</code> (a hardened git repo, tags <code>slice/SLICE-NNNN/iter-K</code> and <code>/approved</code>), <code>slices/SLICE-NNNN/</code>, <code>runs/RUN-NNNN/</code>, <code>migration/</code>, <code>config/</code>, <code>data/</code>, <code>equivalence/</code>, <code>cutover/</code>. All writes are atomic and every command can be re-run: the folder is the state.</p>
+<p>New ID prefixes (<code>migrate/ids.py</code>, stored in <code>migration/ids.json</code>, never reused): <code>SLICE-</code>, <code>CT-</code> (test case), <code>RISK-</code>, <code>EQ-</code> (diff or runtime finding), <code>RUN-</code>. Every command that writes Phase 2 state calls <code>require_contract</code> first.</p>
+</div>
+
+<div class="sub" id="p2budget">
+<h3>14.5 Budget, resume and the slice state machine</h3>
+<ul>
+<li><strong>Budget.</strong> <code>target init --budget-usd N</code> sets a project budget. <code>ledger.py</code> derives cumulative spend from <code>audit/audit.jsonl</code>, and every model call is capped by what remains, plus per-run (<code>--max-usd</code>) and per-slice (<code>--max-usd-per-slice</code>) caps.</li>
+<li><strong>State machine.</strong> Slice status changes only through <code>state.transition</code> (<code>slices/SLICE-NNNN/state.json</code>): the statuses (<code>planned</code>, <code>tests_recorded</code>, <code>generating</code>, <code>built</code>, <code>tests_passing</code>, <code>reviewed</code>, <code>awaiting_human</code>, <code>approved</code>, <code>rejected</code>, <code>blocked</code>, ...) and the allowed transitions are defined in <code>TRANSITIONS</code> and validated.</li>
+<li><strong>Humans can edit.</strong> You may commit to <code>target_code/</code>. <code>generate</code> refuses a dirty tree and never overwrites uncommitted edits; a commit after the last equivalence run makes approval wait for a new run. Human commits feed the human-edit metric.</li>
+<li><strong>Metrics.</strong> <code>metrics</code> derives cost per slice, node and 1k legacy lines, cache hit rate, iterations to green, first-try build success, characterization pass rate, equivalence %, unknown-diff rate, mask additions, human-edit rate and wall-clock split from existing files only. A metric without data is <code>n/a</code>, never 0.</li>
+</ul>
+</div>
+
+<div class="sub" id="p2tests">
+<h3>14.6 Testing and eval for Phase 2</h3>
+<ul>
+<li><strong>Offline by construction.</strong> Unit and integration tests use a scripted docker CLI (<code>FakeExecBackend</code> or a fake <code>docker</code> binary) and fake model clients. Files: <code>tests/test_p2_*.py</code>, helpers <code>tests/p2_*_helpers.py</code>, <code>tests/phase1_helpers.py</code>, <code>tests/phase2_helpers.py</code>. Live Docker tests (<code>test_p2_exec_docker.py</code>) skip without a daemon, which is why 7 tests skip.</li>
+<li><strong>Phase 1 gate tests:</strong> <code>test_approval.py</code>, <code>test_decisions.py</code>, <code>test_contract_source_hash.py</code>, <code>test_coverage_exclusions_persist.py</code>.</li>
+<li><strong>Eval.</strong> <code>evalharness.score_migration</code> and <code>compare_migration</code> score a migration run against the three <code>eval/targets/</code> pairs; <code>scripts/eval_phase2.py</code> is the gate in CI job <code>eval-phase2</code>. The baselines are hand-written reference runs, not agent output, and there is no nightly real-model run.</li>
+<li><strong>Run it:</strong> <code>PYTHONPATH=src python -m pytest -q</code> (about 2 minutes: 1159 passed, 7 skipped).</li>
+</ul>
+</div>
+
+<div class="sub" id="p2limits">
+<h3>14.7 Known gaps and rules for contributors</h3>
+<ul>
+<li>Not run against a real Docker daemon or a real model; fixtures never built in Docker; images (runner, router, proxy, codemods) are tags, not digests.</li>
+<li>gRPC and message characterization cases return <code>not_implemented</code>. OpenRewrite supports Maven only, jscodeshift is a stub, codemod versions are pinned but never run. Mirror resolution of new dependencies is a hook only; no lockfile hash checks or SBOM per run.</li>
+<li>With <code>sqlite</code> or <code>none</code> DB engines the composite gives each service a private database (<code>db_shared: false</code>).</li>
+<li>Reviewer precision is always <code>n/a</code>; there is no Cut-over tab in the review UI.</li>
+<li><strong>Phase 2 is CLI and self-hosted only (decision P2-Q13).</strong> The hosted worker must not run it. Do not add Phase 2 stages to the hosted job path without redoing the threat model.</li>
+<li>Change <code>migrate/models.py</code> only additively; never fork <code>MigrationContract</code>; never pass real secrets or model keys into a container; never pull images from the exec backend.</li>
+</ul>
+</div>
+</section>
 </main>
 </div>
-<footer>migration-agent developer handbook &middot; generated from the repository state of 2026-11-09 &middot; if something here is wrong, the code is right.</footer>
+<footer>migration-agent developer handbook &middot; updated for the Phase 1 gate and Phase 2 on 2026-11-14 (chapters 1 to 13 written 2026-11-09) &middot; if something here is wrong, the code is right.</footer>
 <script>
 (function(){
 var chaps=[].slice.call(document.querySelectorAll('section.chap'));

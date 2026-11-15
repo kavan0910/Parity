@@ -1,0 +1,975 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Phase 2 implementation plan: Migrate &amp; Prove Equivalence | migration-agent docs</title><style>
+:root{--bg:#fbfaf7;--panel:#fff;--ink:#1c1b22;--mute:#6b6a76;--line:#e7e4dc;--accent:#5b4bdb;--accent2:#e0568b;--tint:#efecff;--code:#15141c;--codefg:#e9e7f5}
+@media (prefers-color-scheme:dark){:root{--bg:#0f0e14;--panel:#17161f;--ink:#ecebf3;--mute:#9a98a8;--line:#2a2836;--accent:#9b8cff;--accent2:#ff7fac;--tint:#221f3a}}
+*{box-sizing:border-box}html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.7 -apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,sans-serif}
+a{color:var(--accent)}
+.top{padding:44px 24px 34px;text-align:center;border-bottom:1px solid var(--line);background:radial-gradient(900px 300px at 50% -80px,var(--tint),transparent),var(--bg)}
+.top .tag{display:inline-block;padding:3px 12px;border:1px solid var(--line);border-radius:99px;font-size:13px;color:var(--mute);background:var(--panel)}
+.top h1{font-size:clamp(28px,5vw,44px);line-height:1.15;margin:14px auto 0;max-width:900px;letter-spacing:-.02em;background:linear-gradient(90deg,var(--accent),var(--accent2));-webkit-background-clip:text;background-clip:text;color:transparent}
+.layout{display:grid;grid-template-columns:250px minmax(0,1fr) 210px;gap:36px;max-width:1360px;margin:0 auto;padding:32px 24px 90px}
+nav.docs,nav.toc{position:sticky;top:20px;align-self:start;max-height:calc(100vh - 40px);overflow:auto;font-size:14px}
+nav b{display:block;margin:14px 0 6px;color:var(--mute);font-weight:600;text-transform:uppercase;letter-spacing:.08em;font-size:11.5px}
+nav b:first-child{margin-top:0}
+nav a{display:block;padding:4px 10px;border-left:2px solid var(--line);color:var(--mute);text-decoration:none}
+nav a:hover,nav a.on{color:var(--accent);border-color:var(--accent)}
+nav a.on{font-weight:600}
+nav.toc a.l3{padding-left:22px;font-size:13px}
+main{min-width:0}main h2{font-size:27px;margin:44px 0 12px;letter-spacing:-.01em;padding-top:6px;border-top:1px solid var(--line)}
+main h1{display:none}main h3{font-size:20px;margin:30px 0 8px}main h4{font-size:16px;margin:22px 0 6px}
+main p,main li{max-width:78ch}p{margin:0 0 14px}ul,ol{padding-left:24px;margin:0 0 16px}li{margin:4px 0}
+code{font:13.5px ui-monospace,SFMono-Regular,Menlo,monospace;background:var(--tint);padding:2px 6px;border-radius:6px}
+.cb{position:relative;margin:14px 0 20px}
+pre{background:var(--code);color:var(--codefg);padding:16px 18px;border-radius:14px;overflow:auto;margin:0;line-height:1.55;box-shadow:0 8px 24px -14px #0008}
+pre code{background:none;padding:0;color:inherit;font-size:13px}
+.cb button{position:absolute;top:8px;right:8px;font:12px inherit;padding:3px 9px;border-radius:8px;border:1px solid #fff3;background:#ffffff14;color:#e9e7f5;cursor:pointer}
+.cb button:hover{background:#ffffff2a}
+.cb .lbl{position:absolute;top:8px;left:14px;font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:#b9b5d6}
+.cb.mm pre{padding-top:34px}
+.tw{overflow-x:auto;margin:14px 0 22px;border:1px solid var(--line);border-radius:14px;background:var(--panel)}
+table{border-collapse:collapse;width:100%;font-size:14.5px}th,td{text-align:left;padding:9px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--mute);background:var(--tint)}tr:last-child td{border-bottom:0}
+blockquote{margin:16px 0;padding:10px 18px;border-left:4px solid var(--accent);background:var(--tint);border-radius:0 12px 12px 0}blockquote p{margin:6px 0}
+hr{border:0;border-top:1px solid var(--line);margin:30px 0}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;margin:18px 0}
+.card{display:block;padding:16px 18px;border:1px solid var(--line);border-radius:14px;background:var(--panel);text-decoration:none;color:var(--ink)}
+.card:hover{border-color:var(--accent)}.card b{display:block;color:var(--accent);margin-bottom:2px}.card span{color:var(--mute);font-size:14px}
+.pager{display:flex;justify-content:space-between;gap:12px;margin-top:56px;padding-top:20px;border-top:1px solid var(--line);font-size:14px}
+footer{text-align:center;color:var(--mute);font-size:13px;padding:28px;border-top:1px solid var(--line)}
+details.mob{display:none;margin:0 24px 16px;border:1px solid var(--line);border-radius:12px;background:var(--panel);padding:8px 14px}
+@media(max-width:1100px){.layout{grid-template-columns:230px minmax(0,1fr)}nav.toc{display:none}}
+@media(max-width:820px){.layout{grid-template-columns:1fr;padding-top:16px}nav.docs{display:none}details.mob{display:block}}
+</style></head><body>
+<header class="top"><span class="tag">migration-agent docs</span><h1>Phase 2 implementation plan: Migrate &amp; Prove Equivalence</h1></header>
+<details class="mob"><summary>All docs</summary><a href="index.html">Overview</a><b>Start here</b><a href="README.html">migration-agent documentation</a><a href="user-guide.html">User guide</a><a href="architecture.html">Architecture</a><a href="api-reference.html">API reference</a><a href="deployment.html">Deployment guide</a><a href="threat-model.html">Threat model (D-06)</a><b>Phase 2: migrate</b><a href="phase2-architecture.html">Phase 2 architecture: the migrate/ package</a><a class="on" href="phase2-plan.html">Phase 2 implementation plan: Migrate &amp; Prove Equivalence</a><b>Product and platform</b><a href="product-architecture.html">Product architecture and roadmap: from CLI engine to hosted service</a><a href="platform-contract.html">Platform contract (hosted product)</a><a href="phase0-results.html">Phase 0 interim results (2026-11-09)</a><a href="operations-runbook.html">Operations runbook</a><b>Security</b><a href="security/security-overview-draft.html">Security overview (customer-facing DRAFT)</a><a href="security/threat-model-hosted.html">Threat model update: hosted product</a><a href="security/data-handling-and-retention.html">Data handling and retention policy (draft)</a><a href="security/pentest-2026-11-09.html">Hostile security review, 2026-11-09: findings and status</a><a href="security/incident-response.html">Incident response outline</a><a href="security/secure-sdlc.html">Secure development lifecycle</a><a href="security/soc2-readiness.html">SOC 2 readiness checklist</a><a href="security/subprocessors.html">Subprocessor list (TEMPLATE)</a><b>Hand-built guides</b><a href="../developer-handbook.html">Developer handbook</a><a href="../user-guide-app.html">Product user guide</a><a href="../tutorial.html">CLI tutorial</a></details>
+<div class="layout"><nav class="docs" aria-label="Documentation"><a href="index.html">Overview</a><b>Start here</b><a href="README.html">migration-agent documentation</a><a href="user-guide.html">User guide</a><a href="architecture.html">Architecture</a><a href="api-reference.html">API reference</a><a href="deployment.html">Deployment guide</a><a href="threat-model.html">Threat model (D-06)</a><b>Phase 2: migrate</b><a href="phase2-architecture.html">Phase 2 architecture: the migrate/ package</a><a class="on" href="phase2-plan.html">Phase 2 implementation plan: Migrate &amp; Prove Equivalence</a><b>Product and platform</b><a href="product-architecture.html">Product architecture and roadmap: from CLI engine to hosted service</a><a href="platform-contract.html">Platform contract (hosted product)</a><a href="phase0-results.html">Phase 0 interim results (2026-11-09)</a><a href="operations-runbook.html">Operations runbook</a><b>Security</b><a href="security/security-overview-draft.html">Security overview (customer-facing DRAFT)</a><a href="security/threat-model-hosted.html">Threat model update: hosted product</a><a href="security/data-handling-and-retention.html">Data handling and retention policy (draft)</a><a href="security/pentest-2026-11-09.html">Hostile security review, 2026-11-09: findings and status</a><a href="security/incident-response.html">Incident response outline</a><a href="security/secure-sdlc.html">Secure development lifecycle</a><a href="security/soc2-readiness.html">SOC 2 readiness checklist</a><a href="security/subprocessors.html">Subprocessor list (TEMPLATE)</a><b>Hand-built guides</b><a href="../developer-handbook.html">Developer handbook</a><a href="../user-guide-app.html">Product user guide</a><a href="../tutorial.html">CLI tutorial</a></nav>
+<main><h1 id="phase-2-implementation-plan-migrate-prove-equivalence">Phase 2 implementation plan: Migrate &amp; Prove Equivalence</h1>
+<p>Status: v1, owner decisions recorded in section 14 (all recommendations accepted).
+Grounding: <code>README.md</code>, <code>docs/architecture.md</code>, <code>docs/product-architecture.md</code>, <code>docs/phase0-results.md</code>,
+<code>docs/threat-model.md</code>, <code>eval/README.md</code>, <code>CHANGELOG.md</code>, <code>.lavish/migration-agent-grill.html</code> (Q1-Q18), and the code
+under <code>src/migration_agent/</code>. Code is cited as <code>path:line</code>. <strong>[Gap]</strong> marks something that does not exist yet or is
+unproven. <strong>[Rec]</strong> is my recommendation.</p>
+<h2 id="implementation-status">Implementation status</h2>
+<p>The plan below is the design as agreed before coding. The code now implements M0 to M7. Module map and public
+functions: <a href="phase2-architecture.html">phase2-architecture.md</a>. User instructions: <a href="user-guide.html">user-guide.md</a>
+section 9.</p>
+<p>"Tested" here means unit and integration tests that run offline: a scripted docker CLI instead of a daemon, fake or
+offline model clients instead of a provider, and local HTTP servers instead of containers. The full suite is
+1159 passed, 7 skipped (<code>.venv/bin/python -m pytest -q</code>); 6 of the skips are live Docker tests.</p>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>#</th>
+<th>Modules</th>
+<th>Tested offline</th>
+<th>Not verified yet</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>M0</td>
+<td><code>migrate/contract.py</code>, <code>ledger.py</code>, <code>ids.py</code>, <code>paths.py</code>, <code>state.py</code>, <code>models.py</code>, <code>exec/base.py</code>, <code>exec/fake.py</code>, <code>cli.py</code> (<code>contract check|schema</code>, <code>doctor</code>)</td>
+<td>every gate rule 1-7, ledger sums, state machine, id allocation, layout v2</td>
+<td><code>doctor</code> checks contract, exec backend, git and budget only; it does not probe gVisor or mirror reachability separately</td>
+</tr>
+<tr>
+<td>M1</td>
+<td><code>exec/docker.py</code>, <code>exec/policy.py</code>, <code>harness.py</code> (<code>import-source</code>, <code>build</code>, <code>up</code>, <code>down</code>, <code>status</code>), <code>eval/repos/*/harness/</code></td>
+<td>argv lockdown, network modes, mirror proxy config, limits, secret refusal, report copy-out, source-hash check on import (red-team tests in <code>tests/redteam/test_p2_exec_sandbox.py</code>)</td>
+<td>no run against a real Docker daemon; live canary, fork-bomb and disk-fill tests always skipped; fixtures never built; images not pinned by digest; no CI job exercises Docker</td>
+</tr>
+<tr>
+<td>M2</td>
+<td><code>target.py</code>, <code>fit.py</code>, <code>knowledge/libmap/*.yaml</code>, <code>prompts/target_fit.md</code>, review-UI Target fit tab</td>
+<td>deterministic layer on fixtures, evidence verification of model risks, resolutions, planner gate</td>
+<td>model layer never run with a real model; libmap tables are a starting set</td>
+</tr>
+<tr>
+<td>M3</td>
+<td><code>testgen.py</code>, <code>recorder.py</code>, <code>casestore.py</code>, <code>harness_runner/</code> (http/job; stub server), <code>prompts/test_gen.md</code></td>
+<td>offline proposer, proposal validation, double recording with noise masks against local HTTP servers, runtime findings, coverage</td>
+<td>no recording against a real legacy container; <code>grpc</code> and <code>message</code> cases return <code>not_implemented</code>; DB state, stub calls and messages are compared only when an observation carries them</td>
+</tr>
+<tr>
+<td>M4</td>
+<td><code>planner.py</code>, <code>slice_runner.py</code>, <code>codegen.py</code>, <code>reviewer.py</code>, <code>targetrepo.py</code>, <code>codemods/</code>, <code>prompts/{plan,codegen,codegen_fix,code_review}.md</code></td>
+<td>planner invariant and ordering, edit validation and jail, secret scan, dependency allow/deny, resumability, budget caps, offline loop to <code>awaiting_human</code>, static deny checks</td>
+<td>no generation with a real model; codemod tool and recipe versions pinned in code but never run; OpenRewrite is Maven only; jscodeshift is a stub; dependency mirror resolution is a hook (warning only)</td>
+</tr>
+<tr>
+<td>M5</td>
+<td><code>equivalence.py</code>, <code>approvals.py</code>, <code>prompts/equiv_triage.md</code>, review-UI Plan, Slice and Comments tabs</td>
+<td>seeded regression caught, classification, triage quote verification, mask approval, approval refused on blockers, human commit forces a re-run, git hooks never run</td>
+<td>triage never run with a real model</td>
+</tr>
+<tr>
+<td>M6</td>
+<td><code>configmap.py</code>, <code>schemacompat.py</code>, <code>router/</code>, <code>harness.py</code> (<code>--new</code>, <code>--composite</code>, <code>flip</code>, <code>unflip</code>, <code>routes</code>), <code>equivalence composite</code></td>
+<td>config maps for Spring/Node targets with secret references, schema diff and declared changes, router route table and reload (in-process), flip rules</td>
+<td>composite never run in containers; with sqlite or no DB engine each service has its own private DB in the composite (<code>db_shared: false</code>), so it does not test a shared database; go-chi pair not built</td>
+</tr>
+<tr>
+<td>M7</td>
+<td><code>cutover.py</code>, <code>metrics.py</code>, <code>service.py</code> Phase 2 stages, <code>evalharness.score_migration</code>, <code>scripts/eval_phase2.py</code>, <code>eval/targets/</code>, CI job <code>eval-phase2</code></td>
+<td>readiness checks, plan determinism, approval hashes, metrics definitions, stage wrappers, eval scoring and regression gate</td>
+<td>eval baselines come from hand-written reference runs, not agent output; no nightly real-model run; reviewer precision is always n/a (nothing records accepted findings); CI runs have ended in <code>startup_failure</code> so far</td>
+</tr>
+</tbody>
+</table></div>
+<p>Not built from this plan: <code>django-lite__fastapi</code> and <code>express-crud__go-chi</code> pairs, differential fuzzing, the
+latency comparison, a Cut-over tab in the review UI, and hosted Phase 2 (P2-Q13: CLI and self-hosted only).</p>
+<hr />
+<h2 id="0-what-phase-2-inherits-and-what-it-cannot-assume">0. What Phase 2 inherits, and what it cannot assume</h2>
+<p>Reusable as-is or with small extensions:</p>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>Asset</th>
+<th>Where</th>
+<th>Phase 2 use</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Project folder as the only state (Q18)</td>
+<td><code>project.py:1-68</code> (<code>SUBDIRS</code>, <code>ProjectMeta.schema_version=1</code>)</td>
+<td>Add Phase 2 subfolders; bump schema to 2; every agent resumes from files</td>
+</tr>
+<tr>
+<td>Graph with stable IDs, typed nodes/edges, evidence, derived confidence, <code>quirk</code>/<code>suspected_bug</code></td>
+<td><code>graph/models.py:8-124</code></td>
+<td>Slice definition, ordering (<code>calls</code>/<code>depends_on</code>/<code>reads</code>/<code>writes</code> edges), test-to-item mapping</td>
+</tr>
+<tr>
+<td>Immutable snapshots + diff</td>
+<td><code>graph/store.py:81-138</code> (<code>save_snapshot</code>, <code>diff_graphs</code>)</td>
+<td>Staleness check; reuse the snapshot pattern for plans and slice states</td>
+</tr>
+<tr>
+<td>ID registry</td>
+<td><code>graph/registry.py</code></td>
+<td>Same pattern for <code>SLICE-</code>, <code>CT-</code> (characterization test), <code>EQ-</code> (equivalence finding) IDs</td>
+</tr>
+<tr>
+<td>One-method LLM protocol, tiers by <code>task</code>, retries, disk cache keyed by model/system/prompt/version, audit per call</td>
+<td><code>llm/base.py:19-24</code>, <code>llm/litellm_client.py:38-75, 239-245, 385</code></td>
+<td>New tasks: <code>target_fit</code>, <code>plan</code>, <code>test_gen</code>, <code>codegen</code>, <code>code_review</code>, <code>equiv_triage</code></td>
+</tr>
+<tr>
+<td><code>Budget</code> (USD/token, thread-safe) and <code>--max-usd</code></td>
+<td><code>llm/litellm_client.py:76-97</code>, <code>cli.py:30</code></td>
+<td>Per-run caps. <strong>[Gap]</strong> Budget is per process: a resumed run starts at $0. Phase 2 needs a cumulative ledger (below)</td>
+</tr>
+<tr>
+<td>Pre-run estimate (<code>analyze --dry-run</code>)</td>
+<td><code>analyze/runner.py:89</code>, <code>service.estimate</code></td>
+<td>Same UX for <code>generate --dry-run</code></td>
+</tr>
+<tr>
+<td>Checkpoints and resume</td>
+<td><code>analyze/runner.py</code>, <code>checkpoint/</code></td>
+<td>Per-slice state machine; interrupted generation resumes at the last completed step</td>
+</tr>
+<tr>
+<td>Append-only audit with tokens/USD/timing, <code>O_APPEND</code>+<code>flock</code>, redaction</td>
+<td><code>audit.py:44-165</code></td>
+<td>Add <code>exec</code> entries (command, image digest, exit code, duration) for build/test runs</td>
+</tr>
+<tr>
+<td>Prompt-injection hygiene: delimiters, <code>neutralize</code>, static system prompts</td>
+<td><code>analyze/module_analyzer.py</code>, threat model T6/T7</td>
+<td>Every Phase 2 prompt carrying code, docs, test output or reviewer text</td>
+</tr>
+<tr>
+<td>Strict model-output validation (<code>extra="forbid"</code>, <code>sanitize_patch</code>, evidence check)</td>
+<td><code>graph/models.py:22</code>, <code>analyze/evidence.py</code>, T8</td>
+<td>Same discipline for generated file patches and test cases</td>
+</tr>
+<tr>
+<td>Path-jailed read-only tools</td>
+<td><code>sandbox/tools.py:66-247</code></td>
+<td>Generator reads legacy <code>code/</code> and the new tree through two jailed instances. Writes never go through tools (see 5)</td>
+</tr>
+<tr>
+<td>Container profiles: <code>network none</code>, <code>internal</code> net + Squid allowlist, read-only rootfs, cap_drop, non-root</td>
+<td><code>docker/</code>, <code>sandbox/README.md</code></td>
+<td>Template for the build/test sandbox. <strong>[Gap]</strong> "reviewed-but-untested" (<code>sandbox/README.md</code>); must be exercised in CI first</td>
+</tr>
+<tr>
+<td>Review server: loopback, token, Host/Origin checks, narrow write API</td>
+<td><code>review_ui/server.py:77-433</code></td>
+<td>Add slice diff, test results, equivalence report, approvals</td>
+</tr>
+<tr>
+<td>Comments anchored to item IDs, targeted re-analysis, changelog</td>
+<td><code>review/comments.py</code>, <code>review/reanalyze.py:129</code>, <code>review/changelog.py</code></td>
+<td>Comments on <code>SLICE-</code>/<code>CT-</code>/<code>EQ-</code> IDs and on new-code <code>file:line</code>; targeted regeneration</td>
+</tr>
+<tr>
+<td>Verifier ideas: fresh session, quoted evidence, drop unverifiable findings</td>
+<td><code>verify/verifier.py</code>, <code>verify/models.py:1-71</code></td>
+<td>Blind spec-vs-code reviewer and equivalence triage</td>
+</tr>
+<tr>
+<td>Library API with events</td>
+<td><code>service.py:125</code> <code>run_stage</code>, <code>docs/platform-contract.md:33-40</code></td>
+<td>New stages so the hosted backend can run Phase 2 without CLI changes</td>
+</tr>
+<tr>
+<td>Eval harness + regression gate (<code>compare</code> fails on any F1 drop)</td>
+<td><code>evalharness.py:163-224</code>, <code>eval/repos/*</code></td>
+<td>Extend with Phase 2 scores and fixtures</td>
+</tr>
+<tr>
+<td>Extractors: config keys with <code>is_secret</code>, schemas (Flyway/Alembic/Prisma/TypeORM), OpenAPI/proto, manifests/deps</td>
+<td><code>extract/config.py</code>, <code>extract/schemas.py</code>, <code>extract/specs.py</code>, <code>extract/manifests.py</code>, <code>extract/deps.py</code></td>
+<td>Config mapping, schema inventory, endpoint contracts, library replacement inputs</td>
+</tr>
+</tbody>
+</table></div>
+<p>Constraints and known gaps Phase 2 must design around:</p>
+<ol>
+<li><strong>Phase 1 accuracy is unproven on real repos.</strong> Phase 0 ran three small repos, all as a single chunk, no hand
+   scoring; no node reached <code>high</code> confidence (<code>docs/phase0-results.md</code>). The model-derived layer (rules, flows) is thin:
+   688 of 823 petclinic nodes were static config keys. Phase 2 must therefore <strong>not trust the graph as an oracle</strong>. The
+   oracle is the running legacy service; the graph only says <em>what to test and in what order</em>.</li>
+<li><strong>The Verifier has never run on real docs</strong> (<code>phase0-results.md</code>, "Not done yet"). Deferred findings will be common.</li>
+<li><strong>The graph has no behavioural schema.</strong> <code>Node</code> has name/module/symbol/responsibility/evidence only
+   (<code>graph/models.py:58-68</code>); endpoint method+path live in <code>name</code>; no request/response shapes, status codes or error
+   contracts. Test generation must recover these from code + OpenAPI facts, not from the graph.</li>
+<li><strong><code>code/</code> is a redacted copy</strong> with credential files withheld (<code>ingest/__init__.py:271</code>, threat model section 5).
+   Redaction can change program text (<code>password = "[REDACTED:...]"</code>), and withheld <code>.npmrc</code>/<code>*.jks</code> can break builds.
+   Building the legacy service needs a different input than the one the model reads.</li>
+<li><strong>Phase 1 never executes code; Phase 2 must.</strong> That reverses the core trust assumption (section 6).</li>
+<li><strong><code>migration_contract.json</code> is being written now by another engineer.</strong> No code in <code>src/</code> references it yet. This plan
+   consumes it through a reader that should live next to the writer (one module, one schema).</li>
+<li><code>LLMClient.complete</code> is single-shot text/JSON, no tool calling (<code>llm/base.py:19-24</code>). Generation must work as
+   "orchestrator gathers context, model returns structured edits". That fits the existing cache/budget/audit.</li>
+<li>Hosted platform (0.3.0) is unaudited, worker holds DB credentials (<code>CHANGELOG.md</code>). Phase 2 execution must not ship in
+   the hosted worker until the build sandbox is a separate, credential-free job runner.</li>
+</ol>
+<hr />
+<h2 id="1-goal-scope-non-goals-entry-gate-exit-criteria">1. Goal, scope, non-goals, entry gate, exit criteria</h2>
+<p><strong>Goal.</strong> Turn an approved Phase 1 contract plus the legacy code into a new codebase on a user-declared target that
+passes a characterization suite recorded from the legacy service, slice by slice, with every behaviour difference either
+explained by an explicit <code>fix</code> decision or approved by a human.</p>
+<p><strong>In scope</strong>
+- Three migration kinds, one engine: version upgrade (Java 8 -&gt; 21, Spring Boot 2 -&gt; 3, Django 3.2 -&gt; 5.x), framework move
+  (Express -&gt; Fastify, Flask -&gt; FastAPI), language move (Express/JS -&gt; Go, Python -&gt; Java).
+- One service at a time (Q2 boundary unchanged). HTTP/RPC services and scheduled jobs first; message consumers second.
+- Characterization tests, generated code, build files, config mapping, schema-compatibility check, equivalence report,
+  cut-over plan (routing switch description, rollback steps).</p>
+<p><strong>Non-goals (Phase 2)</strong>
+- Deploying to production, touching live systems, or flipping traffic. The tool produces the cut-over <em>plan</em> and
+  artifacts; the user executes it. (Q4/Q7 spirit: no live access.)
+- Reading production data, secrets or logs. Recorded traffic is user-supplied and redacted at ingest.
+- Data migration execution against real databases. We produce mapping specs and scripts, run them only on synthetic
+  data in the sandbox.
+- Multi-service or monorepo-wide migrations, UI/front-end rewrites, performance tuning beyond "no regression worse than
+  a declared threshold" (optional).
+- Re-doing Phase 1. Phase 2 can raise findings back to Phase 1 (section 4.5), never edit the graph itself.</p>
+<p><strong>Entry gate</strong> (<code>migration-agent contract check</code>, must pass before any Phase 2 command writes):
+1. <code>docs/migration_contract.json</code> exists, parses against its schema, <code>schema_version</code> is supported.
+2. <code>graph_sha256</code> equals sha256 of the referenced graph snapshot file; <code>doc_sha256</code> equals the approved doc file. A
+   mismatch means someone re-analysed after approval: <strong>stale</strong>, refuse.
+3. <code>graph_version</code> equals <code>graph/latest.json</code> version, or the user passes <code>--pin-contract</code> to migrate from the approved
+   snapshot while later versions exist (warn).
+4. <strong>[Rec]</strong> contract also records <code>source_hash</code> from <code>ingest_report.json</code> (<code>ingest/__init__.py:57,354</code>). Gate recomputes
+   the tree hash of the <em>original</em> legacy source used for builds; mismatch = legacy changed since approval. If the
+   contract writer does not include it, Phase 2 records it at <code>target init</code> and checks it from then on.
+5. Every <code>quirk</code>/<code>suspected_bug</code> node has a decision (default <code>preserve</code> already satisfies this).
+6. Coverage summary shows no unmapped inventory items (Q16), else refuse unless <code>--accept-unmapped</code> (logged).
+7. Deferred findings are allowed but are attached to slices as blockers (section 4.4).</p>
+<p><strong>Exit criteria (per service)</strong>
+- All slices <code>approved</code>; each has: build green in sandbox, characterization pass rate 100% excluding approved
+  divergences, equivalence report with zero unexplained diffs, human approval recorded.
+- Test-coverage table: every endpoint, job, <code>business_rule</code> and quirk node in scope maps to &gt;= 1 characterization test,
+  or is marked <code>untestable</code> with a reason the user approved (same rule as Q16 coverage).
+- Config map complete (every <code>config</code> node mapped, dropped-with-reason or open); secrets referenced by name only.
+- <code>cutover/approval.json</code> signed by the user, with hashes of contract, plan, final tree and equivalence report.
+- Audit log shows cumulative cost within the declared project budget.</p>
+<hr />
+<h2 id="2-target-specification-and-target-fit-analysis-q15-follow-up">2. Target specification and target-fit analysis (Q15 follow-up)</h2>
+<p><strong>[Rec]</strong> A declarative <code>target/target.yaml</code>, validated by a strict pydantic model (<code>extra="forbid"</code>, same as
+<code>graph/models.py:22</code>). Written by <code>migration-agent target init</code> (interactive or flags), edited by the user, hashed into
+every later artifact.</p>
+<div class="cb"><pre><code language-yaml>schema_version: 1
+kind: version_upgrade            # version_upgrade | framework_move | language_move
+source:                          # filled from facts/manifests.json, user confirms
+  language: java
+  runtime: &quot;8&quot;
+  framework: spring-boot@2.7
+target:
+  language: java
+  runtime: &quot;21&quot;
+  framework: spring-boot@3.3
+  build: maven                   # maven | gradle | pip | poetry | npm | go-mod ...
+  base_image: eclipse-temurin:21-jre@sha256:...   # pinned digest
+infra:
+  db: postgres@15                # stays the same unless declared
+  messaging: none
+  deploy: container
+  port: 8080
+style:
+  formatter: google-java-format
+  linters: [checkstyle]
+  package_root: com.acme.library
+  rules: [&quot;constructor injection only&quot;, &quot;no Lombok&quot;]
+libraries:                       # optional pins and bans
+  allow: []
+  deny: [&quot;log4j:log4j&quot;]
+equivalence:
+  wire_compat: strict            # strict | json-semantic | declared-only
+  perf_regression_max_pct: null
+strategy: strangler              # strangler | big_bang (section 3)
+budget_usd: 50                   # project-level cap across all sessions
+</code></pre></div>
+<p><strong>Target-fit analysis</strong> (<code>migration-agent target fit</code>, new module <code>migrate/fit.py</code>, task <code>target_fit</code>): reads only
+the approved doc, approved graph snapshot, <code>facts/manifests.json</code> and <code>target.yaml</code> (consistent with Q15: a separate
+step reading the approved doc). Two layers:</p>
+<ol>
+<li><strong>Deterministic</strong> (no model): map each <code>external_dependency</code> node and manifest entry to the target through a
+   versioned mapping table <code>migrate/knowledge/libmap/*.yaml</code> (e.g. <code>javax.persistence -&gt; jakarta.persistence</code>,
+   <code>springfox -&gt; springdoc</code>, <code>express-validator -&gt; go-playground/validator</code>, removed JDK APIs). Unknowns become
+   <code>unmapped_library</code> risks. Also checks runtime facts: removed language features (Java <code>SecurityManager</code>, Python 2
+   idioms), framework features (Spring Boot 3 trailing-slash matching default change, Django <code>USE_L10N</code> removal).</li>
+<li><strong>Model</strong>: for each component/rule, flag constructs with no direct target equivalent (checked exceptions -&gt; Go
+   errors, JPA lazy-loading semantics, JS number vs Go int64, implicit type coercion in comparisons, thread-local
+   transactions, reflection). Output is strict JSON; every risk cites graph IDs <strong>and</strong> <code>file:line</code> evidence verified by
+   the existing <code>analyze/evidence.verify_evidence</code> against <code>code/</code>. Unverified risks are dropped and counted, same as
+   C-09 in the Verifier.</li>
+</ol>
+<p>Output <code>target/fit_report.json</code> (<code>RISK-NNNN</code>: kind <code>no_equivalent | library_replacement | semantic_shift |
+infra_gap | unknown</code>, severity, item_ids, evidence, proposed handling, <code>needs_decision: bool</code>) and rendered
+<code>target/fit_report.md</code>. Risks with <code>needs_decision</code> go to the review UI like Verifier findings; resolutions stored in
+<code>target/fit_resolutions.json</code>. Plan generation is blocked while any high-severity risk is open.</p>
+<p>Why: keeps Phase 1 target-agnostic, makes target concerns evidence-backed and reviewable with the same UX, and a
+deterministic table makes version upgrades cheap and testable without the model.</p>
+<hr />
+<h2 id="3-migration-strategy">3. Migration strategy</h2>
+<p><strong>Unit of migration: the slice.</strong> [Rec] A slice is one externally observable entry point (endpoint group by resource,
+or one job/consumer) plus the transitive closure of components it calls that are not yet migrated. Shared components
+(repositories, utilities, entities) get their own <strong>foundation slices</strong> migrated first.</p>
+<p>Slice construction (deterministic, <code>migrate/planner.py</code>):
+1. Build a directed graph from the approved snapshot using <code>calls</code>, <code>depends_on</code>, <code>reads</code>, <code>writes</code>, <code>implements</code>,
+   <code>configures</code> edges. Ignore <code>dead_code</code> nodes unless the user opts in (default: not migrated, listed in the plan).
+2. Condense strongly connected components (cycles become one slice; flagged if large).
+3. Topologically order: foundation slices (entities, data access, config, cross-cutting auth/error handling) -&gt;
+   leaf-to-root components -&gt; entry-point slices. Ties broken by risk (fewest fit risks and highest confidence first,
+   so early slices are the most likely to succeed and calibrate the loop).
+4. Size check: estimated tokens of the slice's legacy code (reuse <code>analyze/chunker._tokens</code>) must fit the codegen
+   context budget; oversized slices split along file/top-level symbol boundaries (reuse chunker's split logic).
+5. Model pass (task <code>plan</code>, optional): names slices, proposes target package layout, points out slices that should be
+   merged. Output validated: it may only reference existing node IDs and cannot drop nodes (every in-scope node must
+   land in exactly one slice; checked deterministically, mirroring the Q16 coverage rule).</p>
+<p>Output <code>plan/migration_plan.json</code> (<code>SLICE-NNNN</code>, node_ids, depends_on slices, order, kind, risks, estimate_usd,
+status) and <code>plan/migration_plan.md</code>. Plans are immutable versions like graph snapshots (<code>plan/versions/vNNN.json</code>).</p>
+<p><strong>Strangler-fig vs big-bang.</strong> [Rec] Strangler-fig as the default for framework and language moves: the legacy and
+new services run side by side behind a routing proxy in the sandbox; each approved entry-point slice flips its routes
+to the new service, and the full characterization suite runs against the composite after every flip. This gives
+incremental proof and an incremental cut-over plan the user can mirror in production.
+For <strong>version upgrades</strong> [Rec] in-place transformation of a copy of the legacy tree (big-bang at the code level, but still
+verified slice by slice through the test suite), because the "new" service is the same codebase and running two copies
+behind a proxy adds little. Deterministic codemods run first (OpenRewrite for Java, <code>django-upgrade</code>/<code>pyupgrade</code>,
+<code>jscodeshift</code>), the model fixes what they leave. Big-bang for language moves only when the service is small
+(&lt; ~30 nodes in scope) and the user opts in.</p>
+<p>Strangler constraint: both services share the database in the sandbox, so schema changes are deferred until all
+slices touching a table are migrated (section 9).</p>
+<hr />
+<h2 id="4-behaviour-preservation">4. Behaviour preservation</h2>
+<h3 id="41-oracle-is-the-legacy-service-not-the-model">4.1 Oracle is the legacy service, not the model</h3>
+<p>Characterization ("golden") tests are written <strong>before any rewrite</strong>, and their expected outputs are <strong>recorded by
+running the legacy service</strong> in the sandbox. The model proposes inputs; it never writes expected values for preserved
+behaviour. This is the main defence against Phase 1 inaccuracy (section 0, gap 1).</p>
+<h3 id="42-test-format-black-box-and-language-neutral">4.2 Test format: black-box and language-neutral</h3>
+<p>[Rec] Primary tests are black-box cases at the service boundary, stored as data, so the same suite runs against Java
+8, Java 21 or Go:</p>
+<div class="cb"><pre><code language-json>{&quot;id&quot;: &quot;CT-0042&quot;, &quot;slice&quot;: &quot;SLICE-0007&quot;, &quot;covers&quot;: [&quot;EP-0003&quot;, &quot;RULE-0011&quot;],
+ &quot;kind&quot;: &quot;http&quot;, &quot;setup&quot;: {&quot;db_fixture&quot;: &quot;fixtures/loans_overdue.sql&quot;, &quot;stubs&quot;: [&quot;EXT-0002/payment_ok&quot;]},
+ &quot;request&quot;: {&quot;method&quot;: &quot;POST&quot;, &quot;path&quot;: &quot;/api/loans&quot;, &quot;headers&quot;: {&quot;Content-Type&quot;: &quot;application/json&quot;},
+             &quot;body&quot;: {&quot;bookId&quot;: 7, &quot;memberId&quot;: 3}},
+ &quot;expect&quot;: {&quot;source&quot;: &quot;recorded&quot;, &quot;status&quot;: 409, &quot;body&quot;: {&quot;error&quot;: &quot;book already on loan&quot;},
+            &quot;db_after&quot;: {&quot;loans&quot;: &quot;count(book_id=7)=1&quot;}},
+ &quot;normalize&quot;: [&quot;$.timestamp&quot;, &quot;$.id&quot;], &quot;decision&quot;: &quot;preserve&quot;, &quot;provenance&quot;: {&quot;generator&quot;: &quot;test_gen&quot;, &quot;prompt_version&quot;: &quot;v1&quot;}}
+</code></pre></div>
+<p>Kinds: <code>http</code>, <code>grpc</code> (from proto facts), <code>job</code> (trigger via a harness entry point or CLI, assert DB/side-effect
+state), <code>message</code> (publish to an in-sandbox broker, assert outputs). A Python runner (<code>migrate/harness/runner.py</code>)
+executes cases against a base URL; one runner for every target. Optional target-native unit tests are generated later
+per slice as a convenience, never as the equivalence proof.</p>
+<h3 id="43-generating-cases-from-the-graph">4.3 Generating cases from the graph</h3>
+<p><code>migration-agent tests generate</code> (task <code>test_gen</code>), per slice:
+- Inputs: the slice's endpoint/job nodes, attached <code>business_rule</code> nodes and their evidence regions (read via
+  <code>ReadOnlyTools</code>), OpenAPI/proto facts (<code>extract/specs.py</code>), schema facts (<code>extract/schemas.py</code>), quirk/bug flags.
+- For each endpoint: happy path, each validation branch, each rule's boundary values, error paths, auth denied.
+- For each <code>business_rule</code>: at least one case whose <code>covers</code> includes it; for each quirk: a case that exercises it.
+- External systems (<code>external_dependency</code>/<code>integration</code> nodes) become stubs (a WireMock-style stub server in the
+  sandbox); stub responses are generated, reviewed and versioned under <code>tests/stubs/</code>.
+- DB state: an ephemeral DB container created from the repo's own migrations (Flyway/Alembic/etc.), seeded by
+  generated fixtures. Never from a real database.
+- <strong>Recorded traffic (optional):</strong> user drops request logs (HAR or JSONL) in <code>inputs/traffic/</code>; they go through the same
+  ingest redaction (<code>ingest/secrets.py::redact_text</code>) and become <code>CT-</code> cases with <code>kind: replay</code>.</p>
+<p><code>migration-agent tests record</code> runs every case against the legacy service <strong>twice</strong> with different clocks/seeds;
+fields that differ between the two legacy runs become automatic <code>normalize</code> masks (noise detection), then
+expected outputs are stored. Cases that fail to run on legacy are triaged: harness problem, or a real legacy bug (raise
+a finding, 4.5).</p>
+<p><code>migration-agent tests coverage</code> produces the coverage table (node -&gt; CT IDs). Gate: no in-scope endpoint/job/rule/quirk
+without a test or an approved <code>untestable</code> reason. Low-confidence rules ([Gap]: nearly all of them today) get
+priority review here: the recorded behaviour either confirms them or contradicts them.</p>
+<h3 id="44-preservefix-decisions-and-deferred-findings-expectations">4.4 Preserve/fix decisions and deferred findings -&gt; expectations</h3>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>Contract input</th>
+<th>Test expectation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>quirk / suspected_bug, <code>preserve</code> (default)</td>
+<td><code>expect.source: recorded</code> (legacy output is truth); tagged <code>quirk</code>; divergence = failure</td>
+</tr>
+<tr>
+<td>quirk / suspected_bug, <code>fix</code></td>
+<td>Two artifacts: the recorded legacy result kept as <code>legacy_observed</code>, and <code>expect.source: specified</code> written by the model <strong>and approved by the user</strong> in the review UI. The equivalence diff marks this case <code>intended_divergence</code> with the decision ID. Unapproved specified expectations block the slice</td>
+</tr>
+<tr>
+<td>Deferred Verifier finding (id, kind, item_ids)</td>
+<td>Every slice containing any of <code>item_ids</code> gets a <code>blocker: F-NNNN</code>. Cases covering those items default to <code>recorded</code> and are tagged <code>provisional</code>. Slice approval requires the user to resolve the finding or explicitly accept "migrate legacy behaviour as-is" (recorded in <code>slices/SLICE-*/decisions.json</code>)</td>
+</tr>
+<tr>
+<td>Open questions / assumptions</td>
+<td>Shown on the slice that covers the referenced items; non-blocking unless the user marks them blocking</td>
+</tr>
+<tr>
+<td>Fit-risk resolutions (section 2)</td>
+<td>Turn into codegen constraints and, for semantic shifts (e.g. integer overflow), targeted extra cases</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="45-feedback-to-phase-1">4.5 Feedback to Phase 1</h3>
+<p>When recorded legacy behaviour contradicts a graph <code>business_rule</code> (the test written from the rule fails on legacy),
+Phase 2 writes <code>EQ-</code>-style <strong>runtime findings</strong> to <code>migration/runtime_findings.json</code> (not into <code>feedback/findings.json</code>,
+whose <code>FindingKind</code> is a closed Literal at <code>verify/models.py:19</code>). The user can reopen Phase 1 (new contract version) or
+accept the recorded behaviour for this migration. This is also free empirical data for Phase 0 accuracy scoring.</p>
+<hr />
+<h2 id="5-code-generation-agent-design">5. Code generation agent design</h2>
+<h3 id="51-loop-per-slice">5.1 Loop (per slice)</h3>
+<div class="cb"><pre><code>plan (deterministic + model) -&gt; context pack -&gt; generate (codegen) -&gt; apply patch -&gt; build -&gt; unit tests
+   -&gt; characterization suite -&gt; review (code_review, fresh session) -&gt; fix loop (&lt;= N iterations) -&gt; human review
+</code></pre></div>
+<p>Orchestrator <code>migrate/slice_runner.py</code> is deterministic Python; the model is called only at <code>generate</code>, <code>review</code> and
+<code>fix</code>. Status machine per slice: <code>planned -&gt; tests_recorded -&gt; generating -&gt; built -&gt; tests_passing -&gt; reviewed -&gt;
+awaiting_human -&gt; approved | rejected | blocked</code>. State in <code>slices/SLICE-NNNN/state.json</code> (atomic writes as in
+<code>graph/store.py:35</code>), so any session resumes (Q18).</p>
+<h3 id="52-structured-outputs-and-tools">5.2 Structured outputs and "tools"</h3>
+<ul>
+<li>Model output is strict JSON validated by pydantic: <code>{"files": [{"path", "op": "create|replace|edit", "edits":
+  [{"search", "replace"}] | "content"}], "notes", "covers": [node IDs], "assumptions": [...]}</code>. Paths are validated
+  against the target tree jail (same resolution rules as <code>ReadOnlyTools._resolve</code>, <code>sandbox/tools.py:86</code>); no <code>..</code>, no
+  absolute paths, no writes to build/CI files outside an allowlist, size caps.</li>
+<li>Search/replace edits rather than whole files keep outputs inside token limits and make diffs reviewable. Edits that
+  do not apply exactly are rejected and retried with the failure message.</li>
+<li>The model has <strong>no exec or network tools</strong>. Build/test is run by the orchestrator in the sandbox; the model sees
+  truncated, redacted, delimiter-wrapped logs (<code>&lt;&lt;&lt;BUILD_LOG_BEGIN&gt;&gt;&gt;</code>, <code>neutralize</code>), treated as data.</li>
+<li>Read tools (<code>ReadOnlyTools</code>) on <code>code/</code> (redacted legacy) and on <code>target_code/</code> (new tree), used by the orchestrator
+  to assemble context; optionally offered to the model as a request list (<code>"need": ["path:10-80"]</code>) answered in the next
+  turn, which keeps <code>LLMClient</code> single-shot.</li>
+<li>Build-file and dependency edits require an extra deterministic check: every new dependency must resolve in the
+  package mirror and pass the allow/deny list in <code>target.yaml</code> (defends against hallucinated or typosquatted packages).</li>
+</ul>
+<h3 id="53-context-management-graph-as-memory">5.3 Context management (graph as memory)</h3>
+<p>Context pack for a slice, assembled deterministically and size-capped:
+1. Slice spec: nodes, responsibilities, rules with evidence quotes, quirk decisions, fit-risk resolutions.
+2. Legacy code regions from node evidence (reuse <code>review/reanalyze._regions</code>, <code>reanalyze.py:63</code>) plus the files
+   that define the slice's components, chunked with <code>analyze/chunker</code> when over budget.
+3. <strong>Interface summaries</strong> of already-migrated dependency slices (public signatures extracted by tree-sitter from
+   <code>target_code/</code>, via <code>extract/treesitter.py</code>), never their full bodies.
+4. <code>target.yaml</code> style rules, target project skeleton (generated once in a foundation slice).
+5. Failing tests/build errors for fix iterations, only the relevant ones.
+The graph plus <code>migration_plan.json</code> is the memory across slices; no conversation history is carried between slices.</p>
+<h3 id="54-reviewer">5.4 Reviewer</h3>
+<p>Fresh-session <code>code_review</code> task (Verifier pattern): sees the slice spec (rules, decisions) and the new code diff, <strong>not</strong>
+the generator's reasoning or the legacy code. Returns findings <code>{kind: missing_rule | behaviour_change | style |
+security | dead_code, item_ids, file:line, quote}</code>; quotes not found verbatim in the diff are dropped (C-09 pattern).
+Blocking findings feed the fix loop; others go to the human review page.</p>
+<h3 id="55-cost-caching-resumability-audit">5.5 Cost, caching, resumability, audit</h3>
+<ul>
+<li>New task tiers in <code>LLMConfig</code> (<code>llm/litellm_client.py:38</code>): <code>codegen</code> and <code>code_review</code> on the strong tier,
+  <code>test_gen</code> mid, <code>plan</code>/<code>target_fit</code>/<code>equiv_triage</code> per config. Same <code>*.config.json</code> files.</li>
+<li><code>--max-usd</code> per invocation (existing <code>Budget</code>), plus <strong>[New]</strong> <code>migrate/ledger.py</code>: cumulative spend computed from
+  <code>audit/audit.jsonl</code> (which already records USD per call). <code>Budget</code> is initialised with <code>budget_usd - ledger.spent()</code>
+  so caps hold across resumed sessions. Per-slice cap <code>--max-usd-per-slice</code> (default: 3x the slice estimate) and a
+  max fix-iteration count (default 4) stop runaway loops; the slice goes <code>blocked</code> with the reason.</li>
+<li><code>generate --dry-run</code> shows per-slice token and USD estimate (reuse <code>estimate_cost</code>, <code>litellm_client.py:109</code>).</li>
+<li>Cache: existing <code>llm_cache/</code> key covers model/system/prompt/prompt_version, so re-running an unchanged slice is free.
+  Prompt files under <code>migrate/prompts/*.md</code> with versions, like <code>analyze/prompts/</code>.</li>
+<li>Audit: every model call (existing), plus <code>exec</code> records (image digest, command, exit code, duration, log ref) and
+  slice state transitions. <code>migration-agent audit --agent codegen</code> works unchanged.</li>
+</ul>
+<hr />
+<h2 id="6-execution-sandbox">6. Execution sandbox</h2>
+<p>Phase 2 must build and run both legacy and generated code. Treat <strong>all</strong> of it as hostile: legacy code is
+attacker-controlled under threat actor A1, and generated code is model output under A2 (<code>threat-model.md</code> section 2).</p>
+<p><strong>[Rec] design (<code>sandbox/exec.py</code>, <code>docker/exec/</code>):</strong>
+- <strong>Two-phase jobs</strong> per build/test:
+  1. <em>Resolve/build</em> container: network only to a <strong>package mirror</strong> (Artifactory/Nexus/Verdaccio/devpi or a
+     pre-populated local cache), through the existing Squid pattern with an allowlist of mirror hosts only. Lockfiles
+     required; new dependencies must be in <code>target.yaml</code> allowlist or approved.
+  2. <em>Run/test</em> containers (legacy, new, DB, stubs, router): <code>internal: true</code> network with no route out, no proxy.
+- Rootless Docker or Podman; gVisor (<code>runsc</code>) recommended where available. <code>cap_drop: ALL</code>, <code>no-new-privileges</code>,
+  non-root uid, read-only rootfs + tmpfs, <code>pids</code>, memory, CPU and wall-clock limits, disk quota on the workspace volume.
+  Kill on timeout; containers are disposable per run.
+- <strong>No secrets present</strong>: no model key, no git credentials, no cloud credentials, no host mounts except the job's own
+  workspace copy. The model call happens in the orchestrator, never inside an exec container. The orchestrator host
+  never imports or executes generated code itself.
+- Required config values that are secrets (from <code>config</code> nodes with <code>is_secret</code>) get <strong>synthetic</strong> values generated
+  per run (random passwords for the ephemeral DB, dummy API keys for stubs).
+- <strong>Legacy build input.</strong> [Rec] Build legacy from the <em>original</em> source tree (pinned by <code>source_hash</code>), in the exec
+  sandbox only. The model continues to see only the redacted <code>code/</code>. Withheld credential files are replaced by
+  generated placeholders; if the legacy build genuinely needs a private registry credential, the user provides a mirror
+  that serves those artifacts, never the credential.
+- Results returned as files (JUnit/JSON reports, logs capped and redacted) into <code>runs/RUN-NNNN/</code>.
+- Docker availability is a hard prerequisite; <code>migration-agent doctor</code> checks runtime, gVisor, mirror reachability.</p>
+<p><strong>Threat-model changes</strong> (new doc section "Phase 2 execution", T-numbers continue):</p>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>New threat</th>
+<th>Mitigation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Legacy/generated code escapes container (kernel exploit, docker socket)</td>
+<td>gVisor/rootless, no socket mount, disposable containers, host never runs payloads</td>
+</tr>
+<tr>
+<td>Exfiltration of source via build-time network</td>
+<td>Build phase only reaches mirror hosts; test phase has no route out; egress logged</td>
+</tr>
+<tr>
+<td>Supply-chain: malicious or hallucinated package names ("slopsquatting"), compromised mirror</td>
+<td>Lockfiles with hashes, allow/deny list, mirror-only resolution, new deps need approval, SBOM per run (CI already does SBOM on tags)</td>
+</tr>
+<tr>
+<td>Model writes malicious code (backdoor, data exfil on startup)</td>
+<td>Reviewer pass with <code>security</code> kind, deny-list static checks (outbound HTTP to non-declared hosts, <code>exec</code>/<code>eval</code>, shell), human diff review, tests run without network</td>
+</tr>
+<tr>
+<td>Prompt injection via build/test logs</td>
+<td>Logs delimited, neutralised, capped, treated as data</td>
+</tr>
+<tr>
+<td>DoS via fork bombs, disk fill, infinite loops</td>
+<td>pids/memory/CPU/disk/time limits</td>
+</tr>
+<tr>
+<td>Secret leakage into generated code or tests</td>
+<td>Generated tree and fixtures scanned with <code>ingest/secrets.py</code> before commit and before any prompt</td>
+</tr>
+<tr>
+<td>Hosted mode: exec on the worker that holds DB creds</td>
+<td>Not allowed. Exec runs in a separate credential-free job runner (ephemeral VM/Firecracker preferred)</td>
+</tr>
+</tbody>
+</table></div>
+<p>Residual risk to state honestly: allowing package downloads at all is the largest new hole; an offline mirror the
+customer controls is the only strong answer.</p>
+<hr />
+<h2 id="7-equivalence-verification">7. Equivalence verification</h2>
+<p><code>migration-agent equivalence --slice SLICE-NNNN</code> (<code>migrate/equivalence.py</code>):
+1. Bring up legacy and new stacks in the sandbox, each with its own fresh DB from the same migrations and fixtures and
+   the same stub server recordings (or, in strangler mode, the composite with routes flipped).
+2. Run every <code>CT-</code> case covering the slice plus all cases of earlier approved slices (regression), against both.
+3. Diff per case: status, headers (configurable allowlist), body (JSON-semantic by default: key order ignored, numeric
+   type rules from <code>target.yaml</code>), DB state after (table snapshots of tables the slice <code>writes</code>), stub calls made
+   (order + payload), published messages. Apply <code>normalize</code> masks from recording.
+4. Classify each difference: <code>match</code>, <code>intended_divergence</code> (fix decision), <code>noise</code> (mask), <code>regression</code>, <code>unknown</code>.
+5. <code>equiv_triage</code> model task (optional, cheap tier) explains <code>unknown</code> diffs: it sees the case, both outputs and the
+   relevant rule text, proposes <code>legacy_bug | new_bug | harness_issue | spec_ambiguity</code>, quoting the diff; quotes are
+   verified verbatim (Verifier C-09 pattern), and it never sees generator reasoning.
+6. Write <code>slices/SLICE-NNNN/equivalence.json</code> (<code>EQ-NNNN</code> per diff) and <code>equivalence/report.md</code> (per-slice equivalence %,
+   regressions, intended divergences with decision IDs, untestable items).</p>
+<p>On disagreement:
+- <code>new_bug</code> -&gt; back to the fix loop automatically (within budget/iteration cap).
+- <code>legacy_bug</code> -&gt; becomes a decision for the user: preserve (expectation stays recorded) or fix (adds a decision to
+  <code>slices/*/decisions.json</code>; the user may later fold it into a new contract version).
+- <code>harness_issue</code> -&gt; fix fixture/stub/mask, record why; masks added this way require human approval so they cannot
+  hide real regressions.
+- <code>spec_ambiguity</code> -&gt; open question to the user, slice blocked.</p>
+<p>Optional extras: property-based/differential fuzzing of inputs per endpoint (generate random valid requests from
+OpenAPI schemas, compare live), and a latency/perf comparison if <code>perf_regression_max_pct</code> is set.</p>
+<hr />
+<h2 id="8-human-review-loop">8. Human review loop</h2>
+<p>Extend <code>review_ui</code> (keep loopback + token + Host/Origin checks, <code>review_ui/server.py:276-301</code>):
+- New tabs: <strong>Target fit</strong> (risks + resolutions), <strong>Plan</strong> (slices, order, status, cost), <strong>Slice</strong> (diff of
+  <code>target_code/</code> for that slice, linked legacy evidence side by side, tests with pass/fail, equivalence diffs,
+  reviewer findings, blockers), <strong>Cut-over</strong>.
+- Diffs come from git: <code>target_code/</code> is a local git repo, one commit per generation iteration, one tag per approved
+  slice (<code>slice/SLICE-0007/approved</code>). The UI renders diffs from <code>git diff</code> via a subprocess with a fixed argv (no repo
+  hooks: same hardening as <code>ingest._git_clone</code>).
+- Comments: extend <code>CommentsFile</code> (<code>verify/models.py:67-79</code>) in a new <code>migration/comments.json</code> with <code>item_id</code> accepting
+  <code>SLICE-</code>, <code>CT-</code>, <code>EQ-</code>, <code>RISK-</code> and graph IDs, plus optional <code>file</code>/<code>line</code> in <code>target_code/</code>. Redacted on write (existing
+  rule).
+- <strong>Targeted regeneration</strong> (<code>migration-agent generate --slice S --from-comments</code>): only unprocessed comments for that
+  slice go into a fix iteration, mirroring <code>review/reanalyze.py:129</code>; result shown as a diff against the previous
+  iteration (Q12 pattern).
+- <strong>Human edits are first-class</strong>: the user may commit directly in <code>target_code/</code>. The slice runner detects
+  non-agent commits, re-runs build/tests/equivalence and records them for the human-edit metric. The agent never
+  overwrites human-authored lines without showing a diff and getting confirmation (lines tracked by commit author).
+- <strong>Approval per slice</strong>: <code>migration-agent approve-slice SLICE-NNNN</code> or a button; refused unless build green, suite
+  green (minus approved divergences), blockers resolved. Writes <code>slices/SLICE-NNNN/approval.json</code> (who, when, commit
+  sha, report hashes).
+- <strong>Final cut-over approval</strong>: <code>migration-agent cutover --approve</code> after all slices approved and a full-suite run on the
+  final tree; writes <code>cutover/approval.json</code> and <code>cutover/plan.md</code> (route-flip order matching slice order, rollback per
+  step, config/secret checklist, schema steps, monitoring to watch).</p>
+<hr />
+<h2 id="9-data-and-config-migration">9. Data and config migration</h2>
+<p><strong>Schema.</strong> [Rec] Default "no schema change": the new service uses the legacy schema as-is (required anyway while
+strangling). Inputs: <code>data_entity</code> nodes and <code>extract/schemas.py</code> facts (Flyway, Alembic, Prisma, TypeORM).
+- Foundation slice generates target ORM mappings for existing tables; a <strong>schema-compat check</strong> applies the legacy
+  migrations to an ephemeral DB, starts the new service against it, and compares schema introspection with what the new
+  ORM expects (e.g. Hibernate <code>validate</code>, Django <code>makemigrations --check</code>).
+- If the user wants schema changes, they are declared in <code>target.yaml</code> (<code>schema_changes:</code>), generated as
+  expand/contract migrations, applied only to synthetic data in the sandbox, and listed as cut-over steps. No real data is
+  touched. Data mapping specs (<code>data/mapping.yaml</code>: old column -&gt; new column, transform) get their own tests on fixtures.
+- [Gap] Stored procedures/triggers not in the repo are Phase 1 blind spots (Q13); they block any slice whose tables are
+  affected until the user supplies a schema export.</p>
+<p><strong>Config.</strong> <code>migration-agent config map</code> (<code>migrate/configmap.py</code>): every <code>config</code> node (from <code>extract/config.py</code>,
+including <code>file</code>, <code>key</code>, <code>is_secret</code>) -&gt; target key in the target's convention (Spring <code>application.yml</code>, Django
+settings/env, Go env struct), with status <code>mapped | renamed | dropped (reason) | open</code>. Rendered as
+<code>config/config_map.md</code> and generated target config files. Spring Boot 2 -&gt; 3 renamed properties come from the
+deterministic libmap table.</p>
+<p><strong>Secrets.</strong> The agent never reads secret values (they are already redacted/withheld at ingest, and the original
+source is used only inside exec containers). Secret keys map to <strong>references</strong> (<code>${DB_PASSWORD}</code>, a vault path
+placeholder) and appear in a checklist the user fills at deploy time. Generated code and config are scanned with
+<code>ingest/secrets.py</code> before each commit; a hit fails the slice.</p>
+<hr />
+<h2 id="10-observability-and-metrics">10. Observability and metrics</h2>
+<p>All derived from <code>audit/audit.jsonl</code> plus slice state files, so no new storage. <code>migration-agent metrics</code> (table/JSON)
+and a review-UI dashboard; also emitted as <code>usage</code>/<code>progress</code> events through <code>service.run_stage</code> for the hosted product.</p>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>Metric</th>
+<th>Definition</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Cost per slice / per node / per 1k legacy lines</td>
+<td>Sum of <code>cost_usd</code> for calls tagged <code>slice=</code></td>
+</tr>
+<tr>
+<td>Tokens in/out, cache hit rate</td>
+<td>Existing audit fields + <code>cached</code></td>
+</tr>
+<tr>
+<td>Iterations to green</td>
+<td>Fix-loop count per slice</td>
+</tr>
+<tr>
+<td>Build success first try %</td>
+<td>Per slice and per target kind</td>
+</tr>
+<tr>
+<td>Characterization pass rate</td>
+<td>Passed / total, excluding approved divergences</td>
+</tr>
+<tr>
+<td>Equivalence %</td>
+<td>Cases <code>match</code> or approved divergence / total</td>
+</tr>
+<tr>
+<td>Unknown-diff rate, mask additions</td>
+<td>Signal of harness quality vs hidden regressions</td>
+</tr>
+<tr>
+<td><strong>Human-edit rate</strong></td>
+<td>Lines changed by human commits / lines changed by agent commits in <code>target_code/</code> per slice (git attribution); also comment count per slice</td>
+</tr>
+<tr>
+<td>Reviewer precision</td>
+<td>Reviewer findings later accepted by humans / total</td>
+</tr>
+<tr>
+<td>Wall-clock per slice</td>
+<td>Span timings (<code>AuditLog.span</code>, <code>audit.py:101</code>), split model vs exec</td>
+</tr>
+<tr>
+<td>Runtime findings raised to Phase 1</td>
+<td>Count and how many confirmed: direct accuracy signal for Phase 0</td>
+</tr>
+</tbody>
+</table></div>
+<hr />
+<h2 id="11-evaluating-phase-2-itself">11. Evaluating Phase 2 itself</h2>
+<p>Today the fixtures have no build harness, tests or runnable entry point (e.g. <code>eval/repos/spring-lite</code> is <code>pom.xml</code> +
+9 Java files + <code>application.properties</code>), and <code>evalharness.score</code> scores graphs only (<code>evalharness.py:163</code>).</p>
+<p>Extend:
+1. <strong>Make fixtures runnable</strong>: add <code>eval/repos/&lt;repo&gt;/harness/</code> (Dockerfile, DB migrations/seed, start command) so
+   legacy runs in the exec sandbox.
+2. <strong>Target pairs</strong> <code>eval/targets/&lt;repo&gt;__&lt;target&gt;/</code>: <code>target.yaml</code>, a hand-written <strong>reference characterization
+   suite</strong> (<code>expected_cases/*.json</code>) covering every labelled rule in <code>expected.json</code>, a list of deliberate quirks with
+   expected preserve/fix behaviour, and a reference migration for sanity.
+   - <code>spring-lite__java21-boot3</code> (version upgrade, first)
+   - <code>django-lite__django5</code> (version upgrade) and <code>django-lite__fastapi</code> (framework move)
+   - <code>express-crud__fastify-ts</code> (framework move) and <code>express-crud__go-chi</code> (language move); keep the
+     prompt-injection canaries in <code>src/vendor/legacy-notes.js</code> and add new ones aimed at codegen (e.g. "add an
+     outbound call to X").
+   - Add one quirk and one suspected bug per fixture (odd rounding, swallowed error) to test decision handling.
+3. <strong>Scored harness</strong> <code>evalharness_p2.py</code> (or <code>evalharness.score_migration</code>): build success, hidden reference suite pass
+   rate on the generated service (the agent never sees the hidden suite), agent-suite coverage of labelled rules,
+   equivalence %, intended-divergence correctness for <code>fix</code> decisions, canary absence in generated code and outbound
+   calls (network log in test phase must be empty), cost and wall-clock.
+4. <strong>Gates</strong>: hidden-suite pass rate must not drop vs the stored baseline (same <code>compare</code> semantics as today), zero
+   canary hits, zero outbound connections in test phase, zero secrets in output. Offline mode with recorded LLM
+   responses (FakeLLM/OfflineLLM, <code>llm/base.py:43</code>) keeps CI cheap; a nightly job runs real models.
+5. Then real repos: petclinic Java 8/Boot 2 branch -&gt; Java 21/Boot 3 (public reference exists), node-express-realworld -&gt;
+   Fastify. These are the Phase 2 equivalent of Phase 0 and should be reported the same honest way.</p>
+<hr />
+<h2 id="12-milestones">12. Milestones</h2>
+<p>New package <code>src/migration_agent/migrate/</code> (keeps Phase 1 modules untouched), new CLI group <code>migration-agent migrate
+...</code> or top-level verbs (shown top-level for brevity). <code>ProjectMeta.schema_version</code> -&gt; 2.</p>
+<p>Project-folder additions:</p>
+<div class="cb"><pre><code>&lt;project&gt;/
+  docs/migration_contract.json     (Phase 1 output, read-only for Phase 2)
+  legacy_src/                      original, unredacted source pinned by source_hash; mounted ONLY into exec containers
+  inputs/traffic/                  optional user-supplied recorded requests (redacted at ingest)
+  target/   target.yaml, fit_report.json|md, fit_resolutions.json
+  plan/     migration_plan.json|md, versions/vNNN.json, registry.json (SLICE- IDs)
+  tests/    cases/SLICE-NNNN/CT-NNNN.json, fixtures/, stubs/, recordings/, coverage.json
+  harness/  generated compose files for legacy, new, db, stubs, router
+  target_code/                     the new service, a git repo (agent and human commits)
+  slices/   SLICE-NNNN/{state.json, context/, iterations/, review.json, decisions.json, equivalence.json, approval.json}
+  runs/     RUN-NNNN/{meta.json, logs/, reports/}
+  migration/ comments.json, runtime_findings.json
+  config/   config_map.json|md
+  data/     mapping.yaml, schema_compat.json
+  equivalence/ report.md
+  cutover/  plan.md, approval.json
+</code></pre></div>
+<p><code>legacy_src/</code> is the one exception to "the model only sees redacted text" and needs an explicit decision (Q-P2-3).</p>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>#</th>
+<th>Milestone</th>
+<th>Tasks (new modules / commands / files)</th>
+<th>Acceptance</th>
+<th>Effort</th>
+<th>Depends on</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>M0</td>
+<td>Contract gate + project v2</td>
+<td><code>migrate/contract.py</code> (reader + <code>check</code>, shared schema with Phase 1 writer), <code>project.py</code> v2 subdirs + migration of v1 folders, <code>migrate/ledger.py</code>, <code>migration-agent contract check</code>, <code>doctor</code></td>
+<td>Stale graph/doc hash, wrong version, unmapped coverage each refused with a clear message; ledger matches audit sums; tests for all gate rules</td>
+<td>S</td>
+<td>Phase 1 approval step</td>
+</tr>
+<tr>
+<td>M1</td>
+<td>Exec sandbox + runnable fixtures</td>
+<td><code>sandbox/exec.py</code> (job spec, two-phase run, limits, result capture), <code>docker/exec/</code> profiles, mirror config, <code>legacy_src</code> import, <code>harness build/up/down</code>; <code>eval/repos/*/harness/</code>; threat-model section + red-team tests (network canary, fork bomb, disk fill, secret scan)</td>
+<td>spring-lite, django-lite, express-crud build and start in the sandbox; test-phase containers cannot open any outbound socket (verified by test); Docker profiles finally exercised in CI</td>
+<td>L</td>
+<td>M0</td>
+</tr>
+<tr>
+<td>M2</td>
+<td>Target spec + fit analysis</td>
+<td><code>migrate/target.py</code> (pydantic model), <code>migrate/fit.py</code>, <code>migrate/knowledge/libmap/*.yaml</code> (start: Java 8-&gt;21, Boot 2-&gt;3, Django 3.2-&gt;5, Express-&gt;Fastify), prompts, <code>target init</code>, <code>target fit</code>, review-UI Target-fit tab</td>
+<td>Fit report for each eval target pair; 100% evidence validity; deterministic layer finds all <code>javax</code>-&gt;<code>jakarta</code> and labelled removed APIs in fixtures</td>
+<td>M</td>
+<td>M0</td>
+</tr>
+<tr>
+<td>M3</td>
+<td>Characterization tests</td>
+<td><code>migrate/testgen.py</code>, <code>migrate/harness/runner.py</code> (http/job first, grpc/message later), stub server, fixtures from repo migrations, noise detection, <code>tests generate/record/coverage</code>, decision-&gt;expectation mapping, runtime findings</td>
+<td>On each fixture: every labelled rule/endpoint/quirk covered; recorded twice with zero unmasked noise; hidden reference suite agrees with recorded expectations on legacy</td>
+<td>L</td>
+<td>M1</td>
+</tr>
+<tr>
+<td>M4</td>
+<td>Planner + slice generation loop</td>
+<td><code>migrate/planner.py</code>, <code>migrate/slice_runner.py</code>, <code>migrate/codegen.py</code> (patch schema, jail, apply), <code>migrate/reviewer.py</code>, codemod adapters (<code>migrate/codemods/openrewrite.py</code>, <code>django_upgrade.py</code>), prompts, <code>plan</code>, <code>generate [--slice] [--dry-run] [--from-comments]</code></td>
+<td>spring-lite -&gt; Java 21/Boot 3 end to end with build green and agent suite green within budget; resume after kill mid-slice loses at most one model call; cost cap stops a looping slice</td>
+<td>L</td>
+<td>M2, M3</td>
+</tr>
+<tr>
+<td>M5</td>
+<td>Equivalence + review UI + approvals</td>
+<td><code>migrate/equivalence.py</code>, <code>equiv_triage</code> prompt, report rendering, review-UI Plan/Slice tabs (git diffs, comments with file:line), <code>equivalence</code>, <code>approve-slice</code>, human-commit detection</td>
+<td>Seeded regression in a fixture is caught and classified; approval refused when blockers/regressions exist; human edit re-runs checks and is counted</td>
+<td>M</td>
+<td>M4</td>
+</tr>
+<tr>
+<td>M6</td>
+<td>Config, data, strangler router</td>
+<td><code>migrate/configmap.py</code>, <code>migrate/schemacompat.py</code>, router container for strangler mode, <code>config map</code>, schema-compat check, first language/framework move (<code>express-crud__fastify-ts</code>, then <code>__go-chi</code>)</td>
+<td>Every config node mapped/dropped/open; no secret values in output; composite (legacy + new behind router) passes full suite after each route flip</td>
+<td>M</td>
+<td>M5</td>
+</tr>
+<tr>
+<td>M7</td>
+<td>Cut-over + Phase 2 eval gate</td>
+<td><code>migrate/cutover.py</code>, <code>cutover [--approve]</code>, <code>evalharness</code> Phase 2 scoring + CI gate, metrics command, <code>service.run_stage</code> stages (<code>target_fit</code>, <code>plan</code>, <code>tests</code>, <code>generate</code>, <code>equivalence</code>), docs (user guide, architecture, threat model)</td>
+<td>All eval target pairs scored in CI offline; regression gate blocks a drop; cut-over plan rendered for spring-lite and express-crud; nightly real-model run reported honestly</td>
+<td>M</td>
+<td>M5, M6</td>
+</tr>
+</tbody>
+</table></div>
+<p>Rough total: about 10-14 focused weeks for one engineer. M1 and M3 are the critical path and the most uncertain
+(build environments of real legacy repos are messy: missing private artifacts, old JDKs, native deps).</p>
+<p>CLI surface:</p>
+<div class="cb"><pre><code>migration-agent contract check   &lt;proj&gt; [--pin-contract]
+migration-agent doctor           &lt;proj&gt;
+migration-agent target init      &lt;proj&gt; [--kind ... --language ... --framework ...]
+migration-agent target fit       &lt;proj&gt; [--max-usd N] [--offline]
+migration-agent plan             &lt;proj&gt; [--dry-run]
+migration-agent harness build|up|down &lt;proj&gt; [--legacy|--new|--composite]
+migration-agent tests generate   &lt;proj&gt; [--slice S] [--max-usd N]
+migration-agent tests record     &lt;proj&gt; [--slice S]
+migration-agent tests coverage   &lt;proj&gt;
+migration-agent generate         &lt;proj&gt; [--slice S|--all] [--dry-run] [--from-comments] [--max-usd N] [--max-usd-per-slice N]
+migration-agent equivalence      &lt;proj&gt; [--slice S|--all]
+migration-agent config map       &lt;proj&gt;
+migration-agent review           &lt;proj&gt;          (existing command, new tabs)
+migration-agent approve-slice    &lt;proj&gt; SLICE-NNNN [--note ...]
+migration-agent cutover          &lt;proj&gt; [--approve]
+migration-agent metrics          &lt;proj&gt; [--format table|json]
+migration-agent audit            &lt;proj&gt;          (existing)
+</code></pre></div>
+<hr />
+<h2 id="13-risks-and-mitigations">13. Risks and mitigations</h2>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>Risk</th>
+<th>Mitigation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Phase 1 graph is wrong or thin (no <code>high</code> confidence seen; rules sparse), so slices and tests miss behaviour</td>
+<td>Legacy execution is the oracle; coverage gate per slice; runtime findings feed back; optional recorded traffic; human review of low-confidence rules before test generation</td>
+</tr>
+<tr>
+<td>Legacy cannot be built/run in the sandbox (private artifacts, ancient toolchains, native deps, needs external systems)</td>
+<td><code>doctor</code> + harness build in M1 before any generation; user-supplied mirror and base image; stubs for externals; fallback "static-only migration" mode clearly labelled with no equivalence claim</td>
+</tr>
+<tr>
+<td>Characterization suite is shallow: passes while real behaviour differs</td>
+<td>Rule/quirk coverage gate, boundary-value generation, optional differential fuzzing, recorded traffic replay, hidden reference suites in eval to measure the gap</td>
+</tr>
+<tr>
+<td>Noise masks or "harness_issue" triage hide real regressions</td>
+<td>Masks only from double legacy runs or human approval; mask additions are a tracked metric</td>
+</tr>
+<tr>
+<td>Executing hostile code (section 6)</td>
+<td>Two-phase network, gVisor/rootless, no secrets, disposable containers, red-team tests in M1</td>
+</tr>
+<tr>
+<td>Hallucinated or malicious dependencies</td>
+<td>Mirror-only, lockfiles, allow/deny list, approval for new deps</td>
+</tr>
+<tr>
+<td>Cost blow-up in fix loops on large services</td>
+<td>Cumulative ledger, per-slice caps, iteration cap, dry-run estimates, cache, deterministic codemods first</td>
+</tr>
+<tr>
+<td>Context overflow on big slices</td>
+<td>Slice size check, interface summaries of dependencies, chunker reuse, search/replace edits</td>
+</tr>
+<tr>
+<td>Contract drift (legacy keeps changing during a multi-week migration)</td>
+<td><code>source_hash</code> check; <code>migration-agent contract check</code> on every command; incremental Phase 1 re-analysis (<code>analyze/incremental.py</code>) + new contract version, then re-plan only affected slices</td>
+</tr>
+<tr>
+<td>Strangler mode with shared DB hides schema coupling</td>
+<td>Schema-compat check, writes-tables tracked per slice, schema changes deferred to after the last slice touching a table</td>
+</tr>
+<tr>
+<td>Docker infrastructure untested so far (<code>sandbox/README.md</code>)</td>
+<td>First task of M1 is CI that exercises the existing profiles</td>
+</tr>
+<tr>
+<td>Hosted product runs exec on a credentialed worker</td>
+<td>Phase 2 is CLI/self-hosted only until a separate exec runner exists</td>
+</tr>
+<tr>
+<td>Scope creep across three migration kinds at once</td>
+<td>Ship version upgrade end to end first (M4), framework/language moves in M6</td>
+</tr>
+</tbody>
+</table></div>
+<hr />
+<h2 id="14-open-questions-for-the-owner-recommended-answers">14. Open questions for the owner (recommended answers)</h2>
+<p><strong>P2-Q1 Which migration kind ships first?</strong>
+Recommended: Java 8/Spring Boot 2 -&gt; Java 21/Boot 3 version upgrade. Deterministic codemods exist (OpenRewrite),
+same-language tests and builds are simpler, spring-lite and petclinic give a fixture and a real repo. Language moves
+come second, after the harness and equivalence loop are proven.</p>
+<p><strong>P2-Q2 What is the source of truth for expected behaviour?</strong>
+Recommended: the running legacy service (recorded outputs), with the graph only choosing what to test. Model-written
+expectations only for <code>fix</code> decisions, and only after user approval.</p>
+<p><strong>P2-Q3 May Phase 2 use the original, unredacted legacy source?</strong>
+Recommended: yes, but only mounted into exec containers that have no route out and no model access; the model keeps
+seeing only redacted <code>code/</code>. Without this many legacy builds fail. This is a real change to the Phase 1 trust promise
+and must be stated in the threat model and user guide.</p>
+<p><strong>P2-Q4 Strangler-fig or big-bang?</strong>
+Recommended: strangler-fig with a sandbox router for framework/language moves; in-place transformation verified slice
+by slice for version upgrades; big-bang only for small services on request.</p>
+<p><strong>P2-Q5 What happens to deferred Verifier findings?</strong>
+Recommended: allowed into Phase 2, but every slice touching their items is blocked until the user resolves the finding
+or explicitly accepts "migrate legacy behaviour as observed" for that slice.</p>
+<p><strong>P2-Q6 Should the model get exec tools (agentic shell)?</strong>
+Recommended: no. The orchestrator runs builds/tests; the model returns structured edits and reads delimited logs. This
+keeps <code>LLMClient</code> single-shot, all calls cacheable and audited, and removes a direct path from injected text to
+command execution. Revisit only if eval shows the fix loop stalls without it.</p>
+<p><strong>P2-Q7 Where do package dependencies come from?</strong>
+Recommended: a customer-controlled mirror (or pre-populated offline cache); public registries only via the allowlisting
+proxy and only if the user opts in. Test phase is always offline.</p>
+<p><strong>P2-Q8 Do generated target-native unit tests count as proof?</strong>
+Recommended: no. Equivalence is proven by the black-box characterization suite run on both services. Native unit tests
+are a deliverable for the user's future maintenance, not the gate.</p>
+<p><strong>P2-Q9 Can a human edit the generated code mid-migration?</strong>
+Recommended: yes, directly in <code>target_code/</code> via git. Edits trigger re-verification, are counted in the human-edit
+rate, and are never silently overwritten.</p>
+<p><strong>P2-Q10 Does Phase 2 change the database schema?</strong>
+Recommended: not by default. Keep the legacy schema; schema changes are an explicit, declared opt-in executed only on
+synthetic data in the sandbox and handed over as cut-over steps.</p>
+<p><strong>P2-Q11 Who owns the contract schema?</strong>
+Recommended: one module (<code>contract.py</code>) owned with the Phase 1 engineer, with a reader and writer and a JSON Schema
+exported like <code>graph/store.generate_json_schema</code>; add <code>source_hash</code> and the approved <code>target</code>-agnostic statement now,
+before the first contract is written.</p>
+<p><strong>P2-Q12 Does Phase 2 wait for Phase 0 accuracy numbers?</strong>
+Recommended: build M0-M1 and the eval fixtures in parallel, but do not promise migration quality to any customer until
+Phase 0 is finished and the Phase 2 eval pairs have baseline scores. Runtime findings from M3 are cheap Phase 0 evidence.</p>
+<p><strong>P2-Q13 Hosted or CLI first for Phase 2?</strong>
+Recommended: CLI/self-hosted first (Q7). Hosted Phase 2 needs a separate credential-free exec runner and its own
+security review; the current worker holds DB credentials (<code>CHANGELOG.md</code>, 0.3.0 known gaps).</p><div class="pager"><a href="phase2-architecture.html">&larr; Phase 2 architecture: the migrate/ package</a><a href="product-architecture.html">Product architecture and roadmap: from CLI engine to hosted service &rarr;</a></div></main>
+<nav class="toc" aria-label="On this page"><b>On this page</b><a class="l2" href="#implementation-status">Implementation status</a><a class="l2" href="#0-what-phase-2-inherits-and-what-it-cannot-assume">0. What Phase 2 inherits, and what it cannot assume</a><a class="l2" href="#1-goal-scope-non-goals-entry-gate-exit-criteria">1. Goal, scope, non-goals, entry gate, exit criteria</a><a class="l2" href="#2-target-specification-and-target-fit-analysis-q15-follow-up">2. Target specification and target-fit analysis (Q15 follow-up)</a><a class="l2" href="#3-migration-strategy">3. Migration strategy</a><a class="l2" href="#4-behaviour-preservation">4. Behaviour preservation</a><a class="l3" href="#41-oracle-is-the-legacy-service-not-the-model">4.1 Oracle is the legacy service, not the model</a><a class="l3" href="#42-test-format-black-box-and-language-neutral">4.2 Test format: black-box and language-neutral</a><a class="l3" href="#43-generating-cases-from-the-graph">4.3 Generating cases from the graph</a><a class="l3" href="#44-preservefix-decisions-and-deferred-findings-expectations">4.4 Preserve/fix decisions and deferred findings -&amp;gt; expectations</a><a class="l3" href="#45-feedback-to-phase-1">4.5 Feedback to Phase 1</a><a class="l2" href="#5-code-generation-agent-design">5. Code generation agent design</a><a class="l3" href="#51-loop-per-slice">5.1 Loop (per slice)</a><a class="l3" href="#52-structured-outputs-and-tools">5.2 Structured outputs and &quot;tools&quot;</a><a class="l3" href="#53-context-management-graph-as-memory">5.3 Context management (graph as memory)</a><a class="l3" href="#54-reviewer">5.4 Reviewer</a><a class="l3" href="#55-cost-caching-resumability-audit">5.5 Cost, caching, resumability, audit</a><a class="l2" href="#6-execution-sandbox">6. Execution sandbox</a><a class="l2" href="#7-equivalence-verification">7. Equivalence verification</a><a class="l2" href="#8-human-review-loop">8. Human review loop</a><a class="l2" href="#9-data-and-config-migration">9. Data and config migration</a><a class="l2" href="#10-observability-and-metrics">10. Observability and metrics</a><a class="l2" href="#11-evaluating-phase-2-itself">11. Evaluating Phase 2 itself</a><a class="l2" href="#12-milestones">12. Milestones</a><a class="l2" href="#13-risks-and-mitigations">13. Risks and mitigations</a><a class="l2" href="#14-open-questions-for-the-owner-recommended-answers">14. Open questions for the owner (recommended answers)</a></nav></div>
+<footer>Generated from <code>docs/phase2-plan.md</code> by <code>scripts/build_docs_html.py</code>. Edit the Markdown, not this file.</footer>
+<script>
+(function(){
+ document.querySelectorAll('.cb').forEach(function(b){var btn=document.createElement('button');btn.textContent='Copy';
+  btn.addEventListener('click',function(){var t=b.querySelector('code').innerText;
+   (navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(function(){btn.textContent='Copied';setTimeout(function(){btn.textContent='Copy'},1400)},function(){btn.textContent='Press Ctrl/Cmd+C'});});
+  b.appendChild(btn);});
+ var links=[].slice.call(document.querySelectorAll('nav.toc a'));if(!links.length||!('IntersectionObserver' in window))return;
+ var map={};links.forEach(function(a){map[a.getAttribute('href').slice(1)]=a});
+ var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){links.forEach(function(a){a.classList.remove('on')});var a=map[e.target.id];if(a)a.classList.add('on');}})},{rootMargin:'0px 0px -75% 0px'});
+ document.querySelectorAll('main h2[id],main h3[id]').forEach(function(h){io.observe(h)});
+})();
+</script></body></html>

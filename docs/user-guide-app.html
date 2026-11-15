@@ -689,7 +689,7 @@ migration-agent verify petclinic.migration --max-usd 1          # writes feedbac
 <div class="pw"><pre><code>migration-agent resolve orders.migration F-0001 --status accepted_doc --note "Discount is 25% from 10 items"
 migration-agent resolve orders.migration F-0004 --status dismissed --no-reanalyze
 migration-agent resolve orders.migration F-0007 --status needs_reanalysis --max-usd 1</code></pre></div>
-<p>Statuses: <code>accepted_doc</code>, <code>accepted_code</code>, <code>dismissed</code>, <code>needs_reanalysis</code>. In the CLI, re-analysis runs right away unless you pass <code>--no-reanalyze</code>.</p></div>
+<p>Statuses in the web app: <code>accepted_doc</code>, <code>accepted_code</code>, <code>dismissed</code>, <code>needs_reanalysis</code>. In the CLI, re-analysis runs right away unless you pass <code>--no-reanalyze</code>, and there is a fifth status, <code>deferred</code> ("decide later"): no re-analysis, it does not block approval and it is listed in the migration contract. The web app does not offer it yet.</p></div>
 </section>
 
 <!-- ============================================================ 12 -->
@@ -873,7 +873,7 @@ migration-agent changelog orders.migration               # regenerate docs/chang
 <tr><td>Run type Analyze</td><td><code>analyze PROJECT [--workers N]</code></td></tr>
 <tr><td>Incremental</td><td><code>ingest PROJECT --refresh</code> then <code>analyze PROJECT --incremental</code></td></tr>
 <tr><td>Run type Verify; user docs</td><td>Copy files into <code>PROJECT/user_docs/</code>, then <code>verify PROJECT</code></td></tr>
-<tr><td>Run type Re-analyze; answer a finding</td><td><code>resolve PROJECT FINDING_ID --status accepted_doc|accepted_code|dismissed|needs_reanalysis [--note T] [--no-reanalyze]</code></td></tr>
+<tr><td>Run type Re-analyze; answer a finding</td><td><code>resolve PROJECT FINDING_ID --status accepted_doc|accepted_code|dismissed|needs_reanalysis|deferred [--note T] [--no-reanalyze]</code></td></tr>
 <tr><td>Comment on a node</td><td><code>resolve PROJECT --comment ITEM_ID --note TEXT</code></td></tr>
 <tr><td>Document</td><td><code>PROJECT/docs/understanding.latest.md</code></td></tr>
 <tr><td>Graph explorer, versions, diff</td><td><code>review PROJECT</code> (local UI); <code>PROJECT/graph/snapshots/vNNN.json</code>; <code>PROJECT/docs/graph.html</code></td></tr>
@@ -881,6 +881,9 @@ migration-agent changelog orders.migration               # regenerate docs/chang
 <tr><td>Changelog</td><td><code>changelog PROJECT</code></td></tr>
 <tr><td>Usage and cost</td><td><code>audit PROJECT [--format table|json]</code></td></tr>
 <tr><td>Facts-only check, no model</td><td><code>render PROJECT</code>; <code>analyze PROJECT --offline</code> (stand-in model, not a real analysis)</td></tr>
+<tr><td>Decide what to do with a quirk or suspected bug (not in the web app)</td><td><code>decide PROJECT ITEM_ID (--preserve|--fix) [--note T]</code>; unlisted items default to preserve</td></tr>
+<tr><td>Check readiness; approve the understanding (not in the web app)</td><td><code>status PROJECT</code>, then <code>approve PROJECT --by NAME</code>; writes <code>docs/migration_contract.json</code></td></tr>
+<tr><td>Migrate and prove equivalence, Phase 2 (not in the web app)</td><td>CLI and self-hosted only: <code>contract check</code>, <code>doctor</code>, <code>target</code>, <code>plan</code>, <code>harness</code>, <code>tests</code>, <code>generate</code>, <code>equivalence</code>, <code>approve-slice</code>, <code>config</code>, <code>cutover</code>, <code>metrics</code>. See the CLI tutorial and section 9 of the user guide.</td></tr>
 <tr><td>Members, roles, audit log, delete project</td><td>No equivalent. The project is a folder: you own it. Delete it with your file manager.</td></tr>
 </tbody></table></div>
 <p>The CLI's local review UI binds to <code>127.0.0.1</code> only, requires an unguessable token in the URL, checks the <code>Host</code> and <code>Origin</code> headers and cannot run inside a container. Do not forward its port.</p>
@@ -1040,6 +1043,8 @@ migration-agent changelog orders.migration               # regenerate docs/chang
 <tr><td>Password reset, e-mail verification, account deletion</td><td><span class="badge na">Not available yet</span></td><td>Ask your operator.</td></tr>
 <tr><td>Private repositories, SSH, access tokens, GitHub/GitLab app</td><td><span class="badge na">Not available yet</span></td><td>Upload an archive.</td></tr>
 <tr><td>E-mail delivery of invitations; accept-by-link; pending-invitation list and revoke in the UI</td><td><span class="badge na">Not available yet</span></td><td>Pass the one-time code yourself; revoke via API.</td></tr>
+<tr><td>Approving the understanding, recording preserve/fix decisions and the <code>deferred</code> status in the web app</td><td><span class="badge na">Not available yet</span></td><td>Use the CLI: <code>decide</code>, <code>status</code>, <code>approve</code> (Phase 1 exit gate).</td></tr>
+<tr><td>Phase 2 (target fit, slice plan, generated code, equivalence checks, cut-over plan) in the hosted app</td><td><span class="badge na">Not available yet</span></td><td>By design the hosted worker does not run it, because it executes code. Use the CLI on your own machine with Docker; see the CLI tutorial.</td></tr>
 <tr><td>Uploading Verifier docs in the web app</td><td><span class="badge na">Not available yet</span></td><td>API upload or CLI.</td></tr>
 <tr><td>Replacing a project's source in the web app</td><td><span class="badge na">Not available yet</span></td><td>API call, or a new project.</td></tr>
 <tr><td>Changelog page</td><td><span class="badge na">Not available yet</span></td><td>API, or the Versions diff.</td></tr>

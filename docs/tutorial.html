@@ -48,9 +48,9 @@ footer{text-align:center;color:var(--mute);font-size:13px;padding:32px;border-to
 </head>
 <body>
 <header class="hero">
-  <span class="tag">Version 0.2.0 &middot; Complete tutorial</span>
+  <span class="tag">Version 0.2.0 + unreleased 0.3.0 work &middot; Complete tutorial</span>
   <h1>migration-agent</h1>
-  <p>Read a legacy codebase without ever running it. Get an evidence-backed understanding document, a knowledge graph, and a blind check against your own docs.</p>
+  <p>Read a legacy codebase without ever running it. Get an evidence-backed understanding document, a knowledge graph and a blind check against your own docs. Approve it, then migrate slice by slice and prove the new service behaves like the old one.</p>
 </header>
 
 <div class="layout">
@@ -60,6 +60,8 @@ footer{text-align:center;color:var(--mute);font-size:13px;padding:32px;border-to
   <a href="#setup">Install and set up</a>
   <a href="#walkthrough">Walkthrough</a>
   <a href="#review">The review loop</a>
+  <a href="#approve">Approve (Phase 1 gate)</a>
+  <a href="#phase2">Phase 2: migrate</a>
   <a href="#ops">Docker, safety, help</a>
 </nav>
 <main>
@@ -74,7 +76,8 @@ footer{text-align:center;color:var(--mute);font-size:13px;padding:32px;border-to
   <div class="card"><b>Bounded cost</b><code>--max-usd</code> caps spend; results are cached and runs resumable.</div>
 </div>
 <h3>The pipeline</h3>
-<div class="flow"><span>init</span><i>&rarr;</i><span>ingest</span><i>&rarr;</i><span>extract</span><i>&rarr;</i><span>analyze</span><i>&rarr;</i><span>verify</span><i>&rarr;</i><span>review</span></div>
+<div class="flow"><span>init</span><i>&rarr;</i><span>ingest</span><i>&rarr;</i><span>extract</span><i>&rarr;</i><span>analyze</span><i>&rarr;</i><span>verify</span><i>&rarr;</i><span>review</span><i>&rarr;</i><span>approve</span></div>
+<p>Those seven steps are <strong>Phase 1</strong> (understand). <strong>Phase 2</strong> (migrate and prove equivalence) starts from the approved result; see section 5 and 6.</p>
 <div class="tw"><table>
 <tr><th>Stage</th><th>Command</th><th>What happens</th><th>Output</th></tr>
 <tr><td>1. Init</td><td><code>init</code></td><td>Creates the project folder for your source (path, zip, tarball or git URL)</td><td><code>project.json</code></td></tr>
@@ -82,7 +85,8 @@ footer{text-align:center;color:var(--mute);font-size:13px;padding:32px;border-to
 <tr><td>3. Extract</td><td><code>extract</code></td><td>Static facts: frameworks, schemas, specs, dependencies</td><td><code>facts/</code>, <code>inventory.json</code></td></tr>
 <tr><td>4. Analyze</td><td><code>analyze</code></td><td>LLM builds the graph and understanding doc, every claim with evidence</td><td><code>graph/</code>, <code>docs/</code></td></tr>
 <tr><td>5. Verify</td><td><code>verify</code></td><td>Blind Verifier compares the doc with <code>user_docs/</code></td><td><code>feedback/findings.json</code></td></tr>
-<tr><td>6. Review</td><td><code>review</code></td><td>Local UI to comment, accept, dismiss or re-analyse</td><td>resolutions, <code>docs/changelog.md</code></td></tr>
+<tr><td>6. Review</td><td><code>review</code></td><td>Local UI to comment, accept, dismiss, defer or re-analyse</td><td>resolutions, <code>docs/changelog.md</code></td></tr>
+<tr><td>7. Approve</td><td><code>decide</code>, <code>status</code>, <code>approve</code></td><td>Record preserve/fix decisions, check readiness, sign off</td><td><code>docs/migration_contract.json</code></td></tr>
 </table></div>
 </section>
 
@@ -92,7 +96,7 @@ footer{text-align:center;color:var(--mute);font-size:13px;padding:32px;border-to
 <pre><code>python -m venv .venv &amp;&amp; . .venv/bin/activate
 pip install ".[llm]"        # the [llm] extra adds LiteLLM for real model calls
 migration-agent --version   # migration-agent, version 0.2.0</code></pre>
-<p>For development: <code>pip install -e ".[dev,llm]"</code> then <code>PYTHONPATH=src python -m pytest -q</code> (576 tests pass).</p>
+<p>For development: <code>pip install -e ".[dev,llm]"</code> then <code>PYTHONPATH=src python -m pytest -q</code> (1159 tests pass, 7 skipped; live Docker tests skip without a daemon).</p>
 <h3>API keys</h3>
 <p>Copy <code>.env.example</code> to <code>.env</code> and fill in a key. The CLI loads it at start-up and never overrides variables already set in your shell. <code>.env</code> is git-ignored; never commit it.</p>
 <div class="tw"><table>
@@ -179,7 +183,7 @@ migration-agent analyze legacy-orders.migration --config gemini.config.json --ma
 <li>Binds to 127.0.0.1 only; do not forward the port.</li>
 <li>Every request needs an unguessable token, and the <code>Host</code> header is validated.</li>
 <li>Cross-origin POSTs are rejected; bodies are capped at 64 KB and texts at 5,000 characters.</li>
-<li>It can only write comments and resolutions, and cannot run inside a container.</li>
+<li>It can only write comments, resolutions, migration decisions and approvals (token-protected), and cannot run inside a container.</li>
 </ul>
 <h3>Resolving from the command line</h3>
 <pre><code>migration-agent resolve orders.migration F-0001 --status accepted_doc --note "Discount is 25% from 10 items"
@@ -191,6 +195,7 @@ migration-agent resolve orders.migration F-0004 --status dismissed --no-reanalyz
 <tr><td><code>accepted_code</code></td><td>The code is the truth</td><td>No</td></tr>
 <tr><td><code>dismissed</code></td><td>Not a real problem</td><td>No</td></tr>
 <tr><td><code>needs_reanalysis</code></td><td>Re-check this area</td><td>Yes</td></tr>
+<tr><td><code>deferred</code></td><td>Decide later; does not block approval and is listed in the contract</td><td>No</td></tr>
 </table></div>
 <p>Your note goes to the model as untrusted data, and every resulting claim still needs verbatim code evidence. If a budget limit interrupts a re-analysis, nothing is written.</p>
 <h3>Stable IDs, versions and the changelog</h3>
@@ -202,8 +207,72 @@ migration-agent audit legacy-orders.migration --format json</code></pre>
 migration-agent analyze legacy-orders.migration --incremental --workers 4</code></pre>
 </section>
 
+<section id="approve">
+<h2><span class="n">5</span>Approve: the Phase 1 exit gate</h2>
+<p>Before anything is migrated, a person signs off on the understanding. Three commands do it.</p>
+<h3>Decide what to do with quirks and suspected bugs</h3>
+<pre><code>migration-agent decide orders.migration RULE-0007 --fix --note "Refund window is off by one day"
+migration-agent decide orders.migration COMP-0012 --preserve --note "Clients depend on the trailing slash"</code></pre>
+<p>Each quirk or suspected bug (section 12 of the document) gets a migration decision, stored in <code>feedback/decisions.json</code>. Items without one default to <strong>preserve</strong>, because silently changing behaviour is the main migration risk. The document is re-rendered offline, with no model call, and shows <code>Migration decision: ...</code>.</p>
+<h3>Check readiness, then approve</h3>
+<pre><code>migration-agent status  orders.migration                    # blockers, warnings, approval state
+migration-agent approve orders.migration --by "Jane Doe"    # refused while any blocker remains</code></pre>
+<div class="tw"><table>
+<tr><th>Blockers (approval refused)</th><th>Warnings (shown, recorded, not blocking)</th></tr>
+<tr><td>No graph or document; unmapped inventory items; a Verifier finding that is unresolved or <code>open</code>; a resolution waiting for re-analysis; an unused comment; a document that does not match a fresh offline render</td><td>Deferred findings; Verifier never run; open questions; quirks still on the default decision; low-confidence nodes</td></tr>
+</table></div>
+<p>Approval appends to <code>feedback/approvals.json</code>, writes the read-only <code>docs/understanding.vN.approved.md</code> and writes <code>docs/migration_contract.json</code>, the input of Phase 2. It pins the graph and the document by sha256. Any later analysis, resolution or changed decision makes the approval <code>stale</code>; run <code>status</code> and <code>approve</code> again. There is no <code>--force</code>.</p>
+<p>In the review UI, the <strong>Approval</strong> tab shows the same readiness, decisions and approve button.</p>
+</section>
+
+<section id="phase2">
+<h2><span class="n">6</span>Phase 2: migrate and prove equivalence</h2>
+<div class="note"><strong>Status:</strong> implemented and covered by offline unit and integration tests. It has <strong>not</strong> yet run against a real Docker daemon or a real model, so treat the first real runs as a trial. Phase 2 is CLI and self-hosted only; the hosted platform does not run it.</div>
+<p>Phase 2 turns the approved understanding into a new service and shows, case by case, that it behaves like the old one. The running legacy service is the oracle: expected outputs are <em>recorded</em> from it, never written by the model.</p>
+<div class="cards">
+  <div class="card"><b>Code runs, only in sandboxes</b>Legacy builds, generated code, test runners and the router run in disposable Docker containers: no capabilities, non-root, read-only root, no network during tests, images never pulled.</div>
+  <div class="card"><b>Slice by slice</b>The planner splits the approved graph into ordered slices. Every in-scope item lands in exactly one slice.</div>
+  <div class="card"><b>You approve each slice</b><code>approve-slice</code> is refused until the build, tests and equivalence run are green and every blocker is cleared.</div>
+  <div class="card"><b>Nothing is deployed</b>The tool writes a cut-over plan; your team executes it.</div>
+</div>
+<div class="flow"><span>contract check</span><i>&rarr;</i><span>target</span><i>&rarr;</i><span>plan</span><i>&rarr;</i><span>harness</span><i>&rarr;</i><span>tests</span><i>&rarr;</i><span>generate</span><i>&rarr;</i><span>equivalence</span><i>&rarr;</i><span>approve-slice</span><i>&rarr;</i><span>cutover</span></div>
+<h3>Prerequisites</h3>
+<ul>
+<li>An approved Phase 1 project: <code>status</code> shows <code>approved</code> and <code>contract check</code> prints <code>contract: OK</code>.</li>
+<li>Docker, git, and the images your harness and target need, already pulled (Phase 2 never pulls). <code>migration-agent doctor PROJECT</code> checks the contract, sandbox, git and budget.</li>
+<li>A project budget: <code>target init --budget-usd N</code>. Every model call is capped by what remains, across sessions.</li>
+</ul>
+<h3>The commands in order</h3>
+<pre><code>migration-agent contract check orders.migration
+migration-agent target init orders.migration --runtime 21 --framework spring-boot@3.3 --build maven --budget-usd 25
+migration-agent target fit  orders.migration --max-usd 2        # risks; resolve with: target resolve ... RISK-0003 --status mitigate
+migration-agent plan        orders.migration                    # ordered slices
+migration-agent harness import-source orders.migration --from-original
+migration-agent harness build orders.migration &amp;&amp; migration-agent harness up orders.migration
+migration-agent tests generate orders.migration --max-usd 3
+migration-agent tests record   orders.migration --harness       # every case twice against legacy
+migration-agent generate orders.migration --slice SLICE-0001 --max-usd 5
+migration-agent harness build orders.migration --new &amp;&amp; migration-agent harness up orders.migration --new
+migration-agent equivalence orders.migration --slice SLICE-0001
+migration-agent approve-slice orders.migration SLICE-0001 --by alice
+migration-agent cutover orders.migration --approve --by alice   # when every slice is approved</code></pre>
+<div class="tw"><table>
+<tr><th>Step</th><th>What it does</th></tr>
+<tr><td><code>target init|show|fit|resolve</code></td><td>Describes the target and finds migration risks (Java 8 to 21, Spring Boot 2 to 3, Django 3 to 5, Express to Fastify, JS to Go); model risks are kept only with verified evidence</td></tr>
+<tr><td><code>plan</code></td><td>Ordered slices: foundation first, then endpoints, jobs and consumers, then bootstrap</td></tr>
+<tr><td><code>harness ...</code></td><td>Builds and starts legacy, new and composite services in the sandbox; <code>flip</code> and <code>unflip</code> route a slice to the new service</td></tr>
+<tr><td><code>tests generate|record|coverage</code></td><td>Characterization cases; expected values come from the legacy service, with noise masks from the double recording</td></tr>
+<tr><td><code>generate</code></td><td>Per slice: model edits (validated and jailed to <code>target_code/</code>), sandbox build, tests, fresh-session review, then <code>awaiting_human</code>; resumable after a crash</td></tr>
+<tr><td><code>equivalence</code></td><td>Runs the cases against legacy and new and classifies each difference as <code>match</code>, <code>noise</code>, <code>intended_divergence</code>, <code>regression</code> or <code>unknown</code></td></tr>
+<tr><td><code>config map|set|schema-check</code></td><td>Maps configuration (secrets as references only) and checks declared schema changes on synthetic data</td></tr>
+<tr><td><code>cutover</code></td><td>Readiness gate and a deterministic <code>cutover/plan.md</code>; <code>--approve</code> pins hashes of everything</td></tr>
+<tr><td><code>metrics</code></td><td>Cost per slice, iterations to green, equivalence %, human-edit rate; no data shows <code>n/a</code></td></tr>
+</table></div>
+<p>The review UI gains <strong>Target fit</strong>, <strong>Plan</strong>, <strong>Slice</strong> and <strong>Comments</strong> tabs once Phase 2 files exist. There is no cut-over tab; use the CLI. The full reference is section 9 of the user guide, with design in <code>phase2-plan.md</code> and a code map in <code>phase2-architecture.md</code>.</p>
+</section>
+
 <section id="ops">
-<h2><span class="n">5</span>Docker, safety, help</h2>
+<h2><span class="n">7</span>Docker, safety, help</h2>
 <h3>Running in Docker</h3>
 <p>The image is a run-to-completion batch job: source mounted read-only, project folder read-write, non-root user 10001, read-only root filesystem, no baked-in secrets. Run the review UI on your host, not in the container.</p>
 <pre><code>docker build -f docker/Dockerfile --build-arg VERSION=0.2.0 -t migration-agent:0.2.0 .
@@ -223,7 +292,7 @@ $C --profile model run --rm worker analyze /project --max-usd 5</code></pre>
 
 <h3>The safety model</h3>
 <ul>
-<li><strong>Source is never executed or changed.</strong> Analysis reads only the <code>code/</code> copy.</li>
+<li><strong>In Phase 1 the source is never executed or changed.</strong> Analysis reads only the <code>code/</code> copy. Phase 2 does run code, but only inside the sandbox described in section 6, and the model never sees the unredacted <code>legacy_src/</code>.</li>
 <li><strong>Model tools are jailed</strong> to <code>read_file</code>, <code>list_dir</code>, <code>grep</code> and <code>file_stat</code> inside <code>code/</code>.</li>
 <li><strong>Secrets stay out of prompts</strong>: withheld at ingest, redacted from reports and findings.</li>
 <li><strong>Untrusted text stays data</strong>: code, user docs and reviewer notes cannot act as instructions.</li>
@@ -234,7 +303,7 @@ $C --profile model run --rm worker analyze /project --max-usd 5</code></pre>
 
 <h3>Controlling cost</h3>
 <ol>
-<li>Run <code>analyze --dry-run</code> and read the estimate.</li>
+<li>Run <code>analyze --dry-run</code> (and <code>generate --all --dry-run</code> in Phase 2) and read the estimate.</li>
 <li>Set <code>--max-usd</code> (or <code>MA_MAX_USD</code>); runs stop gracefully and resume without repaying.</li>
 <li>Use <code>gemini-lite.config.json</code> for the cheapest runs, or a small model for <code>chunk_extract</code> and a stronger one for reasoning tasks.</li>
 <li>Set correct per-model prices, or estimates will be wrong.</li>
@@ -252,6 +321,10 @@ $C --profile model run --rm worker analyze /project --max-usd 5</code></pre>
 <tr><td>Many <code>unmapped</code> items</td><td>Check section 15 of <code>docs/understanding.latest.md</code> and exclusions in <code>ingest_report.json</code></td></tr>
 <tr><td>Low confidence or blind spots</td><td>Re-run with a stronger model for that task, or comment on the item and <code>resolve</code></td></tr>
 <tr><td><code>not a project folder</code></td><td>No <code>project.json</code>; run <code>init</code> first</td></tr>
+<tr><td><code>approve</code> refuses</td><td>Run <code>status</code>; it lists every blocker</td></tr>
+<tr><td>Approval shows <code>stale</code></td><td>The graph or document changed after approval; run <code>status</code> and <code>approve</code> again</td></tr>
+<tr><td>Phase 2 command fails the contract gate</td><td>Approve again, or pass <code>--pin-contract</code> to work from the approved snapshot (a warning)</td></tr>
+<tr><td><code>doctor</code> exits 1</td><td>Fix the failing check: contract, exec sandbox, git or budget</td></tr>
 </table></div>
 
 <h3>Command cheat sheet</h3>
@@ -267,12 +340,20 @@ $C --profile model run --rm worker analyze /project --max-usd 5</code></pre>
 <tr><td><code>resolve PROJECT [ID]</code></td><td>Only for re-analysis</td><td>Record a decision or comment</td></tr>
 <tr><td><code>changelog PROJECT</code></td><td>No</td><td>Regenerate <code>docs/changelog.md</code></td></tr>
 <tr><td><code>audit PROJECT</code></td><td>No</td><td>Calls, tokens and cost log</td></tr>
+<tr><td><code>decide PROJECT ID</code></td><td>No</td><td>Preserve or fix a quirk or suspected bug</td></tr>
+<tr><td><code>status PROJECT</code></td><td>No</td><td>Phase 1 readiness and approval state</td></tr>
+<tr><td><code>approve PROJECT --by NAME</code></td><td>No</td><td>Phase 1 exit gate; writes the migration contract</td></tr>
+<tr><td><code>contract check</code>, <code>doctor</code></td><td>No</td><td>Phase 2 entry gate and prerequisites</td></tr>
+<tr><td><code>target</code>, <code>plan</code>, <code>harness</code>, <code>tests</code></td><td>Some (<code>--offline</code> available)</td><td>Phase 2 target fit, slices, sandbox, characterization tests</td></tr>
+<tr><td><code>generate</code>, <code>equivalence</code></td><td>Yes (or <code>--offline</code>)</td><td>Generate the new service; compare it with legacy</td></tr>
+<tr><td><code>approve-slice</code>, <code>reject-slice</code>, <code>slice</code></td><td>No</td><td>Per-slice human decisions and comments</td></tr>
+<tr><td><code>config</code>, <code>cutover</code>, <code>metrics</code></td><td>No</td><td>Config and schema mapping, cut-over plan, metrics</td></tr>
 </table></div>
 <p>More detail lives next to this file: the user guide, architecture, API reference, deployment guide and threat model.</p>
 </section>
 
 </main>
 </div>
-<footer>migration-agent 0.2.0 &middot; tutorial</footer>
+<footer>migration-agent 0.2.0 (0.3.0 unreleased) &middot; tutorial</footer>
 </body>
 </html>

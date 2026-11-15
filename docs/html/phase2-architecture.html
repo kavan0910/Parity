@@ -1,0 +1,684 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Phase 2 architecture: the migrate/ package | migration-agent docs</title><style>
+:root{--bg:#fbfaf7;--panel:#fff;--ink:#1c1b22;--mute:#6b6a76;--line:#e7e4dc;--accent:#5b4bdb;--accent2:#e0568b;--tint:#efecff;--code:#15141c;--codefg:#e9e7f5}
+@media (prefers-color-scheme:dark){:root{--bg:#0f0e14;--panel:#17161f;--ink:#ecebf3;--mute:#9a98a8;--line:#2a2836;--accent:#9b8cff;--accent2:#ff7fac;--tint:#221f3a}}
+*{box-sizing:border-box}html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.7 -apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,sans-serif}
+a{color:var(--accent)}
+.top{padding:44px 24px 34px;text-align:center;border-bottom:1px solid var(--line);background:radial-gradient(900px 300px at 50% -80px,var(--tint),transparent),var(--bg)}
+.top .tag{display:inline-block;padding:3px 12px;border:1px solid var(--line);border-radius:99px;font-size:13px;color:var(--mute);background:var(--panel)}
+.top h1{font-size:clamp(28px,5vw,44px);line-height:1.15;margin:14px auto 0;max-width:900px;letter-spacing:-.02em;background:linear-gradient(90deg,var(--accent),var(--accent2));-webkit-background-clip:text;background-clip:text;color:transparent}
+.layout{display:grid;grid-template-columns:250px minmax(0,1fr) 210px;gap:36px;max-width:1360px;margin:0 auto;padding:32px 24px 90px}
+nav.docs,nav.toc{position:sticky;top:20px;align-self:start;max-height:calc(100vh - 40px);overflow:auto;font-size:14px}
+nav b{display:block;margin:14px 0 6px;color:var(--mute);font-weight:600;text-transform:uppercase;letter-spacing:.08em;font-size:11.5px}
+nav b:first-child{margin-top:0}
+nav a{display:block;padding:4px 10px;border-left:2px solid var(--line);color:var(--mute);text-decoration:none}
+nav a:hover,nav a.on{color:var(--accent);border-color:var(--accent)}
+nav a.on{font-weight:600}
+nav.toc a.l3{padding-left:22px;font-size:13px}
+main{min-width:0}main h2{font-size:27px;margin:44px 0 12px;letter-spacing:-.01em;padding-top:6px;border-top:1px solid var(--line)}
+main h1{display:none}main h3{font-size:20px;margin:30px 0 8px}main h4{font-size:16px;margin:22px 0 6px}
+main p,main li{max-width:78ch}p{margin:0 0 14px}ul,ol{padding-left:24px;margin:0 0 16px}li{margin:4px 0}
+code{font:13.5px ui-monospace,SFMono-Regular,Menlo,monospace;background:var(--tint);padding:2px 6px;border-radius:6px}
+.cb{position:relative;margin:14px 0 20px}
+pre{background:var(--code);color:var(--codefg);padding:16px 18px;border-radius:14px;overflow:auto;margin:0;line-height:1.55;box-shadow:0 8px 24px -14px #0008}
+pre code{background:none;padding:0;color:inherit;font-size:13px}
+.cb button{position:absolute;top:8px;right:8px;font:12px inherit;padding:3px 9px;border-radius:8px;border:1px solid #fff3;background:#ffffff14;color:#e9e7f5;cursor:pointer}
+.cb button:hover{background:#ffffff2a}
+.cb .lbl{position:absolute;top:8px;left:14px;font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:#b9b5d6}
+.cb.mm pre{padding-top:34px}
+.tw{overflow-x:auto;margin:14px 0 22px;border:1px solid var(--line);border-radius:14px;background:var(--panel)}
+table{border-collapse:collapse;width:100%;font-size:14.5px}th,td{text-align:left;padding:9px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--mute);background:var(--tint)}tr:last-child td{border-bottom:0}
+blockquote{margin:16px 0;padding:10px 18px;border-left:4px solid var(--accent);background:var(--tint);border-radius:0 12px 12px 0}blockquote p{margin:6px 0}
+hr{border:0;border-top:1px solid var(--line);margin:30px 0}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;margin:18px 0}
+.card{display:block;padding:16px 18px;border:1px solid var(--line);border-radius:14px;background:var(--panel);text-decoration:none;color:var(--ink)}
+.card:hover{border-color:var(--accent)}.card b{display:block;color:var(--accent);margin-bottom:2px}.card span{color:var(--mute);font-size:14px}
+.pager{display:flex;justify-content:space-between;gap:12px;margin-top:56px;padding-top:20px;border-top:1px solid var(--line);font-size:14px}
+footer{text-align:center;color:var(--mute);font-size:13px;padding:28px;border-top:1px solid var(--line)}
+details.mob{display:none;margin:0 24px 16px;border:1px solid var(--line);border-radius:12px;background:var(--panel);padding:8px 14px}
+@media(max-width:1100px){.layout{grid-template-columns:230px minmax(0,1fr)}nav.toc{display:none}}
+@media(max-width:820px){.layout{grid-template-columns:1fr;padding-top:16px}nav.docs{display:none}details.mob{display:block}}
+</style></head><body>
+<header class="top"><span class="tag">migration-agent docs</span><h1>Phase 2 architecture: the migrate/ package</h1></header>
+<details class="mob"><summary>All docs</summary><a href="index.html">Overview</a><b>Start here</b><a href="README.html">migration-agent documentation</a><a href="user-guide.html">User guide</a><a href="architecture.html">Architecture</a><a href="api-reference.html">API reference</a><a href="deployment.html">Deployment guide</a><a href="threat-model.html">Threat model (D-06)</a><b>Phase 2: migrate</b><a class="on" href="phase2-architecture.html">Phase 2 architecture: the migrate/ package</a><a href="phase2-plan.html">Phase 2 implementation plan: Migrate &amp; Prove Equivalence</a><b>Product and platform</b><a href="product-architecture.html">Product architecture and roadmap: from CLI engine to hosted service</a><a href="platform-contract.html">Platform contract (hosted product)</a><a href="phase0-results.html">Phase 0 interim results (2026-11-09)</a><a href="operations-runbook.html">Operations runbook</a><b>Security</b><a href="security/security-overview-draft.html">Security overview (customer-facing DRAFT)</a><a href="security/threat-model-hosted.html">Threat model update: hosted product</a><a href="security/data-handling-and-retention.html">Data handling and retention policy (draft)</a><a href="security/pentest-2026-11-09.html">Hostile security review, 2026-11-09: findings and status</a><a href="security/incident-response.html">Incident response outline</a><a href="security/secure-sdlc.html">Secure development lifecycle</a><a href="security/soc2-readiness.html">SOC 2 readiness checklist</a><a href="security/subprocessors.html">Subprocessor list (TEMPLATE)</a><b>Hand-built guides</b><a href="../developer-handbook.html">Developer handbook</a><a href="../user-guide-app.html">Product user guide</a><a href="../tutorial.html">CLI tutorial</a></details>
+<div class="layout"><nav class="docs" aria-label="Documentation"><a href="index.html">Overview</a><b>Start here</b><a href="README.html">migration-agent documentation</a><a href="user-guide.html">User guide</a><a href="architecture.html">Architecture</a><a href="api-reference.html">API reference</a><a href="deployment.html">Deployment guide</a><a href="threat-model.html">Threat model (D-06)</a><b>Phase 2: migrate</b><a class="on" href="phase2-architecture.html">Phase 2 architecture: the migrate/ package</a><a href="phase2-plan.html">Phase 2 implementation plan: Migrate &amp; Prove Equivalence</a><b>Product and platform</b><a href="product-architecture.html">Product architecture and roadmap: from CLI engine to hosted service</a><a href="platform-contract.html">Platform contract (hosted product)</a><a href="phase0-results.html">Phase 0 interim results (2026-11-09)</a><a href="operations-runbook.html">Operations runbook</a><b>Security</b><a href="security/security-overview-draft.html">Security overview (customer-facing DRAFT)</a><a href="security/threat-model-hosted.html">Threat model update: hosted product</a><a href="security/data-handling-and-retention.html">Data handling and retention policy (draft)</a><a href="security/pentest-2026-11-09.html">Hostile security review, 2026-11-09: findings and status</a><a href="security/incident-response.html">Incident response outline</a><a href="security/secure-sdlc.html">Secure development lifecycle</a><a href="security/soc2-readiness.html">SOC 2 readiness checklist</a><a href="security/subprocessors.html">Subprocessor list (TEMPLATE)</a><b>Hand-built guides</b><a href="../developer-handbook.html">Developer handbook</a><a href="../user-guide-app.html">Product user guide</a><a href="../tutorial.html">CLI tutorial</a></nav>
+<main><h1 id="phase-2-architecture-the-migrate-package">Phase 2 architecture: the <code>migrate/</code> package</h1>
+<p>Companion to <a href="phase2-plan.html">phase2-plan.md</a> (the agreed plan, decisions in its section 14). This page describes
+the code as it is: the module map, the public functions, the shared contracts, and how to add commands. User-level
+instructions are in <a href="user-guide.html">user-guide.md</a> section 9; security controls in
+<a href="threat-model.html">threat-model.md</a> section 9.</p>
+<p>Status: milestones M0 to M7 are implemented and tested offline (unit and integration tests with a scripted docker
+CLI and fake model clients). Nothing here has run against a real Docker daemon or a real model yet. See the
+"Implementation status" section at the top of the plan.</p>
+<h2 id="module-map">Module map</h2>
+<p>All Phase 2 code lives in <code>src/migration_agent/migrate/</code>. Each module's docstring is the detailed reference.</p>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>Module</th>
+<th>Milestone</th>
+<th>Commands</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>__init__.py</code></td>
+<td>M0</td>
+<td></td>
+<td>Import-free on purpose: the top-level CLI imports <code>migrate.cli</code> at start-up</td>
+</tr>
+<tr>
+<td><code>cli.py</code></td>
+<td>M0</td>
+<td><code>contract check</code>, <code>contract schema</code>, <code>doctor</code></td>
+<td><code>register(main)</code>: creates the groups, imports every module in <code>SUBMODULES</code></td>
+</tr>
+<tr>
+<td><code>models.py</code></td>
+<td>M0</td>
+<td></td>
+<td>Shared pydantic contracts (below). Change only additively</td>
+</tr>
+<tr>
+<td><code>ids.py</code></td>
+<td>M0</td>
+<td></td>
+<td><code>SLICE-</code>/<code>CT-</code>/<code>RISK-</code>/<code>EQ-</code>/<code>RUN-</code> allocator in <code>migration/ids.json</code> (flock + atomic replace)</td>
+</tr>
+<tr>
+<td><code>paths.py</code></td>
+<td>M0</td>
+<td></td>
+<td><code>Phase2Layout(project)</code>: every Phase 2 path as a property; <code>ensure()</code> creates folders lazily</td>
+</tr>
+<tr>
+<td><code>state.py</code></td>
+<td>M0</td>
+<td></td>
+<td>Atomic JSON I/O, <code>sha256_file</code>, <code>file_lock</code>, slice state machine (<code>transition</code>)</td>
+</tr>
+<tr>
+<td><code>contract.py</code></td>
+<td>M0</td>
+<td></td>
+<td>Entry gate: <code>load_contract</code>, <code>check_contract</code>, <code>require_contract</code>, <code>contract_json_schema</code></td>
+</tr>
+<tr>
+<td><code>ledger.py</code></td>
+<td>M0</td>
+<td></td>
+<td>Cumulative spend from <code>audit/audit.jsonl</code>: <code>spent</code>, <code>remaining</code>, <code>budget_for</code>, <code>project_budget_usd</code></td>
+</tr>
+<tr>
+<td><code>exec/base.py</code></td>
+<td>M0</td>
+<td></td>
+<td><code>ExecBackend</code> protocol, <code>record_run</code> (writes <code>runs/RUN-NNNN/</code>), <code>load_run</code>, <code>UnavailableBackend</code></td>
+</tr>
+<tr>
+<td><code>exec/fake.py</code></td>
+<td>M0</td>
+<td></td>
+<td><code>FakeExecBackend</code> + <code>FakeOutcome</code> for tests</td>
+</tr>
+<tr>
+<td><code>exec/__init__.py</code></td>
+<td>M0</td>
+<td></td>
+<td><code>get_backend(project)</code></td>
+</tr>
+<tr>
+<td><code>exec/docker.py</code></td>
+<td>M1</td>
+<td></td>
+<td><code>DockerBackend</code>: fixed-argv <code>docker run</code>, two-phase network, limits, gVisor, mirror proxy; <code>load_exec_config</code></td>
+</tr>
+<tr>
+<td><code>exec/policy.py</code></td>
+<td>M1</td>
+<td></td>
+<td><code>scan_job</code>/<code>check_job</code>, <code>scan_argv</code>/<code>check_argv</code>: static checks before every container</td>
+</tr>
+<tr>
+<td><code>harness.py</code></td>
+<td>M1, M6</td>
+<td><code>harness import-source|build|up|down|status|flip|unflip|routes</code></td>
+<td>Harness spec, legacy/new/composite roles, strangler route table, in-network case runs</td>
+</tr>
+<tr>
+<td><code>target.py</code></td>
+<td>M2</td>
+<td><code>target init</code>, <code>target show</code></td>
+<td><code>TargetSpec</code> from manifests + flags: <code>detect_source</code>, <code>build_spec</code>, <code>load_target</code>, <code>write_target</code></td>
+</tr>
+<tr>
+<td><code>fit.py</code></td>
+<td>M2</td>
+<td><code>target fit</code>, <code>target resolve</code></td>
+<td>Deterministic libmap layer + verified model layer; <code>fit_blockers</code> gates the planner</td>
+</tr>
+<tr>
+<td><code>knowledge/</code></td>
+<td>M2</td>
+<td></td>
+<td><code>load_libmaps()</code>; tables in <code>knowledge/libmap/*.yaml</code> (java8-21, spring-boot2-3, django3-5, express-fastify, js-go)</td>
+</tr>
+<tr>
+<td><code>casestore.py</code></td>
+<td>M3</td>
+<td></td>
+<td>Case files, hypotheses, untestable marks, scope (<code>scope_nodes</code>), <code>load_plan</code></td>
+</tr>
+<tr>
+<td><code>testgen.py</code></td>
+<td>M3</td>
+<td><code>tests generate</code>, <code>tests approve-spec</code></td>
+<td>Proposes case inputs (model or offline proposer); never expected values for preserved behaviour</td>
+</tr>
+<tr>
+<td><code>recorder.py</code></td>
+<td>M3</td>
+<td><code>tests record</code>, <code>tests run</code>, <code>tests coverage</code>, <code>tests mark-untestable</code></td>
+<td>Double recording against legacy, noise masks, runtime findings, coverage gate <code>coverage_gaps</code></td>
+</tr>
+<tr>
+<td><code>harness_runner/</code></td>
+<td>M3</td>
+<td></td>
+<td>Language-neutral case runner: origin jail, compare, JSONPath masks, stub server, stdlib-only in-network runner</td>
+</tr>
+<tr>
+<td><code>planner.py</code></td>
+<td>M4</td>
+<td><code>plan</code></td>
+<td>Approved graph -&gt; ordered slices (<code>build_plan</code>, <code>plan_project</code>)</td>
+</tr>
+<tr>
+<td><code>targetrepo.py</code></td>
+<td>M4</td>
+<td></td>
+<td><code>target_code/</code> as a hardened local git repo: <code>init_repo</code>, <code>commit_iteration</code>, <code>diff</code>, <code>human_commits</code></td>
+</tr>
+<tr>
+<td><code>codegen.py</code></td>
+<td>M4</td>
+<td></td>
+<td>Edit schema, path jail, build-file allowlist, exact apply, secret scan, dependency check, context pack</td>
+</tr>
+<tr>
+<td><code>reviewer.py</code></td>
+<td>M4</td>
+<td></td>
+<td>Fresh-session <code>code_review</code> task plus deterministic static deny checks</td>
+</tr>
+<tr>
+<td><code>codemods/</code></td>
+<td>M4</td>
+<td></td>
+<td><code>run_codemods</code>; adapters: OpenRewrite (Maven), django-upgrade + pyupgrade, jscodeshift (stub)</td>
+</tr>
+<tr>
+<td><code>slice_runner.py</code></td>
+<td>M4</td>
+<td><code>generate</code></td>
+<td>Per-slice loop: context -&gt; codegen -&gt; apply -&gt; commit -&gt; build -&gt; tests -&gt; review -&gt; human</td>
+</tr>
+<tr>
+<td><code>equivalence.py</code></td>
+<td>M5, M6</td>
+<td><code>equivalence [run]</code>, <code>equivalence composite</code>, <code>equivalence approve-mask</code></td>
+<td>Legacy vs new diffs, classification, triage, fix requests, masks, composite runs</td>
+</tr>
+<tr>
+<td><code>approvals.py</code></td>
+<td>M5</td>
+<td><code>approve-slice</code>, <code>reject-slice</code>, <code>slice comment|decide|accept-observed</code></td>
+<td>Comments, slice decisions, git inspection, approval gate <code>approval_blockers</code></td>
+</tr>
+<tr>
+<td><code>configmap.py</code></td>
+<td>M6</td>
+<td><code>config map</code>, <code>config set</code></td>
+<td>Config keys -&gt; target convention; secrets as references only</td>
+</tr>
+<tr>
+<td><code>schemacompat.py</code></td>
+<td>M6</td>
+<td><code>config schema-check</code>, <code>config schema-blockers</code></td>
+<td>Legacy schema vs what the new service expects; declared expand/contract changes; blind spots</td>
+</tr>
+<tr>
+<td><code>router/</code></td>
+<td>M6</td>
+<td></td>
+<td>Package data: stdlib reverse proxy (<code>proxy.py</code>), <code>schema_probe.py</code>, <code>Dockerfile</code></td>
+</tr>
+<tr>
+<td><code>cutover.py</code></td>
+<td>M7</td>
+<td><code>cutover [--approve]</code></td>
+<td>Readiness gate, deterministic <code>cutover/plan.md</code>, <code>cutover/approval.json</code> with hashes</td>
+</tr>
+<tr>
+<td><code>metrics.py</code></td>
+<td>M7</td>
+<td><code>metrics</code></td>
+<td><code>compute_metrics(project)</code>: derived from existing files only</td>
+</tr>
+<tr>
+<td><code>prompts/</code></td>
+<td>M2-M5</td>
+<td></td>
+<td><code>target_fit.md</code>, <code>test_gen.md</code>, <code>plan.md</code>, <code>codegen.md</code>, <code>codegen_fix.md</code>, <code>code_review.md</code>, <code>equiv_triage.md</code></td>
+</tr>
+</tbody>
+</table></div>
+<p>Outside <code>migrate/</code>: <code>service.py</code> (Phase 2 stages for <code>run_stage</code>, <code>metrics()</code>), <code>review_ui/server.py</code> and <code>page.py</code>
+(Target fit, Plan, Slice and Comments tabs, <code>/api/p2/*</code> routes), <code>evalharness.py</code> (<code>score_migration</code>,
+<code>compare_migration</code>, <code>run_phase2_offline</code>), <code>scripts/eval_phase2.py</code> (CI gate), <code>eval/targets/</code> (target pairs) and
+<code>eval/repos/*/harness/</code> (runnable fixtures).</p>
+<p>Phase 1 changes made for Phase 2: <code>analyze/runner.py</code> persists gap-fill exclusions (<code>facts/coverage_exclusions.json</code>);
+readiness, approval, <code>review/docrender.py</code> and <code>review/reanalyze.py</code> compute coverage with
+<code>analyze/coverage.project_coverage</code>; <code>MigrationContract</code> (in <code>verify/models.py</code>) gained <code>source_hash</code> (schema 2);
+<code>project.py</code> <code>SCHEMA_VERSION = 2</code>; <code>cli.py</code> has one registration line.</p>
+<h2 id="data-flow">Data flow</h2>
+<div class="cb mm"><span class="lbl">diagram source (mermaid)</span><pre><code>flowchart TD
+  C[(docs/migration_contract.json)] --&gt; G{contract gate}
+  G --&gt; TI[target init] --&gt; TY[(target/target.yaml)]
+  TY --&gt; FIT[target fit] --&gt; FR[(target/fit_report.json)]
+  G --&gt; PL[plan] --&gt; PJ[(plan/migration_plan.json)]
+  FR --&gt; PL
+  G --&gt; TG[tests generate] --&gt; CS[(characterization/cases/)]
+  IS[harness import-source] --&gt; LS[(legacy_src/)]
+  LS --&gt; HB[harness build/up --legacy]
+  HB --&gt; TR[tests record --harness] --&gt; CS
+  PJ --&gt; GEN[generate]
+  CS --&gt; GEN
+  GEN --&gt; TC[(target_code/ git)]
+  GEN --&gt; SL[(slices/SLICE-NNNN/)]
+  TC --&gt; HN[harness build/up --new]
+  HN --&gt; EQ[equivalence] --&gt; SL
+  EQ --&gt;|fix requests| GEN
+  SL --&gt; AP[approve-slice] --&gt; FL[harness flip] --&gt; COMP[equivalence composite]
+  COMP --&gt; CO[cutover --approve] --&gt; CA[(cutover/approval.json)]
+</code></pre></div>
+<p>Every command that writes Phase 2 state calls <code>require_contract</code> first. The model sees only the redacted <code>code/</code>,
+graph facts and generated text; <code>legacy_src/</code> is mounted only into exec containers.</p>
+<h2 id="public-entry-points">Public entry points</h2>
+<div class="cb"><pre><code language-python>from migration_agent.migrate.contract import check_contract, require_contract   # ContractCheck / MigrationContract
+from migration_agent.migrate.ledger import budget_for                            # Budget capped by project budget
+from migration_agent.migrate.target import detect_source, load_target            # Detection / TargetSpec
+from migration_agent.migrate.fit import run_fit, resolve_risk, fit_blockers      # FitRun / FitResolution / [Risk]
+from migration_agent.migrate.planner import plan_project, build_plan             # PlanResult / PlanDraft
+from migration_agent.migrate.testgen import generate_cases, approve_spec         # TestgenReport
+from migration_agent.migrate.recorder import record_cases, run_suite, coverage_gaps
+from migration_agent.migrate.harness import import_source, build, up, down, status, flip, unflip, run_cases_in_network
+from migration_agent.migrate.slice_runner import generate, dry_run, GenerateOptions   # GenerateReport
+from migration_agent.migrate.equivalence import run_equivalence, run_composite, approve_mask
+from migration_agent.migrate.approvals import approve_slice, reject_slice, approval_blockers, add_comment
+from migration_agent.migrate.configmap import build_config_map, config_gaps, set_decision
+from migration_agent.migrate.schemacompat import check, schema_blockers
+from migration_agent.migrate.cutover import readiness, write_plan, approve, verify_approval
+from migration_agent.migrate.metrics import compute_metrics
+</code></pre></div>
+<p>Signatures (keyword-only arguments shown after <code>*</code>):</p>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>Function</th>
+<th>Signature (abridged)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>run_fit</code></td>
+<td><code>(project, llm=None, *, pin=False, accept_unmapped=False, log=None, ...) -&gt; FitRun</code></td>
+</tr>
+<tr>
+<td><code>plan_project</code></td>
+<td><code>(project, *, dry_run=False, offline=False, include_dead_code=False, ...) -&gt; PlanResult</code></td>
+</tr>
+<tr>
+<td><code>generate_cases</code></td>
+<td><code>(project, llm=None, *, offline=False, node_ids=None, ...) -&gt; TestgenReport</code></td>
+</tr>
+<tr>
+<td><code>record_cases</code></td>
+<td><code>(project, base_url=None, second_base_url=None, *, ...) -&gt; RecordReport</code></td>
+</tr>
+<tr>
+<td><code>harness.build</code> / <code>up</code> / <code>down</code> / <code>status</code></td>
+<td><code>(project, role="legacy", *, backend=None) -&gt; dict</code></td>
+</tr>
+<tr>
+<td><code>harness.flip</code></td>
+<td><code>(project, slice_id, *, force_for_testing=False, actor="human", reason="") -&gt; dict</code></td>
+</tr>
+<tr>
+<td><code>run_cases_in_network</code></td>
+<td><code>(project, role, cases, *, backend=None, compare=True, timeout_s=10.0, ...)</code></td>
+</tr>
+<tr>
+<td><code>slice_runner.generate</code></td>
+<td><code>(project, *, slice_id=None, all_slices=False, llm, backend=None, ...) -&gt; GenerateReport</code></td>
+</tr>
+<tr>
+<td><code>run_equivalence</code></td>
+<td><code>(project, slice_id, legacy_url=None, new_url=None, *, llm=None, ...) -&gt; EquivalenceReport</code></td>
+</tr>
+<tr>
+<td><code>run_composite</code></td>
+<td><code>(project, *, base_url=None, backend=None, timeout_s=10.0, ...) -&gt; CompositeReport</code></td>
+</tr>
+<tr>
+<td><code>approve_slice</code></td>
+<td><code>(project, slice_id, by, note="") -&gt; SliceApproval</code> (raises <code>ApprovalError</code> with <code>.blockers</code>)</td>
+</tr>
+<tr>
+<td><code>build_config_map</code></td>
+<td><code>(project, *, force=False) -&gt; ConfigMap</code></td>
+</tr>
+<tr>
+<td><code>schemacompat.check</code></td>
+<td><code>(project, *, backend=None, static=False, ...) -&gt; SchemaCompatReport</code></td>
+</tr>
+<tr>
+<td><code>cutover.readiness</code> / <code>approve</code></td>
+<td><code>(project) -&gt; Readiness</code> / <code>(project, by, note="") -&gt; CutoverApproval</code></td>
+</tr>
+<tr>
+<td><code>compute_metrics</code></td>
+<td><code>(project) -&gt; dict</code> (pure read; missing data is <code>None</code>, never 0)</td>
+</tr>
+</tbody>
+</table></div>
+<p>For hosts that embed the engine, <code>migration_agent.service.run_stage</code> wraps the main steps (see
+<a href="platform-contract.html">platform-contract.md</a> section 2).</p>
+<h2 id="shared-contracts-migratemodelspy">Shared contracts (<code>migrate/models.py</code>)</h2>
+<p>All models use <code>extra="forbid"</code> and round-trip through <code>model_dump_json</code> / <code>model_validate_json</code>. Sha256 fields accept
+64 lowercase hex chars or <code>""</code> (not known yet).</p>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>File</th>
+<th>Model</th>
+<th>Plan</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>docs/migration_contract.json</code></td>
+<td><code>verify.models.MigrationContract</code> (single definition; never fork it)</td>
+<td>1</td>
+</tr>
+<tr>
+<td><code>target/target.yaml</code></td>
+<td><code>TargetSpec</code> (<code>SourceStack</code>, <code>TargetStack</code>, <code>Infra</code>, <code>Style</code>, <code>Libraries</code>, <code>EquivalencePolicy</code>); <code>from_yaml</code>/<code>to_yaml</code></td>
+<td>2</td>
+</tr>
+<tr>
+<td><code>target/fit_report.json</code></td>
+<td><code>FitReport</code> of <code>Risk</code></td>
+<td>2</td>
+</tr>
+<tr>
+<td><code>plan/migration_plan.json</code>, <code>plan/versions/vNNN.json</code></td>
+<td><code>MigrationPlan</code> of <code>Slice</code> (validator: unique slice ids, known <code>depends_on</code>, each node in at most one slice)</td>
+<td>3</td>
+</tr>
+<tr>
+<td><code>slices/SLICE-NNNN/state.json</code></td>
+<td><code>SliceState</code> + <code>StateTransition</code> (write only through <code>state.transition</code>)</td>
+<td>5.1</td>
+</tr>
+<tr>
+<td><code>characterization/cases/SLICE-NNNN/CT-NNNN.json</code></td>
+<td><code>CharacterizationCase</code> (<code>CaseSetup</code>, request by kind: <code>HttpRequest</code> for http/replay, <code>GrpcRequest</code>, <code>JobRequest</code>, <code>MessageRequest</code>; <code>Expectation</code> recorded/specified; <code>Provenance</code>)</td>
+<td>4.2</td>
+</tr>
+<tr>
+<td><code>runs/RUN-NNNN/meta.json</code></td>
+<td><code>{"job": ExecJob, "result": ExecResult}</code> (<code>Mount</code>, <code>Limits</code>)</td>
+<td>6</td>
+</tr>
+<tr>
+<td><code>slices/SLICE-NNNN/equivalence.json</code></td>
+<td><code>EquivalenceReport</code> of <code>EquivalenceDiff</code> (<code>match</code>/<code>intended_divergence</code>/<code>noise</code>/<code>regression</code>/<code>unknown</code>; triage <code>legacy_bug</code>/<code>new_bug</code>/<code>harness_issue</code>/<code>spec_ambiguity</code>)</td>
+<td>7</td>
+</tr>
+<tr>
+<td><code>slices/SLICE-NNNN/approval.json</code></td>
+<td><code>SliceApproval</code></td>
+<td>8</td>
+</tr>
+<tr>
+<td><code>cutover/approval.json</code></td>
+<td><code>CutoverApproval</code></td>
+<td>8</td>
+</tr>
+<tr>
+<td><code>migration/runtime_findings.json</code></td>
+<td><code>RuntimeFindingsFile</code> of <code>RuntimeFinding</code> (uses <code>EQ-</code> ids)</td>
+<td>4.5</td>
+</tr>
+</tbody>
+</table></div>
+<p>Module-local models (not shared): <code>FitResolutionsFile</code> (fit.py), <code>PlannerReport</code> (planner.py), <code>RecordReport</code>,
+<code>CoverageReport</code>, <code>RunReport</code> (recorder.py), <code>CodegenOutput</code>, <code>ContextPack</code> (codegen.py), <code>ReviewResult</code>
+(reviewer.py), <code>EquivalenceRunMeta</code>, <code>FixRequestsFile</code>, <code>MasksFile</code>, <code>CompositeReport</code> (equivalence.py),
+<code>P2CommentsFile</code>, <code>SliceDecisionsFile</code> (approvals.py), <code>ConfigMap</code>, <code>ConfigDecisions</code> (configmap.py),
+<code>SchemaChangesFile</code>, <code>MappingFile</code>, <code>SchemaCompatReport</code> (schemacompat.py), <code>Readiness</code> (cutover.py),
+<code>HarnessSpec</code> (harness.py), <code>ExecConfig</code> (exec/docker.py).</p>
+<p>Model rules worth knowing:
+- <code>CharacterizationCase</code>: <code>expect.source == "specified"</code> only with <code>decision == "fix"</code>; the request shape must match
+  <code>kind</code>. A specified expectation gates a slice only once <code>expect.approved_by</code> is set (<code>tests approve-spec</code>).
+- <code>ExecJob</code>: <code>command</code> is argv; phase <code>test</code> requires network <code>none</code>; <code>env</code> values that look like secrets (ingest
+  secret patterns) are rejected, use <code>synthetic_secrets</code>; mount sources are project-relative without <code>..</code>, mount
+  targets absolute container paths.</p>
+<h2 id="id-prefixes-migrateidspy">ID prefixes (<code>migrate/ids.py</code>)</h2>
+<p>Format <code>PREFIX-NNNN</code> (4+ digits), never reused or renumbered, stored in <code>migration/ids.json</code>.</p>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>Prefix</th>
+<th>Meaning</th>
+<th>Typical key</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>SLICE</code></td>
+<td>migration slice</td>
+<td>sorted node ids of the slice (re-planning the same nodes keeps the id)</td>
+</tr>
+<tr>
+<td><code>CT</code></td>
+<td>characterization test case</td>
+<td><code>&lt;target&gt;/&lt;category&gt;/&lt;title-slug&gt;</code></td>
+</tr>
+<tr>
+<td><code>RISK</code></td>
+<td>target-fit risk</td>
+<td><code>kind:item_ids</code></td>
+</tr>
+<tr>
+<td><code>EQ</code></td>
+<td>equivalence diff or runtime finding</td>
+<td><code>eq:&lt;case_id&gt;/&lt;field&gt;</code>, <code>runtime:&lt;CT&gt;:&lt;kind&gt;</code></td>
+</tr>
+<tr>
+<td><code>RUN</code></td>
+<td>one sandbox exec run or one recording pass</td>
+<td>none (sequential)</td>
+</tr>
+</tbody>
+</table></div>
+<p>Phase 1 IDs (<code>COMP-</code>, <code>EP-</code>, <code>RULE-</code> ..., <code>F-</code> findings, <code>CM-</code> comments) keep their own registries. Phase 2
+comments in <code>migration/comments.json</code> also use <code>CM-</code> ids, in their own sequence.</p>
+<h2 id="folder-layout-migratepathspy-and-module-outputs">Folder layout (<code>migrate/paths.py</code> and module outputs)</h2>
+<p>Nothing is created by <code>Project.init</code>; folders appear on first write through <code>Phase2Layout.ensure()</code> (which also bumps
+<code>project.json</code> <code>schema_version</code> 1 -&gt; 2). v1 projects load unchanged; <code>Project.load</code> refuses schema versions newer than
+it supports.</p>
+<div class="cb"><pre><code>&lt;project&gt;/
+  docs/migration_contract.json   Phase 1 output, read-only for Phase 2
+  legacy_src/                    ORIGINAL unredacted source (harness import-source); exec containers only
+  inputs/traffic/                optional recorded requests
+  target/                        target.yaml, fit_report.json|md, fit_resolutions.json
+  plan/                          migration_plan.json|md, versions/vNNN.json, planner_report.json
+  characterization/              cases/SLICE-NNNN|UNPLANNED/CT-NNNN.json, fixtures/, stubs/, hypotheses.json,
+                                 untestable.json, testgen_report.json, coverage.json,
+                                 recordings/RUN-NNNN/, results/RUN-NNNN/
+  harness/                       harness.yaml, mirror.json (optional), state.json, compose.&lt;role&gt;.yml,
+                                 legacy_src.json, synthetic_secrets.json (0600), logs/, cache/, new/Dockerfile,
+                                 router/ (build context + live/routes.json), routes.json, flips.json
+  target_code/                   the new service, a git repo (agent and human commits; tags slice/SLICE-NNNN/iter-K,
+                                 slice/SLICE-NNNN/approved, codemod/&lt;name&gt;/RUN-NNNN)
+  slices/SLICE-NNNN/             state.json, loop.json, iterations/K/{prompt_meta,edits,build,tests,review,outcome}.json,
+                                 review.json, decisions.json, equivalence.json, equivalence_run.json,
+                                 fix_requests.json, approval.json
+  runs/RUN-NNNN/                 meta.json, logs/stdout.txt|stderr.txt, reports/, work/, codemod.patch
+  migration/                     ids.json, comments.json, runtime_findings.json, codemods.json, contract.schema.json
+  config/                        config_map.json|md, decisions.json, generated/
+  data/                          schema_changes.yaml, mapping.yaml, schema_compat.json|md (optional inputs + report)
+  equivalence/                   report.md, masks.json, composite.json, composite_history.jsonl, composite_run.json
+  cutover/                       plan.md, approval.json, hashes.json
+</code></pre></div>
+<p>The plan's <code>tests/</code> folder is named <code>characterization/</code> so it is not confused with a repository's own tests.
+Methods taking ids (<code>slice_dir</code>, <code>case_file</code>, <code>run_dir</code> ...) validate them, so a crafted id cannot escape the folder.
+Write files with <code>state.atomic_write_json</code> / <code>atomic_write_text</code> (they create parent folders); call
+<code>layout.ensure(dir)</code> once for the folder so the schema bump happens.</p>
+<h2 id="entry-gate-and-budget">Entry gate and budget</h2>
+<ul>
+<li><code>require_contract(project, pin=..., accept_unmapped=...)</code> returns the <code>MigrationContract</code> or raises
+  <code>ContractError</code> (with <code>.check</code>). <code>check_contract</code> returns <code>ContractCheck{ok, errors, warnings, blockers,
+  graph_version, latest_graph_version, contract_sha256, pinned}</code> and implements plan section 1 rules 1-7 (listed in
+  <code>contract.py</code>). <code>blockers</code> lists deferred findings (<code>finding_id</code>, <code>item_ids</code>); the planner attaches them to slices.</li>
+<li>Model calls get their budget from <code>ledger.budget_for(project, spec.budget_usd, max_usd=cli_max_usd)</code>: an
+  <code>llm.litellm_client.Budget</code> capped at the remaining project budget (sum of <code>llm_call</code> audit records), so caps hold
+  across sessions. The slice runner tags model calls with <code>slice=SLICE-NNNN</code> (<code>TaggedAudit</code>); <code>Ledger.by_slice</code>
+  gives per-slice spend, checked before every call against <code>--max-usd-per-slice</code>.</li>
+</ul>
+<h2 id="slice-state-machine-migratestatepy">Slice state machine (<code>migrate/state.py</code>)</h2>
+<div class="cb"><pre><code>planned -&gt; tests_recorded -&gt; generating -&gt; built -&gt; tests_passing -&gt; reviewed -&gt; awaiting_human -&gt; approved | rejected
+fix loop: built | tests_passing | reviewed | awaiting_human -&gt; generating   (iteration += 1; generating -&gt; generating too)
+rejected -&gt; generating | planned        approved -&gt; generating (reopen, e.g. human commit)
+any except approved -&gt; blocked (reason required); blocked -&gt; the status it came from | planned
+</code></pre></div>
+<p><code>transition(project, slice_id, to_status, actor=..., reason=...)</code> validates (raises <code>IllegalTransition</code>), locks,
+writes atomically and audits (<code>slice_runner</code> / <code>slice_transition</code>). <code>Slice.status</code> in the plan is only a mirror.</p>
+<h2 id="gates">Gates</h2>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>Gate</th>
+<th>Function</th>
+<th>Used by</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Contract</td>
+<td><code>contract.require_contract</code></td>
+<td>every writing command</td>
+</tr>
+<tr>
+<td>Fit blockers</td>
+<td><code>fit.fit_blockers</code> (open high-severity risks)</td>
+<td><code>plan</code></td>
+</tr>
+<tr>
+<td>Coverage</td>
+<td><code>recorder.coverage_gaps</code></td>
+<td><code>tests coverage --fail-on-gaps</code>, <code>cutover</code></td>
+</tr>
+<tr>
+<td>Slice approval</td>
+<td><code>approvals.approval_blockers</code> (build and suite green, no regression/unknown diff, HEAD unchanged since the equivalence run, blockers accepted, no open decisions, no pending fix requests, specified expectations approved)</td>
+<td><code>approve-slice</code>, review UI</td>
+</tr>
+<tr>
+<td>Flip</td>
+<td><code>harness.slice_approved</code> (or <code>--force-for-testing</code>, audited)</td>
+<td><code>harness flip</code></td>
+</tr>
+<tr>
+<td>Config</td>
+<td><code>configmap.config_gaps</code></td>
+<td><code>cutover</code></td>
+</tr>
+<tr>
+<td>Schema</td>
+<td><code>schemacompat.schema_blockers</code> + schema-compat report status</td>
+<td><code>cutover</code></td>
+</tr>
+<tr>
+<td>Cut-over</td>
+<td><code>cutover.readiness</code> (contract, plan, slices, equivalence, full suite on HEAD, clean target_code, coverage, config, schema, findings, budget)</td>
+<td><code>cutover</code>, <code>cutover --approve</code></td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="cli-registration-pattern-migrateclipy">CLI registration pattern (<code>migrate/cli.py</code>)</h2>
+<p><code>cli.py</code> has one line: <code>from .migrate.cli import register as _register_phase2; _register_phase2(main)</code>.
+<code>register(main)</code> creates the groups <code>contract</code>, <code>target</code>, <code>tests</code>, <code>harness</code>, <code>config</code>, adds the M0 commands
+(<code>contract check</code>, <code>contract schema</code>, <code>doctor</code>), then imports each name in <code>SUBMODULES</code> and calls its
+<code>register(groups)</code>. Listed names: <code>target, fit, planner, harness, testgen, recorder, slice_runner, codegen,
+equivalence, approvals, configmap, schemacompat, cutover, metrics</code>. Top-level verbs (<code>plan</code>, <code>generate</code>,
+<code>equivalence</code>, <code>approve-slice</code>, <code>reject-slice</code>, <code>slice</code>, <code>cutover</code>, <code>metrics</code>) go on <code>groups.main</code>. A missing module is
+skipped; an import error inside an existing module propagates. Keep heavy imports inside command functions.</p>
+<div class="cb"><pre><code language-python>def register(groups) -&gt; None:            # groups.main / .contract / .target / .tests / .harness / .config
+    @groups.target.command(&quot;fit&quot;)
+    @click.argument(&quot;project&quot;, type=click.Path(exists=True, path_type=Path))
+    def fit_cmd(project: Path) -&gt; None:
+        from .contract import require_contract   # heavy imports inside the command
+        ...
+</code></pre></div>
+<h2 id="execbackend-contract-migrateexec">ExecBackend contract (<code>migrate/exec/</code>)</h2>
+<div class="cb"><pre><code language-python>class ExecBackend(Protocol):
+    name: str
+    def available(self) -&gt; tuple[bool, str]: ...    # cheap, no side effects (used by `doctor`)
+    def run(self, job: ExecJob) -&gt; ExecResult: ...  # never raises for job failures
+</code></pre></div>
+<ul>
+<li>One job = one disposable container; <code>job.command</code> is argv.</li>
+<li>Network: <code>none</code> (mandatory for <code>test</code>), or <code>mirror</code> (<code>build</code> only: per-run <code>--internal</code> network plus a Squid proxy
+  that allows only the configured mirror hosts; no hosts configured means <code>--network none</code>).</li>
+<li>Limits from <code>job.limits</code> (cpus, memory_mb, pids, timeout_s, disk_mb), plus cap_drop ALL, no-new-privileges,
+  non-root, read-only rootfs + tmpfs, no docker socket, <code>--runtime runsc</code> when installed or required.</li>
+<li>Images are never pulled (<code>--pull never</code>); they are resolved locally and run by image ID.</li>
+<li>No secrets: validated <code>env</code>; <code>synthetic_secrets</code> filled with fresh random values per run.</li>
+<li><code>exec/policy.py</code> checks the job and the final argv before every start.</li>
+<li>Results are files under <code>runs/RUN-NNNN/</code> written by <code>record_run</code> (1 MB log cap, redaction, audit record
+  <code>exec</code>/<code>exec_run</code>).</li>
+<li><code>get_backend(project)</code> returns <code>DockerBackend(project)</code>. Tests inject <code>FakeExecBackend</code> by monkeypatching
+  <code>migration_agent.migrate.exec.get_backend</code>.</li>
+</ul>
+<p>Configuration: <code>harness/mirror.json</code> <code>{"hosts": [...], "ports": [443], "runtime": "auto", "proxy_image": ...,
+"user": "auto"}</code>; <code>MA_MIRROR_HOSTS</code> (comma separated) overrides <code>hosts</code>; <code>MA_EXEC_RUNTIME</code> (<code>auto|runsc|runc</code>)
+overrides <code>runtime</code>.</p>
+<h2 id="tests">Tests</h2>
+<p>Helpers: <code>tests/phase2_helpers.approved_project(tmp_path, tmp_path_factory)</code> gives an offline-analysed, approved
+express-crud project (built on <code>tests/phase1_helpers.py</code>); <code>p2_exec_helpers.py</code> (scripted docker CLI),
+<code>p2_m3_helpers.py</code>, <code>p2_m4_helpers.py</code>, <code>p2_m5_helpers.py</code>, <code>p2_integration_helpers.py</code>.</p>
+<p>Per module: <code>tests/test_p2_&lt;module&gt;.py</code> (contract, models, ledger, state, cli, target, fit, planner, testgen,
+recorder, harness, harness_runner, exec_docker, codegen, codemods, reviewer, slice_runner, equivalence, approvals,
+configmap, schemacompat, router, cutover, metrics, review_ui, service_stages, eval, integration) and
+<code>tests/redteam/test_p2_exec_sandbox.py</code>. Live tests in <code>test_p2_exec_docker.py</code>, <code>test_p2_router.py</code> and
+<code>test_p2_integration.py</code> skip when <code>docker info</code> fails; on the authoring machine they have always skipped.</p><div class="pager"><a href="threat-model.html">&larr; Threat model (D-06)</a><a href="phase2-plan.html">Phase 2 implementation plan: Migrate &amp; Prove Equivalence &rarr;</a></div></main>
+<nav class="toc" aria-label="On this page"><b>On this page</b><a class="l2" href="#module-map">Module map</a><a class="l2" href="#data-flow">Data flow</a><a class="l2" href="#public-entry-points">Public entry points</a><a class="l2" href="#shared-contracts-migratemodelspy">Shared contracts (migrate/models.py)</a><a class="l2" href="#id-prefixes-migrateidspy">ID prefixes (migrate/ids.py)</a><a class="l2" href="#folder-layout-migratepathspy-and-module-outputs">Folder layout (migrate/paths.py and module outputs)</a><a class="l2" href="#entry-gate-and-budget">Entry gate and budget</a><a class="l2" href="#slice-state-machine-migratestatepy">Slice state machine (migrate/state.py)</a><a class="l2" href="#gates">Gates</a><a class="l2" href="#cli-registration-pattern-migrateclipy">CLI registration pattern (migrate/cli.py)</a><a class="l2" href="#execbackend-contract-migrateexec">ExecBackend contract (migrate/exec/)</a><a class="l2" href="#tests">Tests</a></nav></div>
+<footer>Generated from <code>docs/phase2-architecture.md</code> by <code>scripts/build_docs_html.py</code>. Edit the Markdown, not this file.</footer>
+<script>
+(function(){
+ document.querySelectorAll('.cb').forEach(function(b){var btn=document.createElement('button');btn.textContent='Copy';
+  btn.addEventListener('click',function(){var t=b.querySelector('code').innerText;
+   (navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(function(){btn.textContent='Copied';setTimeout(function(){btn.textContent='Copy'},1400)},function(){btn.textContent='Press Ctrl/Cmd+C'});});
+  b.appendChild(btn);});
+ var links=[].slice.call(document.querySelectorAll('nav.toc a'));if(!links.length||!('IntersectionObserver' in window))return;
+ var map={};links.forEach(function(a){map[a.getAttribute('href').slice(1)]=a});
+ var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){links.forEach(function(a){a.classList.remove('on')});var a=map[e.target.id];if(a)a.classList.add('on');}})},{rootMargin:'0px 0px -75% 0px'});
+ document.querySelectorAll('main h2[id],main h3[id]').forEach(function(h){io.observe(h)});
+})();
+</script></body></html>
