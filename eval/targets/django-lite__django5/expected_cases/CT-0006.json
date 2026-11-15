@@ -1,0 +1,47 @@
+{
+  "id": "CT-0006",
+  "slice": null,
+  "covers": [
+    "RULE-PROMOTE"
+  ],
+  "kind": "job",
+  "setup": {
+    "db_fixture": "fixtures/waitlisted_registration.json",
+    "stubs": [],
+    "clock": null,
+    "seed": null
+  },
+  "request": {
+    "job": "library.services.cancel",
+    "args": [
+      "--registration",
+      "1"
+    ]
+  },
+  "expect": {
+    "source": "recorded",
+    "status": 0,
+    "headers": {},
+    "body": null,
+    "db_after": {
+      "library_registration": "pk=3 waitlisted=false; pk=1 absent"
+    },
+    "stub_calls": [],
+    "messages": [],
+    "legacy_observed": null,
+    "recorded_runs": [],
+    "approved_by": ""
+  },
+  "normalize": [],
+  "decision": "preserve",
+  "decision_ref": "",
+  "provenance": {
+    "generator": "human",
+    "prompt_version": "",
+    "model": "",
+    "created": "2026-01-01T00:00:00+00:00"
+  },
+  "tags": [
+    "happy_path"
+  ]
+}

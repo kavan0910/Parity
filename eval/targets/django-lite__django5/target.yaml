@@ -1,0 +1,23 @@
+# django-lite__django5: target spec for the Phase 2 eval pair (docs/phase2-plan.md section 11).
+schema_version: 1
+kind: version_upgrade
+source:
+  language: python
+  runtime: '3.9'
+  framework: django@3.2
+target:
+  language: python
+  runtime: '3.12'
+  framework: django@5.0
+  build: pip
+  base_image: python:3.12-slim
+infra:
+  db: sqlite
+  messaging: none
+  deploy: container
+  port: 8000
+equivalence:
+  wire_compat: json-semantic
+  perf_regression_max_pct: 20
+strategy: in_place
+budget_usd: 5.0

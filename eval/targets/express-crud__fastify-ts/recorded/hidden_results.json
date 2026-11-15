@@ -1,0 +1,41 @@
+{
+  "note": "hand-written: the reference migration is expected to pass every hidden case",
+  "results": [
+    {
+      "case_id": "CT-0001",
+      "outcome": "pass"
+    },
+    {
+      "case_id": "CT-0002",
+      "outcome": "pass"
+    },
+    {
+      "case_id": "CT-0003",
+      "outcome": "pass"
+    },
+    {
+      "case_id": "CT-0004",
+      "outcome": "pass"
+    },
+    {
+      "case_id": "CT-0005",
+      "outcome": "pass"
+    },
+    {
+      "case_id": "CT-0006",
+      "outcome": "pass"
+    },
+    {
+      "case_id": "CT-0007",
+      "outcome": "pass"
+    },
+    {
+      "case_id": "CT-0008",
+      "outcome": "pass"
+    },
+    {
+      "case_id": "CT-0009",
+      "outcome": "pass"
+    }
+  ]
+}

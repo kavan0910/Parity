@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Maven settings for the harness build job. Maven ignores HTTPS_PROXY, so the sandbox egress proxy
+     (alias egress-proxy:3128 on the per-run internal build network) is configured here. The repository is
+     MA_MAVEN_MIRROR_URL (harness.yaml build.env); list its host in harness/mirror.json or MA_MIRROR_HOSTS.
+     No credentials here, ever: use a mirror that serves private artifacts without them in the sandbox. -->
+<settings xmlns="http://maven.apache.org/SETTINGS/1.2.0">
+  <mirrors>
+    <mirror>
+      <id>ma-mirror</id>
+      <mirrorOf>*</mirrorOf>
+      <url>${env.MA_MAVEN_MIRROR_URL}</url>
+    </mirror>
+  </mirrors>
+  <proxies>
+    <proxy><id>ma-https</id><active>true</active><protocol>https</protocol><host>egress-proxy</host><port>3128</port></proxy>
+    <proxy><id>ma-http</id><active>true</active><protocol>http</protocol><host>egress-proxy</host><port>3128</port></proxy>
+  </proxies>
+</settings>

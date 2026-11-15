@@ -1,0 +1,11 @@
+[
+  {
+    "model": "library.workshop",
+    "pk": 3,
+    "fields": {
+      "title": "Oversized",
+      "seats": 30,
+      "starts_at": "2030-03-01T09:00:00Z"
+    }
+  }
+]

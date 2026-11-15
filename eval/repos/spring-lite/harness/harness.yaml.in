@@ -1,0 +1,38 @@
+# Sandbox harness spec for the spring-lite fixture (docs/phase2-plan.md section 11, migrate/harness.py).
+# Paths are relative to the service source tree (legacy_src/ once imported). Named .yaml.in so Phase 1 does
+# not analyse it as service config; `harness build` copies it to <project>/harness/harness.yaml.
+schema_version: 1
+name: spring-lite
+legacy:
+  image: ma-fixture/spring-lite:legacy
+  dockerfile: harness/Dockerfile
+  context: harness
+  workdir: /work/app
+  build:
+    # harness/harness-pom.xml builds the unchanged sources (see its header). Offline: pre-populate
+    # harness/cache/m2 (mounted at /cache) and add -o; with a mirror, set MA_MAVEN_MIRROR_URL.
+    command: [mvn, -B, -q, -s, harness/maven-settings.xml, -f, harness/harness-pom.xml,
+              -Dmaven.repo.local=/cache/m2, -DskipTests, package]
+    network: mirror
+    cache: harness/cache/m2
+    timeout_s: 2400
+    env:
+      MA_MAVEN_MIRROR_URL: https://repo.maven.apache.org/maven2
+  start: [java, -jar, harness/target/spring-lite-harness.jar,
+          --server.port=8080,
+          --spring.datasource.url=jdbc:h2:mem:library,
+          --spring.jpa.hibernate.ddl-auto=create-drop,
+          --spring.jpa.defer-datasource-initialization=true,
+          --spring.sql.init.mode=always,
+          --spring.sql.init.data-locations=file:harness/seed/data.sql.in]
+  port: 8080
+  healthcheck:
+    path: /api/books
+    command:
+      - bash
+      - -c
+      - 'exec 3<>/dev/tcp/127.0.0.1/{port} && printf "GET {path} HTTP/1.0\r\n\r\n" >&3 && head -n 1 <&3 | grep -q " 200 "'
+    timeout_s: 240
+  limits: {cpus: 2.0, memory_mb: 2048, pids: 512, timeout_s: 900, disk_mb: 2048}
+db:
+  engine: none        # in-memory H2 inside the service; schema from JPA, rows from harness/seed/data.sql.in (.in: kept out of Phase 1 analysis)

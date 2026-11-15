@@ -1,0 +1,55 @@
+{
+  "id": "CT-0108",
+  "slice": null,
+  "covers": [
+    "Q-2",
+    "EP:ANY workshops/<int:workshop_id>/register/"
+  ],
+  "kind": "http",
+  "setup": {
+    "db_fixture": null,
+    "stubs": [],
+    "clock": null,
+    "seed": null
+  },
+  "request": {
+    "method": "POST",
+    "path": "/workshops/999/register/",
+    "headers": {
+      "content-type": "application/json"
+    },
+    "query": {},
+    "body": {
+      "email": "x@example.com"
+    }
+  },
+  "expect": {
+    "source": "specified",
+    "status": 404,
+    "headers": {},
+    "body": {
+      "error": "Workshop not found"
+    },
+    "db_after": {},
+    "stub_calls": [],
+    "messages": [],
+    "legacy_observed": {
+      "status": 500
+    },
+    "recorded_runs": [],
+    "approved_by": "eval-fixture"
+  },
+  "normalize": [],
+  "decision": "fix",
+  "decision_ref": "Q-2",
+  "provenance": {
+    "generator": "human",
+    "prompt_version": "",
+    "model": "",
+    "created": "2026-01-01T00:00:00+00:00"
+  },
+  "tags": [
+    "suspected_bug",
+    "error_path"
+  ]
+}

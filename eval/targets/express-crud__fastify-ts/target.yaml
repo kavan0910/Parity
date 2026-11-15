@@ -1,0 +1,23 @@
+# express-crud__fastify-ts: target spec for the Phase 2 eval pair (docs/phase2-plan.md section 11).
+schema_version: 1
+kind: framework_move
+source:
+  language: javascript
+  runtime: node@20
+  framework: express@4
+target:
+  language: typescript
+  runtime: node@20
+  framework: fastify@4
+  build: npm
+  base_image: node:20-alpine
+infra:
+  db: sqlite
+  messaging: none
+  deploy: container
+  port: 3000
+equivalence:
+  wire_compat: json-semantic
+  perf_regression_max_pct: 20
+strategy: strangler
+budget_usd: 8.0

@@ -1,0 +1,53 @@
+{
+  "schema_version": 1,
+  "quirks": [
+    {
+      "id": "Q-1",
+      "kind": "quirk",
+      "title": "Book JSON exposes only copiesAvailable: the entity has no other getters",
+      "evidence": {
+        "file": "src/main/java/com/acme/library/Book.java",
+        "start_line": 13,
+        "end_line": 14
+      },
+      "expected_decision": "preserve",
+      "case_ids": [
+        "CT-0001",
+        "CT-0002"
+      ],
+      "expected_behaviour": "GET/POST /api/books keep answering objects with copiesAvailable only (strict wire compat)"
+    },
+    {
+      "id": "Q-3",
+      "kind": "quirk",
+      "title": "Business-rule violations answer a generic HTTP 500 (IllegalStateException is not mapped)",
+      "evidence": {
+        "file": "src/main/java/com/acme/library/LoanService.java",
+        "start_line": 21,
+        "end_line": 30
+      },
+      "expected_decision": "preserve",
+      "case_ids": [
+        "CT-0003",
+        "CT-0004",
+        "CT-0005"
+      ],
+      "expected_behaviour": "suspended member, loan limit and no copies still answer 500 with the default error body"
+    },
+    {
+      "id": "Q-2",
+      "kind": "suspected_bug",
+      "title": "Successful checkout answers HTTP 500: Loan has no readable properties, so the saved loan cannot be serialised",
+      "evidence": {
+        "file": "src/main/java/com/acme/library/Loan.java",
+        "start_line": 14,
+        "end_line": 17
+      },
+      "expected_decision": "fix",
+      "case_ids": [
+        "CT-0006"
+      ],
+      "expected_behaviour": "checkout answers 200 with {dueDate: checkout day + 14} (clock pinned)"
+    }
+  ]
+}

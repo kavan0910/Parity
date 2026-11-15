@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "slice": null,
+  "legacy_run": null,
+  "new_run": null,
+  "cases_total": 9,
+  "cases_equivalent": 9,
+  "diffs": [
+    {
+      "id": "EQ-0001",
+      "case_id": "CT-0109",
+      "slice": null,
+      "field": "status",
+      "legacy": 204,
+      "new": 404,
+      "classification": "intended_divergence",
+      "triage": null,
+      "triage_quote": "",
+      "decision_ref": "Q-2",
+      "note": ""
+    }
+  ],
+  "untestable": {},
+  "created": "2026-01-01T00:00:00+00:00"
+}

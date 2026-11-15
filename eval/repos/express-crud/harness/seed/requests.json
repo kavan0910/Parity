@@ -1,0 +1,11 @@
+{
+  "note": "HTTP seed for the in-memory express-crud database. Replayed by the characterization recorder after `harness up`; x-api-token is the synthetic API_TOKEN of the running harness.",
+  "requests": [
+    {"method": "POST", "path": "/api/products", "auth": "API_TOKEN",
+     "body": {"sku": "BOOK-001", "name": "Legacy Systems Field Guide", "price": "19.99", "stock": 5}},
+    {"method": "POST", "path": "/api/products", "auth": "API_TOKEN",
+     "body": {"sku": "MUG-002", "name": "Coffee Mug", "price": "7.50", "stock": 0}},
+    {"method": "POST", "path": "/api/products", "auth": "API_TOKEN",
+     "body": {"sku": "PEN-003", "name": "Fountain Pen", "price": "42.00", "stock": 12}}
+  ]
+}

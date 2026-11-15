@@ -1,0 +1,11 @@
+{
+  "kind": "reference",
+  "note": "hand-written reference migration and results (not agent output); exercises the Phase 2 scorer and regression gate offline",
+  "build_ok": true,
+  "cost_usd": 0.0,
+  "wall_clock_s": 0.0,
+  "decisions": {
+    "Q-1": "preserve",
+    "Q-2": "fix"
+  }
+}

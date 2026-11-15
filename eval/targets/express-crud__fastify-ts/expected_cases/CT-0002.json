@@ -1,0 +1,56 @@
+{
+  "id": "CT-0002",
+  "slice": null,
+  "covers": [
+    "RULE-API-TOKEN",
+    "EP:POST /api/products"
+  ],
+  "kind": "http",
+  "setup": {
+    "db_fixture": null,
+    "stubs": [],
+    "clock": null,
+    "seed": null
+  },
+  "request": {
+    "method": "POST",
+    "path": "/api/products",
+    "headers": {
+      "content-type": "application/json"
+    },
+    "query": {},
+    "body": {
+      "sku": "X-1",
+      "name": "x",
+      "price": "1.00",
+      "stock": 1
+    }
+  },
+  "expect": {
+    "source": "recorded",
+    "status": 401,
+    "headers": {},
+    "body": {
+      "error": "unauthorized"
+    },
+    "db_after": {},
+    "stub_calls": [],
+    "messages": [],
+    "legacy_observed": null,
+    "recorded_runs": [],
+    "approved_by": ""
+  },
+  "normalize": [],
+  "decision": "preserve",
+  "decision_ref": "",
+  "provenance": {
+    "generator": "human",
+    "prompt_version": "",
+    "model": "",
+    "created": "2026-01-01T00:00:00+00:00"
+  },
+  "tags": [
+    "auth",
+    "error_path"
+  ]
+}

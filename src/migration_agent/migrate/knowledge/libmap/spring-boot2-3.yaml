@@ -1,0 +1,241 @@
+schema_version: 1
+id: spring-boot2-3
+version: 1
+title: Spring Boot 2.x -> 3.x (Spring Framework 6, Jakarta EE 9+, Hibernate 6)
+applies:
+  source: {language: java, framework: spring-boot, below: "3"}
+  target: {language: java, framework: spring-boot, at_least: "3"}
+known:
+  - "org.springframework.boot:*"
+  - "org.springframework:*"
+  - "org.springframework.data:*"
+  - "org.springframework.security:*"
+  - "com.h2database:h2"
+  - "org.postgresql:postgresql"
+  - "org.flywaydb:*"
+  - "org.liquibase:*"
+  - "org.projectlombok:lombok"
+entries:
+  - id: javax-persistence
+    title: javax.persistence moved to jakarta.persistence (JPA 3, Hibernate 6)
+    match:
+      dependencies: ["javax.persistence:*", "org.hibernate:hibernate-core", "org.hibernate:hibernate-entitymanager"]
+      code: ['\bjavax\.persistence\b']
+      files: ["*.java", "*.kt", "*.xml"]
+    replacement: jakarta.persistence.* (jakarta.persistence:jakarta.persistence-api 3.1, org.hibernate.orm:hibernate-core 6)
+    kind: library_replacement
+    severity: high
+    note: Spring Boot 3 requires Jakarta EE 9+ namespaces; javax.persistence imports no longer compile. hibernate-entitymanager is merged into hibernate-core and the group id changed to org.hibernate.orm.
+    source: https://github.com/spring-projects/spring-boot/wiki/Spring-Boot-3.0-Migration-Guide#jakarta-ee
+  - id: javax-validation
+    title: javax.validation moved to jakarta.validation (Bean Validation 3)
+    match:
+      dependencies: ["javax.validation:*", "org.hibernate.validator:hibernate-validator", "org.hibernate:hibernate-validator"]
+      code: ['\bjavax\.validation\b']
+      files: ["*.java", "*.kt"]
+    replacement: jakarta.validation.* via spring-boot-starter-validation
+    kind: library_replacement
+    severity: high
+    note: Annotations such as @NotNull/@Valid must come from jakarta.validation; javax ones are silently ignored if both are on the classpath, which disables validation.
+    source: https://github.com/spring-projects/spring-boot/wiki/Spring-Boot-3.0-Migration-Guide#jakarta-ee
+  - id: javax-servlet
+    title: javax.servlet moved to jakarta.servlet (Servlet 6)
+    match:
+      dependencies: ["javax.servlet:*"]
+      code: ['\bjavax\.servlet\b']
+      files: ["*.java", "*.kt", "*.xml"]
+    replacement: jakarta.servlet.* (Tomcat 10.1 / Jetty 12 / Undertow 2.3)
+    kind: library_replacement
+    severity: high
+    note: Filters, HttpServletRequest and listeners need the jakarta namespace; third-party filters must have Jakarta builds.
+    source: https://github.com/spring-projects/spring-boot/wiki/Spring-Boot-3.0-Migration-Guide#jakarta-ee
+  - id: javax-ee-other
+    title: Other Java EE javax.* packages moved to jakarta.*
+    match:
+      dependencies: ["javax.annotation:javax.annotation-api", "javax.transaction:*", "javax.inject:*", "javax.mail:*", "com.sun.mail:javax.mail", "javax.ws.rs:*", "javax.jms:*", "javax.websocket:*", "javax.el:*", "javax.json:*", "javax.cache:*"]
+      code: ['\bjavax\.(annotation\.(PostConstruct|PreDestroy|Resource|Resources|Priority|ManagedBean|security)|transaction(?!\.xa\b)|inject|mail|ws\.rs|jms|websocket|el|faces|enterprise|ejb|json|batch|interceptor|decorator|security\.enterprise)\b']
+      files: ["*.java", "*.kt"]
+    replacement: the jakarta.* equivalent (jakarta.annotation, jakarta.transaction, jakarta.inject, jakarta.mail ...)
+    kind: library_replacement
+    severity: high
+    note: javax.transaction.xa, javax.sql, javax.crypto, javax.net and other JDK javax packages stay as they are. javax.cache (JSR-107) keeps its namespace.
+    source: https://github.com/spring-projects/spring-boot/wiki/Spring-Boot-3.0-Migration-Guide#jakarta-ee
+  - id: springfox
+    title: Springfox (Swagger 2) does not work with Spring Boot 3
+    match:
+      dependencies: ["io.springfox:*"]
+      code: ['\bspringfox\.', '@EnableSwagger2\b']
+      files: ["*.java", "*.kt"]
+    replacement: org.springdoc:springdoc-openapi-starter-webmvc-ui (springdoc 2.x), io.swagger.v3.oas.annotations
+    kind: library_replacement
+    severity: medium
+    note: Springfox is unmaintained and fails on Spring Framework 6. Docket configuration and @Api/@ApiOperation annotations need rewriting; the published OpenAPI document changes (2.0 -> 3.0), which clients may notice.
+    source: https://springdoc.org/#migrating-from-springfox
+  - id: trailing-slash-matching
+    title: Trailing slash matching is disabled by default (Spring Framework 6)
+    match:
+      code: ['@(Get|Post|Put|Delete|Patch|Request)Mapping\b']
+      files: ["*.java", "*.kt"]
+      unless: ['setUseTrailingSlashMatch\s*\(\s*true\s*\)', 'UrlHandlerFilter']
+    replacement: keep the legacy behaviour with an explicit redirect/filter (UrlHandlerFilter in 6.2) or accept 404 for "/path/"
+    kind: semantic_shift
+    severity: medium
+    note: In Boot 2 a request to /api/books/ matched @GetMapping("/api/books"); in Boot 3 it returns 404. Every endpoint is affected; decide preserve (add a filter) or accept the change.
+    source: https://github.com/spring-projects/spring-framework/wiki/Upgrading-to-Spring-Framework-6.x#web-applications
+  - id: websecurityconfigureradapter
+    title: WebSecurityConfigurerAdapter was removed (Spring Security 6)
+    match:
+      code: ['\bWebSecurityConfigurerAdapter\b', '@EnableGlobalMethodSecurity\b', '\.antMatchers\s*\(', '\.mvcMatchers\s*\(', '\.authorizeRequests\s*\(']
+      files: ["*.java", "*.kt"]
+    replacement: a SecurityFilterChain @Bean, @EnableMethodSecurity, requestMatchers(..), authorizeHttpRequests(..)
+    kind: removed_api
+    severity: high
+    note: authorizeHttpRequests also applies to all dispatcher types (ERROR, FORWARD) by default, which can change which requests are allowed.
+    source: https://docs.spring.io/spring-security/reference/6.0/migration/servlet/config.html
+  - id: spring-factories-autoconfig
+    title: Auto-configuration registration in spring.factories is no longer read
+    match:
+      code: ['^\s*org\.springframework\.boot\.autoconfigure\.EnableAutoConfiguration\s*=']
+      files: ["spring.factories"]
+    replacement: META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports
+    kind: removed_api
+    severity: high
+    note: Auto-configurations listed only in spring.factories are silently not loaded in Boot 3.
+    source: https://github.com/spring-projects/spring-boot/wiki/Spring-Boot-3.0-Migration-Guide#auto-configuration-files
+  - id: httpstatus-code
+    title: ResponseEntity/ClientHttpResponse getStatusCode() returns HttpStatusCode, getRawStatusCode() deprecated
+    match:
+      code: ['\.getRawStatusCode\s*\(', '\.getStatusCode\s*\(\s*\)\s*\.(series|getReasonPhrase|name)\s*\(']
+      files: ["*.java", "*.kt"]
+    replacement: HttpStatusCode.value() / HttpStatus.resolve(..)
+    kind: removed_api
+    severity: low
+    note: Compile errors for code that used HttpStatus-only methods on the returned value.
+    source: https://github.com/spring-projects/spring-framework/wiki/Upgrading-to-Spring-Framework-6.x#web-applications
+  - id: apache-httpclient4
+    title: RestTemplate supports only Apache HttpClient 5
+    match:
+      dependencies: ["org.apache.httpcomponents:httpclient"]
+      code: ['\bHttpComponentsClientHttpRequestFactory\b', '\borg\.apache\.http\.']
+      files: ["*.java", "*.kt"]
+    replacement: org.apache.httpcomponents.client5:httpclient5
+    kind: library_replacement
+    severity: medium
+    note: Timeouts and connection-pool settings have different names and defaults in HttpClient 5.
+    source: https://github.com/spring-projects/spring-boot/wiki/Spring-Boot-3.0-Migration-Guide#apache-httpclient-in-resttemplate
+  - id: sleuth
+    title: Spring Cloud Sleuth is replaced by Micrometer Tracing
+    match:
+      dependencies: ["org.springframework.cloud:spring-cloud-starter-sleuth", "org.springframework.cloud:spring-cloud-sleuth-*"]
+      code: ['\borg\.springframework\.cloud\.sleuth\b']
+      files: ["*.java", "*.kt"]
+    replacement: io.micrometer:micrometer-tracing-bridge-brave (or -otel)
+    kind: library_replacement
+    severity: medium
+    note: Trace/span header propagation defaults (B3 vs W3C) differ; downstream log correlation can break.
+    source: https://github.com/micrometer-metrics/tracing/wiki/Spring-Cloud-Sleuth-3.1-Migration-Guide
+  - id: mysql-connector
+    title: MySQL driver coordinates changed
+    match:
+      dependencies: ["mysql:mysql-connector-java"]
+    replacement: com.mysql:mysql-connector-j
+    kind: library_replacement
+    severity: low
+    note: Boot 3 dependency management only manages com.mysql:mysql-connector-j.
+    source: https://github.com/spring-projects/spring-boot/wiki/Spring-Boot-3.0-Migration-Guide#mysql-jdbc-driver
+  - id: ehcache2
+    title: Ehcache 2 support was removed
+    match:
+      dependencies: ["net.sf.ehcache:*"]
+      code: ['\bnet\.sf\.ehcache\b']
+    replacement: org.ehcache:ehcache (3.x, jakarta classifier) via JCache
+    kind: library_replacement
+    severity: medium
+    note: Ehcache 3 has a different configuration format.
+    source: https://github.com/spring-projects/spring-boot/wiki/Spring-Boot-3.0-Migration-Guide#ehcache-2-support
+  - id: hibernate6-semantics
+    title: Hibernate 6 changes id generation, type mapping and query semantics
+    match:
+      code: ['@GeneratedValue\b', '@Type\s*\(\s*type\s*=', '@TypeDef\b', '\bcreateQuery\s*\(']
+      files: ["*.java", "*.kt"]
+    replacement: review @GeneratedValue (sequence per entity, allocation size 50), @JdbcTypeCode instead of @Type(type=..), HQL changes
+    kind: semantic_shift
+    severity: medium
+    note: GenerationType.AUTO now uses a sequence per entity (hibernate_sequence no longer shared); generated ids, SQL and some result types change.
+    source: https://github.com/hibernate/hibernate-orm/blob/6.0/migration-guide.adoc
+  - id: constructor-binding
+    title: "@ConstructorBinding is no longer needed at type level and moved package"
+    match:
+      code: ['@ConstructorBinding\b']
+      files: ["*.java", "*.kt"]
+    replacement: remove it (single constructor) or use org.springframework.boot.context.properties.bind.ConstructorBinding on the constructor
+    kind: removed_api
+    severity: low
+    note: Compile error until the import changes.
+    source: https://github.com/spring-projects/spring-boot/wiki/Spring-Boot-3.0-Migration-Guide#constructingbinding-no-longer-needed-at-the-type-level
+  - id: prop-spring-redis
+    title: spring.redis.* properties moved to spring.data.redis.*
+    match:
+      config_keys: ['^spring\.redis\.']
+      code: ['^\s*spring\.redis\.']
+      files: ["*.properties", "*.yml", "*.yaml"]
+    replacement: spring.data.redis.*
+    kind: config_rename
+    severity: medium
+    note: The old keys are ignored (spring-boot-properties-migrator reports them at start-up), so Redis silently falls back to localhost:6379.
+    source: https://github.com/spring-projects/spring-boot/wiki/Spring-Boot-3.0-Migration-Guide#redis-properties
+  - id: prop-max-http-header-size
+    title: server.max-http-header-size renamed to server.max-http-request-header-size
+    match:
+      config_keys: ['^server\.max-http-header-size$']
+      code: ['^\s*server\.max-http-header-size\b']
+      files: ["*.properties", "*.yml", "*.yaml"]
+    replacement: server.max-http-request-header-size
+    kind: config_rename
+    severity: low
+    note: The new property applies to request headers only.
+    source: https://github.com/spring-projects/spring-boot/wiki/Spring-Boot-3.0-Migration-Guide#web-application-changes
+  - id: prop-metrics-export
+    title: management.metrics.export.<product>.* moved to management.<product>.metrics.export.*
+    match:
+      config_keys: ['^management\.metrics\.export\.']
+      code: ['^\s*management\.metrics\.export\.']
+      files: ["*.properties", "*.yml", "*.yaml"]
+    replacement: management.<product>.metrics.export.*
+    kind: config_rename
+    severity: low
+    note: Old keys are ignored; metrics stop being exported.
+    source: https://github.com/spring-projects/spring-boot/wiki/Spring-Boot-3.0-Migration-Guide#actuator-metrics-export-properties
+  - id: prop-httptrace
+    title: management.trace.http.* renamed to management.httpexchanges.*
+    match:
+      config_keys: ['^management\.trace\.http\.']
+      code: ['^\s*management\.trace\.http\.', '\bHttpTraceRepository\b']
+      files: ["*.properties", "*.yml", "*.yaml", "*.java"]
+    replacement: management.httpexchanges.*, HttpExchangeRepository
+    kind: config_rename
+    severity: low
+    note: The httptrace actuator endpoint is now httpexchanges.
+    source: https://github.com/spring-projects/spring-boot/wiki/Spring-Boot-3.0-Migration-Guide#httptrace-endpoint-renamed-to-httpexchanges
+  - id: prop-use-new-id-generator
+    title: spring.jpa.hibernate.use-new-id-generator-mappings was removed
+    match:
+      config_keys: ['^spring\.jpa\.hibernate\.use-new-id-generator-mappings$']
+      code: ['^\s*spring\.jpa\.hibernate\.use-new-id-generator-mappings\b']
+      files: ["*.properties", "*.yml", "*.yaml"]
+    replacement: none (Hibernate 6 always uses the new generators)
+    kind: config_rename
+    severity: medium
+    note: Projects that set it to false relied on the legacy table-based generator; ids are generated differently after the upgrade.
+    source: https://github.com/spring-projects/spring-boot/wiki/Spring-Boot-3.0-Migration-Guide#data-access-changes
+  - id: prop-data-cassandra
+    title: spring.data.cassandra.* moved to spring.cassandra.*
+    match:
+      config_keys: ['^spring\.data\.cassandra\.']
+      code: ['^\s*spring\.data\.cassandra\.']
+      files: ["*.properties", "*.yml", "*.yaml"]
+    replacement: spring.cassandra.*
+    kind: config_rename
+    severity: low
+    note: Old keys are ignored.
+    source: https://github.com/spring-projects/spring-boot/wiki/Spring-Boot-3.0-Migration-Guide#cassandra-properties

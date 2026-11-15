@@ -1,0 +1,6 @@
+-- Seed rows for the in-memory H2 database (loaded by spring.sql.init after Hibernate creates the schema).
+-- Ids start at 1001 so they never collide with the Hibernate sequences (allocation from 1).
+INSERT INTO book (id, isbn, title, copies_available) VALUES (1001, '978-0131103627', 'The C Programming Language', 2);
+INSERT INTO book (id, isbn, title, copies_available) VALUES (1002, '978-0201633610', 'Design Patterns', 0);
+INSERT INTO member (id, name, suspended) VALUES (1001, 'Ada', false);
+INSERT INTO member (id, name, suspended) VALUES (1002, 'Bob (suspended)', true);

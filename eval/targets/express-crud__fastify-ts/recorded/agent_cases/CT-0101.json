@@ -1,0 +1,45 @@
+{
+  "id": "CT-0101",
+  "slice": null,
+  "covers": [
+    "EP:GET /api/products"
+  ],
+  "kind": "http",
+  "setup": {
+    "db_fixture": null,
+    "stubs": [],
+    "clock": null,
+    "seed": null
+  },
+  "request": {
+    "method": "GET",
+    "path": "/api/products",
+    "headers": {},
+    "query": {},
+    "body": null
+  },
+  "expect": {
+    "source": "recorded",
+    "status": 200,
+    "headers": {},
+    "body": null,
+    "db_after": {},
+    "stub_calls": [],
+    "messages": [],
+    "legacy_observed": null,
+    "recorded_runs": [],
+    "approved_by": ""
+  },
+  "normalize": [],
+  "decision": "preserve",
+  "decision_ref": "",
+  "provenance": {
+    "generator": "human",
+    "prompt_version": "",
+    "model": "",
+    "created": "2026-01-01T00:00:00+00:00"
+  },
+  "tags": [
+    "happy_path"
+  ]
+}

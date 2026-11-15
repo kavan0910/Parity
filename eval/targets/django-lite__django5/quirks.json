@@ -1,0 +1,35 @@
+{
+  "schema_version": 1,
+  "quirks": [
+    {
+      "id": "Q-1",
+      "kind": "quirk",
+      "title": "Duplicate check is case-sensitive: FIRST@example.com registers again",
+      "evidence": {
+        "file": "library/services.py",
+        "start_line": 7,
+        "end_line": 8
+      },
+      "expected_decision": "preserve",
+      "case_ids": [
+        "CT-0007"
+      ],
+      "expected_behaviour": "a differently-cased email is a new (waitlisted) registration"
+    },
+    {
+      "id": "Q-2",
+      "kind": "suspected_bug",
+      "title": "Unknown workshop id answers HTTP 500 (Workshop.DoesNotExist is not handled)",
+      "evidence": {
+        "file": "library/views.py",
+        "start_line": 16,
+        "end_line": 16
+      },
+      "expected_decision": "fix",
+      "case_ids": [
+        "CT-0008"
+      ],
+      "expected_behaviour": "404 {error: Workshop not found}"
+    }
+  ]
+}

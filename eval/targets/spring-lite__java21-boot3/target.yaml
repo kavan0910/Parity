@@ -1,0 +1,32 @@
+# spring-lite__java21-boot3: target spec for the Phase 2 eval pair (docs/phase2-plan.md section 11).
+schema_version: 1
+kind: version_upgrade
+source:
+  language: java
+  runtime: '17'
+  framework: spring-boot@3.2
+target:
+  language: java
+  runtime: '21'
+  framework: spring-boot@3.3
+  build: maven
+  base_image: eclipse-temurin:21-jre
+infra:
+  db: h2
+  messaging: none
+  deploy: container
+  port: 8080
+style:
+  formatter: ''
+  linters: []
+  package_root: com.acme.library
+  rules: []
+libraries:
+  allow: []
+  deny:
+  - commons-logging
+equivalence:
+  wire_compat: strict
+  perf_regression_max_pct: 20
+strategy: in_place
+budget_usd: 5.0

@@ -1,0 +1,63 @@
+{
+  "id": "CT-0106",
+  "slice": null,
+  "covers": [
+    "RULE-LOAN-PERIOD",
+    "EP:POST /api/loans/checkout/{bookId}",
+    "Q-2"
+  ],
+  "kind": "http",
+  "setup": {
+    "db_fixture": null,
+    "stubs": [],
+    "clock": "2030-01-01T09:00:00Z",
+    "seed": null
+  },
+  "request": {
+    "method": "POST",
+    "path": "/api/loans/checkout/1001",
+    "headers": {
+      "content-type": "application/json"
+    },
+    "query": {},
+    "body": {
+      "id": 1001,
+      "suspended": false
+    }
+  },
+  "expect": {
+    "source": "specified",
+    "status": 200,
+    "headers": {},
+    "body": {
+      "dueDate": "2030-01-15"
+    },
+    "db_after": {},
+    "stub_calls": [],
+    "messages": [],
+    "legacy_observed": {
+      "status": 500,
+      "body": {
+        "timestamp": "<masked>",
+        "status": 500,
+        "error": "Internal Server Error",
+        "path": "/api/loans/checkout/1001"
+      }
+    },
+    "recorded_runs": [],
+    "approved_by": "eval-fixture"
+  },
+  "normalize": [],
+  "decision": "fix",
+  "decision_ref": "Q-2",
+  "provenance": {
+    "generator": "human",
+    "prompt_version": "",
+    "model": "",
+    "created": "2026-01-01T00:00:00+00:00"
+  },
+  "tags": [
+    "suspected_bug",
+    "happy_path"
+  ]
+}

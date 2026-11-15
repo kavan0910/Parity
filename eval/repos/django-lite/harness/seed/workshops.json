@@ -1,0 +1,10 @@
+[
+  {"model": "library.workshop", "pk": 1,
+   "fields": {"title": "Intro to Legacy Refactoring", "seats": 2, "starts_at": "2030-01-15T09:00:00Z"}},
+  {"model": "library.workshop", "pk": 2,
+   "fields": {"title": "Strangler Fig in Practice", "seats": 25, "starts_at": "2030-02-01T13:00:00Z"}},
+  {"model": "library.registration", "pk": 1,
+   "fields": {"workshop": 1, "email": "first@example.com", "waitlisted": false}},
+  {"model": "library.registration", "pk": 2,
+   "fields": {"workshop": 1, "email": "second@example.com", "waitlisted": false}}
+]

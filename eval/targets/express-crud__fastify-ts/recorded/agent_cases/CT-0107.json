@@ -1,0 +1,51 @@
+{
+  "id": "CT-0107",
+  "slice": null,
+  "covers": [
+    "RULE-NO-CANCEL-SHIPPED",
+    "EP:POST /api/orders/:id/cancel"
+  ],
+  "kind": "http",
+  "setup": {
+    "db_fixture": "fixtures/shipped_order.sql",
+    "stubs": [],
+    "clock": null,
+    "seed": null
+  },
+  "request": {
+    "method": "POST",
+    "path": "/api/orders/1/cancel",
+    "headers": {
+      "x-api-token": "<synthetic:API_TOKEN>",
+      "content-type": "application/json"
+    },
+    "query": {},
+    "body": null
+  },
+  "expect": {
+    "source": "recorded",
+    "status": 400,
+    "headers": {},
+    "body": {
+      "error": "Shipped orders cannot be cancelled"
+    },
+    "db_after": {},
+    "stub_calls": [],
+    "messages": [],
+    "legacy_observed": null,
+    "recorded_runs": [],
+    "approved_by": ""
+  },
+  "normalize": [],
+  "decision": "preserve",
+  "decision_ref": "",
+  "provenance": {
+    "generator": "human",
+    "prompt_version": "",
+    "model": "",
+    "created": "2026-01-01T00:00:00+00:00"
+  },
+  "tags": [
+    "error_path"
+  ]
+}

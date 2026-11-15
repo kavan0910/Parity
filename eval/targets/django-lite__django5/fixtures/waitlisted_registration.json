@@ -1,0 +1,11 @@
+[
+  {
+    "model": "library.registration",
+    "pk": 3,
+    "fields": {
+      "workshop": 1,
+      "email": "third@example.com",
+      "waitlisted": true
+    }
+  }
+]

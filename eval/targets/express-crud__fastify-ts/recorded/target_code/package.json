@@ -1,0 +1,19 @@
+{
+  "name": "express-crud-fastify",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "build": "tsc -p .",
+    "start": "node dist/server.js",
+    "test": "node --test"
+  },
+  "dependencies": {
+    "fastify": "4.28.1",
+    "sequelize": "6.37.3",
+    "sqlite3": "5.1.7"
+  },
+  "devDependencies": {
+    "typescript": "5.5.4",
+    "@types/node": "20.14.10"
+  }
+}

@@ -1,0 +1,35 @@
+{
+  "schema_version": 1,
+  "quirks": [
+    {
+      "id": "Q-1",
+      "kind": "quirk",
+      "title": "Bulk discount is applied in floating point and never rounded (total 505.75500000000005)",
+      "evidence": {
+        "file": "src/services/orderService.js",
+        "start_line": 22,
+        "end_line": 23
+      },
+      "expected_decision": "preserve",
+      "case_ids": [
+        "CT-0008"
+      ],
+      "expected_behaviour": "the create-order response carries the unrounded float total"
+    },
+    {
+      "id": "Q-2",
+      "kind": "suspected_bug",
+      "title": "Deleting an unknown product answers 204 (the service's false result is ignored)",
+      "evidence": {
+        "file": "src/routes/products.js",
+        "start_line": 23,
+        "end_line": 25
+      },
+      "expected_decision": "fix",
+      "case_ids": [
+        "CT-0009"
+      ],
+      "expected_behaviour": "404 for an unknown product id"
+    }
+  ]
+}

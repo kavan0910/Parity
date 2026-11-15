@@ -1,0 +1,192 @@
+schema_version: 1
+id: django3-5
+version: 1
+title: Django 3.2 LTS -> 5.x
+applies:
+  source: {language: python, framework: django, below: "4"}
+  target: {language: python, framework: django, at_least: "5"}
+known:
+  - "django"
+  - "psycopg2"
+  - "psycopg2-binary"
+  - "psycopg"
+  - "gunicorn"
+  - "whitenoise"
+  - "pytest"
+  - "pytest-django"
+  - "requests"
+entries:
+  - id: use-l10n-removed
+    title: The USE_L10N setting was removed (Django 5.0); localized formatting is always on
+    match:
+      config_keys: ['^USE_L10N$']
+      code: ['^\s*USE_L10N\s*=']
+      files: ["*.py"]
+    replacement: delete the setting; if it was False, pin formats explicitly (DATE_FORMAT, NUMBER_GROUPING, |date filters)
+    kind: config_rename
+    severity: medium
+    needs_decision: true
+    note: With USE_L10N = False the legacy service rendered dates and numbers with DATE_FORMAT etc.; Django 5 always uses the locale format, which changes rendered output.
+    source: https://docs.djangoproject.com/en/5.0/releases/5.0/#features-removed-in-5-0
+  - id: use-tz-default
+    title: USE_TZ defaults to True in Django 5.0
+    match:
+      code: ['^\s*INSTALLED_APPS\s*=']
+      files: ["*.py"]
+      unless: ['^\s*USE_TZ\s*=']
+    replacement: set USE_TZ explicitly (False keeps the legacy naive-datetime behaviour)
+    kind: semantic_shift
+    severity: medium
+    note: Settings that never set USE_TZ were naive-datetime in 3.2 and become timezone-aware in 5.0; stored and rendered datetimes change.
+    source: https://docs.djangoproject.com/en/5.0/releases/5.0/#features-removed-in-5-0
+  - id: conf-urls-url
+    title: django.conf.urls.url() was removed (Django 4.0)
+    match:
+      code: ['\bfrom\s+django\.conf\.urls\s+import\s+[^#]*\burl\b', '\bdjango\.conf\.urls\.url\s*\(', '^\s*url\s*\(\s*r?[''"]']
+      files: ["*.py"]
+    replacement: django.urls.re_path (same regex semantics) or path() with converters
+    kind: removed_api
+    severity: high
+    note: re_path keeps the regex; switching to path() changes matching (e.g. trailing slash, int converters reject leading zeros).
+    source: https://docs.djangoproject.com/en/4.0/releases/4.0/#features-removed-in-4-0
+  - id: ugettext-removed
+    title: ugettext / ugettext_lazy / ungettext aliases were removed (Django 4.0)
+    match:
+      code: ['\bu(n)?gettext(_lazy|_noop)?\b']
+      files: ["*.py"]
+    replacement: gettext, gettext_lazy, ngettext
+    kind: removed_api
+    severity: high
+    note: ImportError at start-up.
+    source: https://docs.djangoproject.com/en/4.0/releases/4.0/#features-removed-in-4-0
+  - id: force-text-removed
+    title: force_text / smart_text were removed (Django 4.0)
+    match:
+      code: ['\b(force|smart)_text\b']
+      files: ["*.py"]
+    replacement: force_str / smart_str
+    kind: removed_api
+    severity: high
+    note: ImportError at start-up.
+    source: https://docs.djangoproject.com/en/4.0/releases/4.0/#features-removed-in-4-0
+  - id: is-ajax-removed
+    title: HttpRequest.is_ajax() was removed (Django 4.0)
+    match:
+      code: ['\.is_ajax\s*\(\s*\)']
+      files: ["*.py"]
+    replacement: request.headers.get("x-requested-with") == "XMLHttpRequest" (or inspect Accept)
+    kind: removed_api
+    severity: medium
+    note: AttributeError at request time, so it only shows up on the code path that uses it.
+    source: https://docs.djangoproject.com/en/4.0/releases/4.0/#features-removed-in-4-0
+  - id: nullbooleanfield-removed
+    title: models.NullBooleanField was removed (Django 4.0, only kept for old migrations)
+    match:
+      code: ['\bNullBooleanField\s*\(']
+      files: ["*.py"]
+    replacement: BooleanField(null=True)
+    kind: removed_api
+    severity: high
+    note: Needs a migration; the column type stays nullable boolean.
+    source: https://docs.djangoproject.com/en/4.0/releases/4.0/#features-removed-in-4-0
+  - id: postgres-jsonfield
+    title: django.contrib.postgres JSONField was removed (Django 4.0)
+    match:
+      code: ['\bdjango\.contrib\.postgres\.(fields|forms)\b[^#]*\bJSONField\b', '\bpostgres\.fields\.JSONField\b']
+      files: ["*.py"]
+    replacement: django.db.models.JSONField
+    kind: removed_api
+    severity: high
+    note: Key/contains lookups behave the same on PostgreSQL; check custom encoders.
+    source: https://docs.djangoproject.com/en/4.0/releases/4.0/#features-removed-in-4-0
+  - id: timezone-utc-removed
+    title: django.utils.timezone.utc was removed (Django 5.0)
+    match:
+      code: ['\btimezone\.utc\b', '\bfrom\s+django\.utils\.timezone\s+import\s+[^#]*\butc\b']
+      files: ["*.py"]
+    replacement: datetime.timezone.utc
+    kind: removed_api
+    severity: medium
+    note: The datetime.timezone.utc alias is equivalent.
+    source: https://docs.djangoproject.com/en/5.0/releases/5.0/#features-removed-in-5-0
+  - id: pytz-removed
+    title: pytz support was removed (Django 5.0, zoneinfo only)
+    match:
+      code: ['^\s*import\s+pytz\b', '^\s*from\s+pytz\s+import', '^\s*USE_DEPRECATED_PYTZ\s*=']
+      files: ["*.py"]
+    replacement: zoneinfo.ZoneInfo
+    kind: semantic_shift
+    severity: medium
+    note: pytz localize()/normalize() semantics differ from zoneinfo around DST transitions.
+    source: https://docs.djangoproject.com/en/5.0/releases/5.0/#features-removed-in-5-0
+  - id: storage-settings
+    title: DEFAULT_FILE_STORAGE / STATICFILES_STORAGE were removed (Django 5.1)
+    match:
+      config_keys: ['^(DEFAULT_FILE_STORAGE|STATICFILES_STORAGE)$']
+      code: ['^\s*(DEFAULT_FILE_STORAGE|STATICFILES_STORAGE)\s*=']
+      files: ["*.py"]
+    replacement: the STORAGES setting
+    kind: config_rename
+    severity: medium
+    note: Old settings are ignored in 5.1; uploads silently go to the default FileSystemStorage.
+    source: https://docs.djangoproject.com/en/5.1/releases/5.1/#features-removed-in-5-1
+  - id: index-together
+    title: Meta.index_together was removed (Django 5.1)
+    match:
+      code: ['^\s*index_together\s*=']
+      files: ["*.py"]
+    replacement: Meta.indexes = [models.Index(fields=[...])]
+    kind: removed_api
+    severity: medium
+    note: Requires a migration (RenameIndex keeps the existing index).
+    source: https://docs.djangoproject.com/en/5.1/releases/5.1/#features-removed-in-5-1
+  - id: removed-settings-4
+    title: PASSWORD_RESET_TIMEOUT_DAYS / DEFAULT_HASHING_ALGORITHM were removed (Django 4.0)
+    match:
+      config_keys: ['^(PASSWORD_RESET_TIMEOUT_DAYS|DEFAULT_HASHING_ALGORITHM)$']
+      code: ['^\s*(PASSWORD_RESET_TIMEOUT_DAYS|DEFAULT_HASHING_ALGORITHM)\s*=']
+      files: ["*.py"]
+    replacement: PASSWORD_RESET_TIMEOUT (seconds); sha256 signing is always used
+    kind: config_rename
+    severity: medium
+    note: Tokens and signed values produced by the legacy service with sha1 may stop validating after the upgrade.
+    source: https://docs.djangoproject.com/en/4.0/releases/4.0/#features-removed-in-4-0
+  - id: csrf-trusted-origins-scheme
+    title: CSRF_TRUSTED_ORIGINS entries must include the scheme (Django 4.0)
+    match:
+      config_keys: ['^CSRF_TRUSTED_ORIGINS$']
+      code: ['^\s*CSRF_TRUSTED_ORIGINS\s*=']
+      files: ["*.py"]
+    replacement: "https://example.com instead of example.com"
+    kind: semantic_shift
+    severity: medium
+    note: Entries without a scheme make Django 4+ fail the system check / reject cross-origin POSTs.
+    source: https://docs.djangoproject.com/en/4.0/releases/4.0/#csrf-trusted-origins-changes
+  - id: removed-utils-5
+    title: django.utils.datetime_safe / baseconv were removed (Django 5.0)
+    match:
+      code: ['\bdjango\.utils\.(datetime_safe|baseconv)\b']
+      files: ["*.py"]
+    replacement: datetime module; custom base conversion
+    kind: removed_api
+    severity: low
+    note: ImportError at start-up.
+    source: https://docs.djangoproject.com/en/5.0/releases/5.0/#features-removed-in-5-0
+  - id: drf-version
+    title: Django REST framework must be 3.15+ for Django 5
+    match:
+      dependencies: ["djangorestframework"]
+    replacement: djangorestframework>=3.15
+    kind: library_replacement
+    severity: low
+    note: Older releases import removed Django APIs.
+    source: https://www.django-rest-framework.org/community/release-notes/
+  - id: python-runtime
+    title: Django 5.x requires Python 3.10+
+    match:
+      dependencies: ["django"]
+    replacement: Python 3.10, 3.11 or 3.12 base image
+    kind: library_replacement
+    severity: low
+    note: Django 3.2 ran on 3.6-3.10; check the runtime of the target image and any C extensions.
+    source: https://docs.djangoproject.com/en/5.0/faq/install/#what-python-version-can-i-use-with-django

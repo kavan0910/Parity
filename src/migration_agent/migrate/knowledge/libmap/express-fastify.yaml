@@ -1,0 +1,198 @@
+schema_version: 1
+id: express-fastify
+version: 1
+title: Express 4 -> Fastify 4/5
+applies:
+  source: {language: javascript, framework: express}
+  target: {language: javascript, framework: fastify}
+known:
+  - "sequelize"
+  - "sqlite3"
+  - "pg"
+  - "mysql2"
+  - "mongoose"
+  - "knex"
+  - "prisma"
+  - "@prisma/client"
+  - "dotenv"
+  - "jsonwebtoken"
+  - "bcrypt"
+  - "bcryptjs"
+  - "lodash"
+  - "uuid"
+  - "axios"
+  - "jest"
+  - "mocha"
+  - "supertest"
+  - "nodemon"
+  - "eslint"
+  - "winston"
+  - "pino"
+entries:
+  - id: express-core
+    title: express app and routing -> fastify instance and route plugins
+    match:
+      dependencies: ["express"]
+      code: ['require\(\s*[''"]express[''"]\s*\)', '\bfrom\s+[''"]express[''"]']
+      files: ["*.js", "*.mjs", "*.cjs", "*.ts"]
+    replacement: fastify (app.get/post -> fastify.get/post with (request, reply); routers -> plugins registered with { prefix })
+    kind: library_replacement
+    severity: medium
+    note: Handlers return a value or call reply.send(); res.status(x).json(y) becomes reply.code(x).send(y).
+    source: https://fastify.dev/docs/latest/Guides/Migration-Guide-V4/
+  - id: express-router
+    title: express.Router() -> encapsulated Fastify plugins
+    match:
+      code: ['\bexpress\.Router\s*\(', '\bRouter\s*\(\s*\)']
+      files: ["*.js", "*.mjs", "*.cjs", "*.ts"]
+    replacement: "async function routes(fastify) { ... } registered with fastify.register(routes, { prefix: '/x' })"
+    kind: library_replacement
+    severity: medium
+    note: Plugin encapsulation scopes hooks and decorators; middleware mounted on a router applies only inside its plugin.
+    source: https://fastify.dev/docs/latest/Reference/Plugins/
+  - id: app-use-middleware
+    title: app.use() middleware -> Fastify hooks (or @fastify/middie)
+    match:
+      code: ['\b(app|router|server)\.use\s*\(']
+      files: ["*.js", "*.mjs", "*.cjs", "*.ts"]
+    replacement: onRequest / preHandler hooks, or @fastify/express / @fastify/middie for unported Connect middleware
+    kind: library_replacement
+    severity: medium
+    note: Express runs middleware in registration order for matching paths; Fastify hooks run per lifecycle phase. Order-dependent middleware (auth before body parsing) needs review.
+    source: https://fastify.dev/docs/latest/Reference/Hooks/
+  - id: body-parsing
+    title: Body parsing is built in; express.json()/body-parser go away
+    match:
+      dependencies: ["body-parser"]
+      code: ['\bexpress\.(json|urlencoded|text|raw)\s*\(', '\bbodyParser\.(json|urlencoded|text|raw)\s*\(']
+      files: ["*.js", "*.mjs", "*.cjs", "*.ts"]
+    replacement: built-in application/json parser; @fastify/formbody for urlencoded; addContentTypeParser for others
+    kind: semantic_shift
+    severity: medium
+    note: express.json() defaults to a 100 kB limit and ignores bodies with other content types (req.body = {}); Fastify's default bodyLimit is 1 MiB and it answers 415 for unknown content types and 400 for an empty JSON body.
+    source: https://fastify.dev/docs/latest/Reference/ContentTypeParser/
+  - id: error-handler
+    title: Express error middleware (err, req, res, next) -> setErrorHandler
+    match:
+      code: ['\(\s*err\w*\s*,\s*req\w*\s*,\s*res\w*\s*,\s*next\w*\s*\)']
+      files: ["*.js", "*.mjs", "*.cjs", "*.ts"]
+    replacement: fastify.setErrorHandler((error, request, reply) => ...) and setNotFoundHandler
+    kind: semantic_shift
+    severity: high
+    needs_decision: true
+    note: Default error bodies differ (Express sends an HTML page in development / plain text; Fastify sends JSON {statusCode, error, message}); validation errors become 400 with a different shape. Wire compatibility needs an explicit handler.
+    source: https://fastify.dev/docs/latest/Reference/Server/#seterrorhandler
+  - id: not-found-default
+    title: Default 404 response changes from HTML to JSON
+    match:
+      dependencies: ["express"]
+    replacement: setNotFoundHandler that reproduces the legacy body if clients depend on it
+    kind: semantic_shift
+    severity: medium
+    note: Express answers "Cannot GET /x" as text/html; Fastify answers {"message":"Route GET:/x not found","error":"Not Found","statusCode":404}.
+    source: https://fastify.dev/docs/latest/Reference/Server/#setnotfoundhandler
+  - id: routing-strictness
+    title: Trailing slash and case sensitivity of routes differ
+    match:
+      code: ['\b(app|router)\.(get|post|put|patch|delete|all)\s*\(\s*[''"`]/']
+      files: ["*.js", "*.mjs", "*.cjs", "*.ts"]
+    replacement: "fastify({ ignoreTrailingSlash: true, caseSensitive: false }) to keep Express semantics (routerOptions in v5)"
+    kind: semantic_shift
+    severity: medium
+    note: Express routing is non-strict and case-insensitive by default (/Books/ matches /books); Fastify matches exactly.
+    source: https://fastify.dev/docs/latest/Reference/Server/#ignoretrailingslash
+  - id: query-parsing
+    title: Query strings are parsed flat (no qs nesting)
+    match:
+      code: ['\breq\.query\b']
+      files: ["*.js", "*.mjs", "*.cjs", "*.ts"]
+    replacement: "querystringParser: (s) => qs.parse(s) to keep ?a[b]=1 and ?ids[]=1 semantics"
+    kind: semantic_shift
+    severity: medium
+    note: Express 4 uses qs ("extended" parser); Fastify uses node:querystring, so nested and array query parameters arrive differently.
+    source: https://fastify.dev/docs/latest/Reference/Server/#querystringparser
+  - id: res-api
+    title: res.* response API -> reply.*
+    match:
+      code: ['\bres\.(status|json|send|sendStatus|set|header|redirect|cookie|locals|render)\b']
+      files: ["*.js", "*.mjs", "*.cjs", "*.ts"]
+    replacement: reply.code / reply.send / reply.header / reply.redirect; res.locals -> request decorators
+    kind: library_replacement
+    severity: low
+    note: res.sendStatus(204) also sends a text body in Express; reply.code(204).send() sends none. res.render needs @fastify/view.
+    source: https://fastify.dev/docs/latest/Reference/Reply/
+  - id: response-serialization
+    title: Response schemas strip undeclared fields
+    match:
+      code: ['\bres\.json\s*\(']
+      files: ["*.js", "*.mjs", "*.cjs", "*.ts"]
+    replacement: declare complete response schemas (or none) per route
+    kind: semantic_shift
+    severity: low
+    note: fast-json-stringify drops properties not in the response schema and coerces types, which changes payloads compared with JSON.stringify.
+    source: https://fastify.dev/docs/latest/Reference/Validation-and-Serialization/#serialization
+  - id: cors
+    title: cors -> @fastify/cors
+    match:
+      dependencies: ["cors"]
+    replacement: "@fastify/cors"
+    kind: library_replacement
+    severity: low
+    note: Option names are mostly the same.
+    source: https://github.com/fastify/fastify-cors
+  - id: helmet
+    title: helmet -> @fastify/helmet
+    match:
+      dependencies: ["helmet"]
+    replacement: "@fastify/helmet"
+    kind: library_replacement
+    severity: low
+    note: Same header defaults (wraps helmet).
+    source: https://github.com/fastify/fastify-helmet
+  - id: cookie-session
+    title: cookie-parser / express-session -> @fastify/cookie / @fastify/session
+    match:
+      dependencies: ["cookie-parser", "express-session", "cookie-session"]
+    replacement: "@fastify/cookie, @fastify/session (or @fastify/secure-session)"
+    kind: library_replacement
+    severity: medium
+    note: Session store adapters and signed-cookie formats differ; existing sessions may be invalidated at cut-over.
+    source: https://github.com/fastify/session
+  - id: morgan
+    title: morgan request logging -> built-in pino logger
+    match:
+      dependencies: ["morgan"]
+    replacement: "fastify({ logger: true })"
+    kind: library_replacement
+    severity: low
+    note: Log line format changes (JSON); log parsers downstream may need updating.
+    source: https://fastify.dev/docs/latest/Reference/Logging/
+  - id: multer
+    title: multer -> @fastify/multipart
+    match:
+      dependencies: ["multer"]
+    replacement: "@fastify/multipart"
+    kind: library_replacement
+    severity: medium
+    note: Streaming API differs; file size limits must be re-declared.
+    source: https://github.com/fastify/fastify-multipart
+  - id: express-validator
+    title: express-validator -> JSON Schema route validation (ajv)
+    match:
+      dependencies: ["express-validator", "celebrate"]
+    replacement: route schema.body / querystring / params
+    kind: library_replacement
+    severity: medium
+    note: Error response shape differs; ajv coerces types by default (coerceTypes), so "5" may be accepted as 5.
+    source: https://fastify.dev/docs/latest/Reference/Validation-and-Serialization/
+  - id: misc-middleware
+    title: compression / rate limiting / static files -> Fastify plugins
+    match:
+      dependencies: ["compression", "express-rate-limit", "serve-static", "connect-timeout", "passport"]
+      code: ['\bexpress\.static\s*\(']
+      files: ["*.js", "*.mjs", "*.cjs", "*.ts"]
+    replacement: "@fastify/compress, @fastify/rate-limit, @fastify/static, @fastify/passport"
+    kind: library_replacement
+    severity: low
+    note: Defaults (thresholds, headers) differ slightly per plugin.
+    source: https://fastify.dev/ecosystem/

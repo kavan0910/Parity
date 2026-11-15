@@ -1,0 +1,60 @@
+{
+  "id": "CT-0005",
+  "slice": null,
+  "covers": [
+    "RULE-NO-COPIES",
+    "EP:POST /api/loans/checkout/{bookId}",
+    "Q-3"
+  ],
+  "kind": "http",
+  "setup": {
+    "db_fixture": null,
+    "stubs": [],
+    "clock": null,
+    "seed": null
+  },
+  "request": {
+    "method": "POST",
+    "path": "/api/loans/checkout/1002",
+    "headers": {
+      "content-type": "application/json"
+    },
+    "query": {},
+    "body": {
+      "id": 1001,
+      "suspended": false
+    }
+  },
+  "expect": {
+    "source": "recorded",
+    "status": 500,
+    "headers": {},
+    "body": {
+      "timestamp": "<masked>",
+      "status": 500,
+      "error": "Internal Server Error",
+      "path": "/api/loans/checkout/1002"
+    },
+    "db_after": {},
+    "stub_calls": [],
+    "messages": [],
+    "legacy_observed": null,
+    "recorded_runs": [],
+    "approved_by": ""
+  },
+  "normalize": [
+    "$.timestamp"
+  ],
+  "decision": "preserve",
+  "decision_ref": "",
+  "provenance": {
+    "generator": "human",
+    "prompt_version": "",
+    "model": "",
+    "created": "2026-01-01T00:00:00+00:00"
+  },
+  "tags": [
+    "error_path",
+    "quirk"
+  ]
+}

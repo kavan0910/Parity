@@ -1,0 +1,41 @@
+# Sandbox harness spec for the django-lite fixture (docs/phase2-plan.md section 11, migrate/harness.py).
+# Paths are relative to the service source tree (legacy_src/ once imported). Named .yaml.in so Phase 1 does
+# not analyse it as service config; `harness build` copies it to <project>/harness/harness.yaml.
+schema_version: 1
+name: django-lite
+legacy:
+  image: ma-fixture/django-lite:legacy
+  dockerfile: harness/Dockerfile
+  context: harness
+  workdir: /work/app
+  build:
+    # Set PIP_INDEX_URL to your mirror and list its host in harness/mirror.json (or MA_MIRROR_HOSTS);
+    # with no mirror the build runs offline from wheels in /cache (pip download Django==3.2.25 -d ...).
+    command:
+      - sh
+      - -c
+      - cp harness/harness_settings.py.in harness_settings.py && pip install --no-input --target .deps --cache-dir /cache --find-links /cache/wheels Django==3.2.25
+    network: mirror
+    cache: harness/cache/pip
+    timeout_s: 1800
+    env:
+      PIP_INDEX_URL: https://pypi.org/simple
+  start: [python, manage.py, runserver, "0.0.0.0:8000", --noreload, --nothreading]
+  port: 8000
+  healthcheck:
+    path: /workshops/
+    command:
+      - python
+      - -c
+      - "import urllib.request; urllib.request.urlopen('http://127.0.0.1:{port}{path}', timeout=3)"
+    timeout_s: 120
+  env:
+    DJANGO_SETTINGS_MODULE: harness_settings
+    DB_PATH: /work/app/db.sqlite3
+  synthetic_secrets: [DJANGO_SECRET_KEY]
+  limits: {cpus: 1.0, memory_mb: 1024, pids: 256, timeout_s: 900, disk_mb: 1024}
+db:
+  engine: sqlite      # file in the workspace (DB_PATH)
+  migrate: [python, manage.py, migrate, --run-syncdb, --noinput]
+  seed:
+    - [python, manage.py, loaddata, harness/seed/workshops.json]

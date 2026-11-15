@@ -1,0 +1,121 @@
+schema_version: 1
+id: js-go
+version: 1
+title: JavaScript (Node.js) -> Go (starter table)
+applies:
+  source: {language: javascript}
+  target: {language: go}
+known:
+  - "nodemon"
+  - "eslint"
+  - "prettier"
+  - "jest"
+  - "mocha"
+  - "supertest"
+entries:
+  - id: express-http
+    title: express -> net/http with a router (chi)
+    match:
+      dependencies: ["express", "koa", "fastify", "@hapi/hapi"]
+    replacement: net/http + github.com/go-chi/chi/v5 (or net/http ServeMux patterns, Go 1.22+)
+    kind: library_replacement
+    severity: medium
+    note: Middleware becomes func(http.Handler) http.Handler; error middleware becomes explicit error returns; default 404/500 bodies differ.
+    source: https://pkg.go.dev/github.com/go-chi/chi/v5
+  - id: orm
+    title: sequelize / knex / typeorm -> database/sql with sqlx (or gorm)
+    match:
+      dependencies: ["sequelize", "knex", "typeorm", "objection", "@prisma/client"]
+    replacement: database/sql + github.com/jmoiron/sqlx (or gorm.io/gorm)
+    kind: library_replacement
+    severity: high
+    needs_decision: true
+    note: Model hooks, default scopes, paranoid (soft) deletes, automatic createdAt/updatedAt and association loading are implicit in the ORM and must be re-implemented explicitly.
+    source: https://pkg.go.dev/github.com/jmoiron/sqlx
+  - id: db-drivers
+    title: Database drivers
+    match:
+      dependencies: ["sqlite3", "better-sqlite3", "pg", "mysql", "mysql2", "mongodb", "mongoose", "redis", "ioredis"]
+    replacement: modernc.org/sqlite (or mattn/go-sqlite3), github.com/jackc/pgx/v5, github.com/go-sql-driver/mysql, go.mongodb.org/mongo-driver, github.com/redis/go-redis/v9
+    kind: library_replacement
+    severity: low
+    note: Type mapping differs (e.g. SQLite integers arrive as int64, JS returns numbers); check NULL handling with sql.Null* types.
+    source: https://go.dev/wiki/SQLDrivers
+  - id: auth-crypto
+    title: jsonwebtoken / bcrypt -> golang-jwt / x/crypto/bcrypt
+    match:
+      dependencies: ["jsonwebtoken", "bcrypt", "bcryptjs", "passport", "passport-jwt"]
+    replacement: github.com/golang-jwt/jwt/v5, golang.org/x/crypto/bcrypt
+    kind: library_replacement
+    severity: medium
+    note: Verify algorithm allow-lists and clock-skew handling match; bcrypt hashes are compatible.
+    source: https://pkg.go.dev/github.com/golang-jwt/jwt/v5
+  - id: validation
+    title: joi / express-validator -> go-playground/validator
+    match:
+      dependencies: ["joi", "express-validator", "yup", "ajv", "celebrate"]
+    replacement: github.com/go-playground/validator/v10
+    kind: library_replacement
+    severity: medium
+    note: Coercion rules differ ("5" vs 5); error messages and shapes must be reproduced if clients depend on them.
+    source: https://pkg.go.dev/github.com/go-playground/validator/v10
+  - id: utils
+    title: utility libraries -> standard library
+    match:
+      dependencies: ["lodash", "underscore", "moment", "dayjs", "date-fns", "uuid", "dotenv", "axios", "node-fetch", "winston", "pino", "morgan", "cors", "helmet", "body-parser"]
+    replacement: stdlib (slices, maps, time, net/http, log/slog, os.Getenv), github.com/google/uuid
+    kind: library_replacement
+    severity: low
+    note: moment/dayjs parse ambiguous strings leniently; time.Parse is strict.
+    source: https://pkg.go.dev/std
+  - id: js-number
+    title: JS numbers are float64; Go integer types overflow and truncate differently
+    match:
+      code: ['\bparse(Int|Float)\s*\(', '\bNumber\s*\(', '\bMath\.(round|floor|ceil)\s*\(', '\.toFixed\s*\(']
+      files: ["*.js", "*.mjs", "*.cjs", "*.ts"]
+    replacement: choose int64 / float64 / decimal per field; reproduce parseInt prefix parsing ("12abc" -> 12) if relied upon
+    kind: semantic_shift
+    severity: medium
+    note: parseInt("12abc") is 12 but strconv.Atoi fails; Math.round(-0.5) is -0 in JS and -1 with math.Round; integers above 2^53 lose precision in JS but not in Go.
+    source: https://go.dev/ref/spec#Numeric_types
+  - id: loose-equality
+    title: Loose equality (==) and truthiness have no Go equivalent
+    match:
+      code: ['[^=!<>]==[^=]', '!=[^=]']
+      files: ["*.js", "*.mjs", "*.cjs", "*.ts"]
+    replacement: explicit typed comparisons; decide how "" / 0 / null / undefined map to Go zero values
+    kind: semantic_shift
+    severity: medium
+    note: '"0" == 0 is true in JS; Go needs explicit conversion. null and undefined collapse into zero values or pointers.'
+    source: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Equality_comparisons_and_sameness
+  - id: dynamic-eval
+    title: eval / new Function have no Go equivalent
+    match:
+      code: ['\beval\s*\(', '\bnew\s+Function\s*\(']
+      files: ["*.js", "*.mjs", "*.cjs", "*.ts"]
+    replacement: none (redesign; an embedded interpreter such as goja only if unavoidable)
+    kind: removed_api
+    severity: high
+    needs_decision: true
+    note: Runtime code generation must be replaced by explicit logic.
+    source: https://pkg.go.dev/github.com/dop251/goja
+  - id: exceptions
+    title: throw / try-catch -> explicit error returns
+    match:
+      code: ['\bthrow\s+new\s+\w*Error\b', '\bcatch\s*\(']
+      files: ["*.js", "*.mjs", "*.cjs", "*.ts"]
+    replacement: (T, error) returns, errors.Is/As, typed errors mapped to HTTP statuses
+    kind: semantic_shift
+    severity: low
+    note: Errors thrown deep in a call chain and caught by Express error middleware must be propagated explicitly; uncaught async rejections have no Go analogue.
+    source: https://go.dev/blog/error-handling-and-go
+  - id: regex-re2
+    title: JS regex features not supported by Go RE2 (lookaround, backreferences)
+    match:
+      code: ['\(\?<?[=!]', '/[^/\n]*\\[1-9][^/\n]*/']
+      files: ["*.js", "*.mjs", "*.cjs", "*.ts"]
+    replacement: rewrite the pattern or use github.com/dlclark/regexp2
+    kind: removed_api
+    severity: medium
+    note: Go's regexp package is RE2 and rejects lookahead/lookbehind and backreferences at compile time.
+    source: https://github.com/google/re2/wiki/Syntax

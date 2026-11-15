@@ -1,0 +1,58 @@
+{
+  "id": "CT-0105",
+  "slice": null,
+  "covers": [
+    "RULE-INSUFFICIENT-STOCK",
+    "EP:POST /api/orders"
+  ],
+  "kind": "http",
+  "setup": {
+    "db_fixture": null,
+    "stubs": [],
+    "clock": null,
+    "seed": null
+  },
+  "request": {
+    "method": "POST",
+    "path": "/api/orders",
+    "headers": {
+      "content-type": "application/json"
+    },
+    "query": {},
+    "body": {
+      "email": "buyer@example.com",
+      "items": [
+        {
+          "productId": 2,
+          "qty": 1
+        }
+      ]
+    }
+  },
+  "expect": {
+    "source": "recorded",
+    "status": 400,
+    "headers": {},
+    "body": {
+      "error": "Insufficient stock for 2"
+    },
+    "db_after": {},
+    "stub_calls": [],
+    "messages": [],
+    "legacy_observed": null,
+    "recorded_runs": [],
+    "approved_by": ""
+  },
+  "normalize": [],
+  "decision": "preserve",
+  "decision_ref": "",
+  "provenance": {
+    "generator": "human",
+    "prompt_version": "",
+    "model": "",
+    "created": "2026-01-01T00:00:00+00:00"
+  },
+  "tags": [
+    "error_path"
+  ]
+}
