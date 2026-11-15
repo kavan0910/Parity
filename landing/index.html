@@ -3,16 +3,16 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>migration agent: understand a legacy service, then migrate it with proof</title>
-  <meta name="description" content="A CLI that maps a legacy service with a file and line cited for every claim, asks you to approve that map, then migrates it slice by slice and checks each slice against responses recorded from the old service.">
+  <title>migration agent: migrate a legacy app to the newest version or a different stack, with proof</title>
+  <meta name="description" content="Takes an existing legacy application and migrates it to the newest version of its stack or to a different technology, slice by slice in a sandbox, and checks each slice against responses recorded from the running legacy app.">
   <meta property="og:type" content="website">
-  <meta property="og:title" content="Understand a legacy service, then migrate it with proof">
-  <meta property="og:description" content="Every claim cites a file and line. You approve the map. Each migrated slice is compared with responses recorded from the running legacy service.">
+  <meta property="og:title" content="Migrate a legacy app to the newest version or a different stack, with proof">
+  <meta property="og:description" content="Legacy app in, migrated app out. Each migrated slice is compared with responses recorded from the running legacy app.">
   <meta property="og:image" content="og.jpg">
   <meta property="og:image:alt" content="migration agent terminal and knowledge graph">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="Understand a legacy service, then migrate it with proof">
-  <meta name="twitter:description" content="Evidence on every claim, an approval you sign, and a migration checked against the old service's own responses.">
+  <meta name="twitter:title" content="Migrate a legacy app to the newest version or a different stack, with proof">
+  <meta name="twitter:description" content="Java 8 to 21, Spring Boot 2 to 3, Django 3 to 5, Express to Fastify, JavaScript to Go: migrated slice by slice and checked against the old app's own responses.">
   <meta name="twitter:image" content="og.jpg">
   <meta name="theme-color" content="#000000">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23000'/%3E%3Cpath d='M8 21l5-5-5-5M15 22h9' stroke='%235eead4' stroke-width='2.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
@@ -38,6 +38,7 @@
     <header class="nav">
       <a class="logo" href="#top" aria-label="migration agent, home"><i class="ph ph-terminal-window" aria-hidden="true"></i>migration-agent</a>
       <nav class="nav-links body-5" aria-label="Primary">
+        <a href="#mvp">The MVP</a>
         <a href="#benefits">Benefits</a>
         <a href="#how">How it works</a>
         <a href="#migrate">Migrate</a>
@@ -50,6 +51,7 @@
     </header>
   </div>
   <div class="panel" id="panel" data-open="false" aria-hidden="true">
+    <a class="plink" style="--i:0" href="#mvp">The MVP</a>
     <a class="plink" style="--i:0" href="#benefits">Benefits</a>
     <a class="plink" style="--i:1" href="#how">How it works</a>
     <a class="plink" style="--i:2" href="#migrate">Migrate</a>
@@ -69,8 +71,8 @@
         <span class="c" style="left:30vw;top:130px;width:12px;height:12px;--x:16px;--y:24px;--t:9s"></span>
       </div>
       <div class="container hero-inner">
-        <h1 class="heading-1 reveal">Understand legacy code,<br> then migrate with proof</h1>
-        <p class="sub title-2 reveal" data-d="1">migration agent maps your code and cites a file and line for every claim. You approve that map. Then it rebuilds the service slice by slice and compares each slice with responses recorded from the old one.</p>
+        <h1 class="heading-1 reveal">Migrate your legacy app<br> to the newest version,<br> or a different stack</h1>
+        <p class="sub title-2 reveal" data-d="1">migration agent takes the application you already run and migrates it, one slice at a time, to a current version of its stack or to a different technology. It records how your running app behaves and shows, case by case, that the new one answers the same way. Understanding the legacy code is step 1 of that migration.</p>
         <div class="hero-cta reveal" data-d="2">
           <a class="btn btn-primary btn-lg button-lg" href="#quickstart">Run the quickstart <i class="ph ph-arrow-right" aria-hidden="true"></i></a>
           <span class="proof body-6"><i class="ph ph-seal-check" aria-hidden="true"></i>Mapped Spring PetClinic, 4,297 lines, for $0.077 in 51 seconds</span>
@@ -114,11 +116,26 @@
     </div>
 
     <!-- Benefits -->
+    <!-- The MVP -->
+    <section class="section" id="mvp">
+      <div class="container">
+        <div class="section-head reveal">
+          <span class="eyebrow caption-1"><i class="ph ph-target" aria-hidden="true"></i>The MVP</span>
+          <h2 class="heading-2">A legacy app goes in. A migrated app, and the proof, come out.</h2>
+        </div>
+        <div class="grid-3">
+          <article class="card reveal"><span class="ic"><i class="ph ph-folder-open" aria-hidden="true"></i></span><h3 class="title-1">In: your legacy app</h3><p class="body-6">A source folder, an archive or a git URL of the application you run today. It is copied into a project; your repository is never touched.</p></article>
+          <article class="card reveal" data-d="1"><span class="ic"><i class="ph ph-crosshair" aria-hidden="true"></i></span><h3 class="title-1">Choose: the target</h3><p class="body-6">A newer version of the same stack or a different technology: Java 8 to 21, Spring Boot 2 to 3, Django 3 to 5, Express to Fastify, JavaScript to Go.</p></article>
+          <article class="card reveal" data-d="2"><span class="ic"><i class="ph ph-seal-check" aria-hidden="true"></i></span><h3 class="title-1">Out: the new app and the proof</h3><p class="body-6">New code in its own folder, an equivalence report against the running legacy app, and a cut-over plan you approve. Nothing is deployed for you.</p></article>
+        </div>
+      </div>
+    </section>
+
     <section class="section" id="benefits">
       <div class="container">
         <div class="section-head reveal">
-          <span class="eyebrow caption-1"><i class="ph ph-list-checks" aria-hidden="true"></i>Benefits</span>
-          <h2 class="heading-2">Evidence you can check at every step, from the first map to the last slice</h2>
+          <span class="eyebrow caption-1"><i class="ph ph-list-checks" aria-hidden="true"></i>Why you can trust the migration</span>
+          <h2 class="heading-2">Evidence you can check at every step, from the first map to the last migrated slice</h2>
         </div>
         <div class="grid-3">
           <article class="card reveal"><span class="ic"><i class="ph ph-seal-check" aria-hidden="true"></i></span><h3 class="title-1">Evidence on every claim</h3><p class="body-6">Each node and edge carries a file and line range. Evidence that does not exist in the code is dropped before it reaches the doc.</p></article>
@@ -185,10 +202,10 @@
       <div class="container">
         <div class="section-head reveal">
           <span class="eyebrow caption-1"><i class="ph ph-path" aria-hidden="true"></i>How it works</span>
-          <h2 class="heading-2">Three steps from source folder to migrated service</h2>
+          <h2 class="heading-2">Three moves from legacy app to migrated app</h2>
         </div>
         <div class="steps">
-          <article class="step reveal"><span class="n caption-1">01</span><h3 class="title-1">Map the service</h3><p class="body-6">Copy the source into a project, redact secrets and pull static facts. The model then reads the code in chunks and returns nodes, edges and business rules, each checked against the real file and line.</p><pre><code>migration-agent init ./svc
+          <article class="step reveal"><span class="n caption-1">01</span><h3 class="title-1">Understand the legacy app</h3><p class="body-6">Copy the source into a project, redact secrets and pull static facts. The model then reads the code in chunks and returns nodes, edges and business rules, each checked against the real file and line.</p><pre><code>migration-agent init ./svc
 migration-agent ingest svc.migration
 migration-agent extract svc.migration
 migration-agent analyze svc.migration \
