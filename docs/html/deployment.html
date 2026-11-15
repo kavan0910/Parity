@@ -398,10 +398,10 @@ git push origin v0.2.0                           # CI builds, pushes ghcr.io/&lt
 <p>Verify as a consumer:</p>
 <div class="pw"><pre><code language-bash>cd dist &amp;&amp; sha256sum -c SHA256SUMS
 cosign verify-blob --bundle parity_migrate-0.2.0-py3-none-any.whl.sigstore.json \
-  --certificate-identity-regexp 'https://github.com/&lt;owner&gt;/migration-agent/' \
+  --certificate-identity-regexp 'https://github.com/&lt;owner&gt;/parity/' \
   --certificate-oidc-issuer https://token.actions.githubusercontent.com parity_migrate-0.2.0-py3-none-any.whl
 cosign verify ghcr.io/&lt;owner&gt;/parity:0.2.0 \
-  --certificate-identity-regexp 'https://github.com/&lt;owner&gt;/migration-agent/' \
+  --certificate-identity-regexp 'https://github.com/&lt;owner&gt;/parity/' \
   --certificate-oidc-issuer https://token.actions.githubusercontent.com
 </code></pre></div>
 <p><code>scripts/release.py</code> never signs by itself. Signing in CI is keyless (GitHub OIDC; no stored secrets) and is skipped on

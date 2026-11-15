@@ -269,7 +269,7 @@ here has run with a real model for Phase 2, and nothing has been hand-scored on 
 <td>Phase 2: migrate and prove equivalence (M0 to M7)</td>
 <td>all 8 milestones, plus the additions below</td>
 <td>the sandbox, build, record, equivalence, fuzz, composite and 3 codemods ran on a real Docker daemon on the three eval fixtures</td>
-<td>no stage has ever run with a real model</td>
+<td>the target-fit model layer ran once with a real model (Gemini 3 Flash); test and code generation have not completed with one</td>
 </tr>
 <tr>
 <td>Hosted product (backend, web, deploy; roadmap phases 1 and 2)</td>
@@ -454,7 +454,7 @@ ones for the sandbox, the proxy and the masking guard, run whenever a daemon is 
 </thead>
 <tbody>
 <tr>
-<td><strong>No stage has run with a real model</strong>: target-fit model layer, test generation, code generation, review, equivalence triage, slice naming</td>
+<td><strong>Only the target-fit model layer has run with a real model</strong> (2026-11-15, django-lite, Gemini 3 Flash: 1 call, 2 risks with verified evidence, about $0.06 for the whole project including Phase 1). The test-generation run then hit the free-tier quota (a retry wait of about 17 hours) and produced 0 cases. Still unrun with a model: test generation, code generation, review, equivalence triage, slice naming</td>
 <td>needs an API key and spend; the offline proposer only produces shallow cases (mostly 401 and 400 answers). Everything above used <code>--offline</code></td>
 </tr>
 <tr>

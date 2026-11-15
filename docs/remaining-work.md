@@ -22,7 +22,7 @@ here has run with a real model for Phase 2, and nothing has been hand-scored on 
 | Layer | Built | Verified live | Main gap |
 |---|---|---|---|
 | Phase 1: understand, verify, approve (grill Q1 to Q18; plan A to D) | all 4 phases, A-01 to D-08 | ran on 3 small open-source repos with a real model | accuracy on real repositories is unmeasured |
-| Phase 2: migrate and prove equivalence (M0 to M7) | all 8 milestones, plus the additions below | the sandbox, build, record, equivalence, fuzz, composite and 3 codemods ran on a real Docker daemon on the three eval fixtures | no stage has ever run with a real model |
+| Phase 2: migrate and prove equivalence (M0 to M7) | all 8 milestones, plus the additions below | the sandbox, build, record, equivalence, fuzz, composite and 3 codemods ran on a real Docker daemon on the three eval fixtures | the target-fit model layer ran once with a real model (Gemini 3 Flash); test and code generation have not completed with one |
 | Hosted product (backend, web, deploy; roadmap phases 1 and 2) | API, worker, web UI, compose stack | never run end to end | Docker stack, Postgres paths, CI never exercised |
 | Commercial (roadmap phase 3) | billing seam only | no | pricing, billing, SSO, SOC 2, legal |
 
@@ -103,7 +103,7 @@ ones for the sandbox, the proxy and the masking guard, run whenever a daemon is 
 
 | Gap | Why it is still open |
 |---|---|
-| **No stage has run with a real model**: target-fit model layer, test generation, code generation, review, equivalence triage, slice naming | needs an API key and spend; the offline proposer only produces shallow cases (mostly 401 and 400 answers). Everything above used `--offline` |
+| **Only the target-fit model layer has run with a real model** (2026-11-15, django-lite, Gemini 3 Flash: 1 call, 2 risks with verified evidence, about $0.06 for the whole project including Phase 1). The test-generation run then hit the free-tier quota (a retry wait of about 17 hours) and produced 0 cases. Still unrun with a model: test generation, code generation, review, equivalence triage, slice naming | needs an API key and spend; the offline proposer only produces shallow cases (mostly 401 and 400 answers). Everything above used `--offline` |
 | Quality of generated code is unmeasured | follows from the line above; the eval baselines are hand-written reference runs, not agent output |
 | **Subtle behaviour changes are only caught if a case reaches them** | a second seeded change (`price <= 0` became `price < 0`, so a zero price is accepted) was **not** caught: the offline-proposed cases never send a price, and the fuzzer only mutates fields already present in recorded bodies. Boundary cases are what the model proposer is for, and it has never run |
 | The eval's hidden reference suite does not agree with the live legacy service | checked live: 0 of 9 of `eval/targets/express-crud__fastify-ts/expected_cases` pass. They assume a pre-seeded database and case ordering, some are meant to be unauthenticated, and they were derived from source, not from a recording. Not reconciled yet (a case can now drop the injected token with an empty header value) |
