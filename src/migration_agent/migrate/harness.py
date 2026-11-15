@@ -157,6 +157,21 @@ class ServiceSpec(_M):
     env: dict[str, str] = Field(default_factory=dict)
     synthetic_secrets: list[str] = Field(default_factory=list)
     limits: Limits = Field(default_factory=Limits)
+    # Headers the in-network case runner adds to EVERY request it sends to this service (recording, equivalence,
+    # seeds, composite), e.g. {"X-API-Token": "{secret:API_TOKEN}"}. `{secret:NAME}` is replaced with the random
+    # value generated for NAME at `harness up` (NAME must be in synthetic_secrets); the value never reaches a case
+    # file or a report. Without this an authenticated service answers 401 to everything and nothing is tested.
+    request_headers: dict[str, str] = Field(default_factory=dict)
+
+    @field_validator("request_headers")
+    @classmethod
+    def _rh(cls, v):
+        for k, val in v.items():
+            if not re.fullmatch(r"[A-Za-z0-9-]{1,64}", str(k)):
+                raise ValueError(f"invalid header name {k!r}")
+            if len(str(val)) > 500 or re.search(r"[\r\n\x00]", str(val)):
+                raise ValueError(f"invalid value for header {k!r}")
+        return v
 
     @field_validator("start")
     @classmethod
@@ -338,7 +353,8 @@ def default_new_service(spec: HarnessSpec, target) -> ServiceSpec:
         start=start, port=port,
         healthcheck=HealthSpec(path=leg.healthcheck.path, command=_HEALTH_DEFAULTS[hc_kind],
                                timeout_s=leg.healthcheck.timeout_s, interval_s=leg.healthcheck.interval_s),
-        env=env, synthetic_secrets=list(leg.synthetic_secrets), limits=leg.limits)
+        env=env, synthetic_secrets=list(leg.synthetic_secrets), limits=leg.limits,
+        request_headers=dict(leg.request_headers))
 
 
 def default_new_dockerfile(target) -> str:
@@ -789,6 +805,12 @@ def build(project, role: str = "legacy", *, backend=None) -> dict:
     entry.update({"build_run": run_id, "workspace": lay.rel(ws), "ok": res.ok, "exit_code": res.exit_code,
                   "error": res.error, "image_digest": entry.get("image_digest") or res.image_digest,
                   "port": svc.port})
+    if res.ok:
+        try:                                     # lockfile hashes + CycloneDX SBOM; advisory, never fails a build
+            from . import supplychain
+            entry["supply_chain"] = supplychain.record_build(project, run_id, ws, src, name=spec.name)
+        except Exception as e:  # noqa: BLE001
+            entry["supply_chain"] = {"error": f"{type(e).__name__}: {str(e)[:200]}"}
     st = load_state(project)
     prev_up = (st.get(role) or {}).get("up")
     st[role] = {**entry, **({"up": prev_up} if prev_up else {})}
@@ -949,7 +971,7 @@ class _Stack:
         spec = self.spec
         j = self.job(spec.router.image_tag, router_argv(spec), limits=spec.router.limits,
                      mounts=[Mount(source="harness/router/live", target="/routes", read_only=True)],
-                     labels={"service": "router"}, workdir="/app")
+                     labels={"service": "router"}, workdir="/tmp")   # NOT /app: a tmpfs at the workdir would mask /app/proxy.py
         c = self.b.start_service(j, network=self.net, aliases=["router"])
         self.containers.append(c)
         self.wait(c, router_health_argv(spec), 60, 1.0, "router")
@@ -1038,7 +1060,98 @@ def up(project, role: str = "legacy", *, backend=None, sleep=time.sleep, clock=t
     st[role] = ent
     save_state(project, st)
     _audit(project, "harness_up", role=role, network=stack.net, containers=stack.containers)
+    try:
+        seed = replay_seeds(project, role, backend=b, spec=spec)
+    except HarnessError:
+        try:
+            down(project, role, backend=b)
+        finally:
+            pass
+        raise
+    if seed.get("requests"):
+        ent = load_state(project).get(role) or ent
+        ent.setdefault("up", {})["seed"] = seed
+        st = load_state(project)
+        st[role] = ent
+        save_state(project, st)
     return ent
+
+
+def restart(project, role: str, *, backend=None) -> dict:
+    """down + up of one role: a fresh start re-runs migrations, seeds and `seed_requests`, so in-memory state from
+    earlier recording or equivalence traffic is gone. Needed before comparing two services: both must start from
+    the same data, otherwise state-dependent answers (counts, ids, lists) differ for reasons that are not bugs."""
+    if (load_state(project).get(role) or {}).get("up"):
+        down(project, role, backend=backend)
+    return up(project, role, backend=backend)
+
+
+SEED_MAX_REQUESTS = 200
+
+
+def load_seed_cases(project, spec: HarnessSpec | None = None) -> list:
+    """The harness `seed_requests` file (source-relative, read from legacy_src/) as in-memory HTTP cases. Each item:
+    {method, path, body?, headers?, query?, expect_status?: [codes]}. An `auth` key is accepted and ignored: the
+    service's `request_headers` are always sent."""
+    from .models import CharacterizationCase, HttpRequest
+    spec = spec or load_spec(project)
+    if not spec.seed_requests:
+        return []
+    lay = _layout(project)
+    path = (lay.legacy_src / spec.seed_requests).resolve()
+    if not path.is_file() or not path.is_relative_to(lay.legacy_src.resolve()):
+        raise HarnessError(f"seed_requests file {spec.seed_requests} not found in legacy_src/")
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+        items = data["requests"] if isinstance(data, dict) else data
+        if not isinstance(items, list) or len(items) > SEED_MAX_REQUESTS:
+            raise ValueError(f"expected a list of at most {SEED_MAX_REQUESTS} requests")
+    except (OSError, ValueError, KeyError) as e:
+        raise HarnessError(f"seed_requests {spec.seed_requests} is not valid: {e}") from None
+    cases = []
+    for i, it in enumerate(items):
+        try:
+            req = HttpRequest(method=str(it["method"]).upper(), path=str(it["path"]), headers=dict(it.get("headers") or {}),
+                              query=dict(it.get("query") or {}), body=it.get("body"))
+            if not req.path.startswith("/"):
+                raise ValueError("path must start with /")
+            cases.append(CharacterizationCase(id=f"CT-{9001 + i}", kind="http", request=req, tags=["seed"]))
+        except (KeyError, TypeError, ValueError) as e:
+            raise HarnessError(f"seed_requests item #{i + 1} is invalid: {str(e)[:120]}") from None
+    return cases
+
+
+def replay_seeds(project, role: str, *, backend=None, spec: HarnessSpec | None = None) -> dict:
+    """Replay `seed_requests` against a RUNNING role (needed for in-memory databases that start empty). Every
+    seed must answer below 400 (or one of its `expect_status` codes): a seed that fails would make every later case
+    meaningless, so this raises HarnessError. composite: seeds `legacy` and `new` directly on the composite network."""
+    spec = spec or load_spec(project)
+    cases = load_seed_cases(project, spec)
+    if not cases:
+        return {"requests": 0, "ok": True}
+    items = json.loads((_layout(project).legacy_src / spec.seed_requests).read_text(encoding="utf-8"))
+    items = items["requests"] if isinstance(items, dict) else items
+    targets = [(role, None)]
+    if role == "composite":
+        st = (load_state(project).get("composite") or {}).get("up") or {}
+        sv = st.get("services") or {}
+        targets = [(r, f"http://{r}:{(sv.get(r) or {}).get('port')}") for r in ("legacy", "new")]
+    failed = []
+    for r, url in targets:
+        res = run_cases_in_network(project, "composite" if role == "composite" else r, cases, backend=backend,
+                                   compare=False, base_url=url)
+        for it, c, rr in zip(items, cases, res):
+            status = rr.observed.status if rr.observed is not None else None
+            ok_codes = it.get("expect_status")
+            good = (status in ok_codes) if isinstance(ok_codes, list) and ok_codes else (status is not None and status < 400)
+            if not good:
+                failed.append(f"{r}: {c.request.method} {c.request.path} answered {status if status is not None else rr.error or 'nothing'}")
+    _audit(project, "harness_seed", role=role, requests=len(cases), failed=len(failed))
+    if failed:
+        raise HarnessError(f"{len(failed)} of {len(cases) * len(targets)} seed request(s) failed (first: {failed[0]}). "
+                           "If it is 401/403, set request_headers on the service in harness.yaml, e.g. "
+                           "{X-API-Token: '{secret:API_TOKEN}'}")
+    return {"requests": len(cases), "ok": True, "targets": [t[0] for t in targets]}
 
 
 def down(project, role: str = "legacy", *, backend=None) -> dict:
@@ -1315,11 +1428,46 @@ RUNNER_LIMITS = Limits(cpus=0.5, memory_mb=256, pids=64, timeout_s=900, disk_mb=
 MAX_RUNNER_TIMEOUT_S = 6 * 3600
 
 
-def _runner_cfg(timeout_s: float, job_endpoint: str | None, header_allowlist: list[str] | None, base_url: str):
+def _runner_cfg(timeout_s: float, job_endpoint: str | None, header_allowlist: list[str] | None, base_url: str,
+                extra_headers: dict[str, str] | None = None):
     from .harness_runner.models import DEFAULT_HEADER_ALLOWLIST, DEFAULT_JOB_ENDPOINT, RunnerConfig
     return RunnerConfig(base_url=base_url, timeout_s=timeout_s,
                         header_allowlist=list(header_allowlist or DEFAULT_HEADER_ALLOWLIST),
-                        job_endpoint=DEFAULT_JOB_ENDPOINT if job_endpoint is None else (job_endpoint or None))
+                        job_endpoint=DEFAULT_JOB_ENDPOINT if job_endpoint is None else (job_endpoint or None),
+                        extra_headers=dict(extra_headers or {}))
+
+
+_SECRET_REF = re.compile(r"\{secret:([A-Z][A-Z0-9_]{0,63})\}")
+
+
+def request_headers_for(project, role: str, spec: HarnessSpec | None = None) -> dict[str, str]:
+    """The request headers the runner adds for `role`, with `{secret:NAME}` resolved from the values generated at
+    `harness up`. composite uses the legacy service's headers (secrets are shared by name across its services)."""
+    try:
+        spec = spec or load_spec(project)
+        svc = spec.legacy if role in ("legacy", "composite") else resolve_service(project, spec, "new")
+    except HarnessError:
+        return {}               # no harness spec / no target spec (a hand-made harness): nothing to inject
+    if not svc.request_headers:
+        return {}
+    vals: dict[str, str] = {}
+    sp = _secrets_file(project)
+    if sp.exists():
+        try:
+            vals = (json.loads(sp.read_text()).get(role) or {}).get("values") or {}
+        except ValueError:
+            vals = {}
+    out = {}
+    for k, v in svc.request_headers.items():
+        def sub(m):
+            name = m.group(1)
+            if name not in svc.synthetic_secrets:
+                raise HarnessError(f"request_headers[{k}] uses {{secret:{name}}}, which is not in synthetic_secrets")
+            if name not in vals:
+                raise HarnessError(f"request_headers[{k}]: no value for secret {name} (is the {role} harness up?)")
+            return vals[name]
+        out[k] = _SECRET_REF.sub(sub, v)
+    return out
 
 
 def _supports_internal_network(b) -> bool:
@@ -1356,7 +1504,7 @@ def stage_runner(project, run_id: str, cases, config: dict) -> tuple[str, str]:
 
 def run_cases_in_network(project, role: str, cases, *, backend=None, compare: bool = True, timeout_s: float = 10.0,
                          job_endpoint: str | None = None, header_allowlist: list[str] | None = None,
-                         image: str = RUNNER_IMAGE) -> list:
+                         image: str = RUNNER_IMAGE, base_url: str | None = None) -> list:
     """Run characterization cases against a RUNNING harness role from inside the sandbox.
 
     One test-phase ExecJob (image `RUNNER_IMAGE`, never pulled) attached to the role's `--internal` network
@@ -1371,7 +1519,7 @@ def run_cases_in_network(project, role: str, cases, *, backend=None, compare: bo
     from .models import ExecJob, Mount
     if role not in ("legacy", "new", "composite"):
         raise HarnessError(f"unknown harness role {role!r}")
-    url = service_urls(project).get(role)
+    url = base_url or service_urls(project).get(role)      # base_url: a service alias on the role's network
     net = ((load_state(project).get(role) or {}).get("up") or {}).get("network")
     if not url or not net:
         flag = f"--{role}"
@@ -1383,7 +1531,7 @@ def run_cases_in_network(project, role: str, cases, *, backend=None, compare: bo
     b = _backend(project, backend)
     if not _supports_internal_network(b):
         raise HarnessError(f"exec backend {getattr(b, 'name', '?')} cannot attach jobs to a harness internal network")
-    cfg = _runner_cfg(timeout_s, job_endpoint, header_allowlist, url)
+    cfg = _runner_cfg(timeout_s, job_endpoint, header_allowlist, url, request_headers_for(project, role))
     wcfg = {k: v for k, v in wire_config(cfg).items() if k != "base_url"}
     run_id = allocate(project, "RUN")
     rdir, cdir = stage_runner(project, run_id, cases, wcfg)

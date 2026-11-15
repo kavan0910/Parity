@@ -119,7 +119,30 @@ def apply_masks(obj: Any, masks: Iterable[str]) -> Any:
     return out
 
 
+TIMESTAMP_TOLERANCE_S = 300.0
+_ISO_TS = re.compile(r"^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}:\d{2}(\.\d+)?(Z|[+-]\d{2}:?\d{2})?$")
+
+
+def timestamps_close(a: Any, b: Any, tolerance_s: float = TIMESTAMP_TOLERANCE_S) -> bool:
+    """True when `a` and `b` are both ISO-8601 timestamps no more than `tolerance_s` apart. Legacy and new are
+    started and seeded separately, so rows created at start-up carry different creation times, and a legacy
+    recorded earlier differs from a service seeded later: neither is a behaviour difference. A real timezone or
+    format bug (hours apart, or one side naive and the other zoned) stays a difference."""
+    if not (isinstance(a, str) and isinstance(b, str) and _ISO_TS.match(a) and _ISO_TS.match(b)):
+        return False
+    from datetime import datetime
+    try:
+        da, db = datetime.fromisoformat(a.replace(" ", "T")), datetime.fromisoformat(b.replace(" ", "T"))
+    except ValueError:
+        return False
+    if (da.tzinfo is None) != (db.tzinfo is None):
+        return False
+    return abs((da - db).total_seconds()) <= tolerance_s
+
+
 def json_equal(a: Any, b: Any) -> bool:
+    if isinstance(a, str) and isinstance(b, str) and a != b:
+        return timestamps_close(a, b)               # the one place every comparison goes through
     if isinstance(a, bool) or isinstance(b, bool):
         return type(a) is type(b) and a == b
     if isinstance(a, (int, float)) and isinstance(b, (int, float)):

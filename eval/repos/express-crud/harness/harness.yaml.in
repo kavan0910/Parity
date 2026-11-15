@@ -36,6 +36,10 @@ legacy:
     DB_URL: "sqlite::memory:"
     MAX_ORDER_ITEMS: "20"
   synthetic_secrets: [API_TOKEN]
+  # The service rejects every /api call without x-api-token. The token is random per `harness up`; the runner adds
+  # it to every request it sends (recording, seeds, equivalence). Without this every case would answer 401.
+  request_headers:
+    X-API-Token: "{secret:API_TOKEN}"
   limits: {cpus: 1.0, memory_mb: 1024, pids: 256, timeout_s: 900, disk_mb: 1024}
 db:
   engine: sqlite      # in-memory (DB_URL sqlite::memory:); tables come from sequelize.sync() at start-up

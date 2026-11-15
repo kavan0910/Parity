@@ -110,6 +110,19 @@ class _Redirects(urllib.request.HTTPRedirectHandler):
         return super().redirect_request(req, fp, code, msg, headers, target)
 
 
+def merge_headers(injected: dict | None, case: dict | None) -> dict:
+    """Injected request headers (a service's `request_headers`, e.g. the synthetic auth token) overlaid with a
+    case's own headers. The case wins, compared case-insensitively, and a case header with an EMPTY value removes
+    the injected one, so a case can test "no token" or "wrong token" (`{"X-API-Token": ""}` sends none)."""
+    out = {str(k): str(v) for k, v in (injected or {}).items()}
+    for k, v in (case or {}).items():
+        for existing in [e for e in out if e.lower() == str(k).lower()]:
+            del out[existing]
+        if str(v) != "":
+            out[str(k)] = v
+    return out
+
+
 def check_headers(headers: dict) -> dict[str, str]:
     for k, v in headers.items():
         if not _HDR_NAME.match(str(k)) or re.search(r"[\r\n\x00]", str(v)):
@@ -158,7 +171,7 @@ def exchange(cfg: dict, method: str, path: str, *, headers: dict | None = None, 
     url = build_url(c["base_url"], path, query)
     if not re.fullmatch(r"[A-Z]{3,10}", str(method).upper()):
         raise CaseInvalid(f"invalid HTTP method {method!r}")
-    hdrs = check_headers({**(c.get("extra_headers") or {}), **(headers or {})})
+    hdrs = check_headers(merge_headers(c.get("extra_headers"), headers))
     data = encode_body(body, hdrs)
     req = urllib.request.Request(url, data=data, headers=hdrs, method=str(method).upper())
     opener = urllib.request.build_opener(urllib.request.ProxyHandler({}),

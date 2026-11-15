@@ -101,6 +101,8 @@ class CaseOutcome(_Strict):
     not_compared: list[str] = Field(default_factory=list)   # db_after / stub_calls / messages not observed
     diff_ids: list[str] = Field(default_factory=list)
     masks: list[str] = Field(default_factory=list)
+    legacy_s: float | None = None            # response time on each side (advisory latency comparison)
+    new_s: float | None = None
 
 
 class TriageStats(_Strict):
@@ -125,6 +127,7 @@ class EquivalenceRunMeta(_Strict):
     regression_slices: list[str] = Field(default_factory=list)
     cases: list[CaseOutcome] = Field(default_factory=list)
     triage: TriageStats = Field(default_factory=TriageStats)
+    latency: dict | None = None             # differential.LatencySummary as a dict (advisory, never a gate)
 
 
 class CompositeCase(_Strict):
@@ -405,6 +408,12 @@ def _obs_dict(obs) -> dict:
     return {"status": obs.status, "headers": dict(obs.headers), "body": obs.body}
 
 
+def _secs(res) -> float | None:
+    obs = getattr(res, "observed", None)
+    v = getattr(obs, "duration_s", None) if obs is not None else None
+    return float(v) if isinstance(v, (int, float)) and v >= 0 else None
+
+
 def _extra(obs, name: str):
     return getattr(obs, name, None) if obs is not None else None
 
@@ -630,11 +639,31 @@ def observe_side(project, role: str, url: str | None, cases: list, *, timeout_s:
         raise EquivalenceError(f"{role} (in-network): {e}") from None
 
 
+def reset_harness_sides(project, legacy_url: str | None, new_url: str | None, backend=None) -> list[str]:
+    """Restart each side that runs in the harness (URL None) so both start from the same seeded state."""
+    from . import harness as h
+    done = []
+    try:
+        h.load_spec(project)
+    except h.HarnessError:
+        return done                 # no harness spec: nothing this tool can restart (a hand-made harness)
+    for role, url in (("legacy", legacy_url), ("new", new_url)):
+        if url is None:
+            try:
+                h.restart(project, role, backend=backend)
+            except h.HarnessError as e:
+                raise EquivalenceError(f"cannot restart the {role} harness: {e}") from None
+            done.append(role)
+    return done
+
+
 def run_equivalence(project, slice_id: str, legacy_url: str | None = None, new_url: str | None = None, *, llm=None,
                     timeout_s: float = 10.0, header_allowlist: list[str] | None = None,
-                    job_endpoint: str | None = "/__harness/job", log=None, backend=None) -> EquivalenceReport:
+                    job_endpoint: str | None = "/__harness/job", log=None, backend=None,
+                    reset: bool = False) -> EquivalenceReport:
     """Run, classify, (optionally) triage, write all outputs; returns the EquivalenceReport.
-    A side whose URL is None runs in-network against the running harness role (legacy / new)."""
+    A side whose URL is None runs in-network against the running harness role (legacy / new); `reset=True`
+    restarts those sides first (fresh seeded state; the CLI default in harness mode)."""
     from .approvals import git_head, upsert_open_decision
     from .casestore import load_cases, load_untestable
     from .harness_runner import DEFAULT_HEADER_ALLOWLIST, parse_base_url
@@ -654,6 +683,8 @@ def run_equivalence(project, slice_id: str, legacy_url: str | None = None, new_u
             raise EquivalenceError(f"bad base URL {u[:100]!r}: {e}") from None
     allow = list(header_allowlist or DEFAULT_HEADER_ALLOWLIST)
     common = dict(timeout_s=timeout_s, header_allowlist=allow, job_endpoint=job_endpoint, backend=backend)
+    if reset:
+        reset_harness_sides(project, legacy_url, new_url, backend)
     head = git_head(project)
     regress = regression_slices(project, slice_id)
     cases = load_cases(project)
@@ -694,7 +725,8 @@ def run_equivalence(project, slice_id: str, legacy_url: str | None = None, new_u
                                     new_outcome=nres.outcome, legacy_error=lres.error[:300], new_error=nres.error[:300],
                                     compared=info["compared"], equivalent=info["compared"] and not bad,
                                     not_compared=info["not_compared"], diff_ids=[d.id for d in cdiffs],
-                                    masks=sorted(set(case.normalize) | set(masks.approved_for(case.id)))))
+                                    masks=sorted(set(case.normalize) | set(masks.approved_for(case.id))),
+                                    legacy_s=_secs(lres), new_s=_secs(nres)))
     if llm is None:
         stats.skipped = "no model (offline or --triage not given)"
 
@@ -710,6 +742,9 @@ def run_equivalence(project, slice_id: str, legacy_url: str | None = None, new_u
                               new_url=new_url or up.get("new") or "", legacy_mode="url" if legacy_url else "harness",
                               new_mode="url" if new_url else "harness", target_head=head, regression_slices=regress,
                               cases=outcomes, triage=stats)
+    from .differential import latency_summary
+    lat = latency_summary([(o.case_id, o.legacy_s, o.new_s) for o in outcomes if o.compared])
+    meta.latency = lat.model_dump(mode="json") if lat else None
     atomic_write_json(run_meta_path(project, slice_id), meta)
 
     # ---- disagreement handling (plan 7)
@@ -898,9 +933,32 @@ def render_report_md(project) -> str:
             if nc:
                 lines += ["", "### Cases not compared", ""]
                 lines += [f"- {o.case_id}: {_md(o.legacy_error or o.legacy_outcome)}" for o in nc]
+            lat = meta.latency
+            if lat:
+                lines += ["", "### Latency (advisory)", "",
+                          f"{lat['cases']} case(s) timed on both sides. p50 legacy {lat['legacy_p50_s']}s, new "
+                          f"{lat['new_p50_s']}s (x{lat['ratio_p50']}); p95 legacy {lat['legacy_p95_s']}s, new "
+                          f"{lat['new_p95_s']}s (x{lat['ratio_p95']}). Sandbox timings are noisy: a smoke signal, "
+                          "not a benchmark."]
+                if lat["slower"]:
+                    lines += ["", f"New service more than x{lat['ratio_limit']} slower (and at least "
+                                  f"{lat['min_delta_s']}s):", "", "| Case | Legacy s | New s | Ratio |", "|---|---|---|---|"]
+                    lines += [f"| {x['case_id']} | {x['legacy_s']} | {x['new_s']} | {x['ratio']} |"
+                              for x in lat["slower"][:20]]
             chans = sorted({c for o in meta.cases for c in o.not_compared})
             if chans:
                 lines += ["", f"Not compared (not observed by the runner): {', '.join(chans)}."]
+    from .differential import load_fuzz_reports
+    for fz in load_fuzz_reports(project):
+        lines += ["", f"## Differential fuzzing {fz.slice}", "",
+                  f"Run {fz.created}; {fz.cases_considered} case(s), {fz.variants_run} variant(s) answered by both "
+                  f"services, {fz.variants_skipped_unstable} skipped (legacy unstable), {fz.variants_not_answered} "
+                  f"not answered; {len(fz.divergences)} divergence(s), {len(fz.high)} high."
+                  + (" Truncated." if fz.truncated else "")]
+        if fz.divergences:
+            lines += ["", "| Case | Mutation | Field | Legacy | New | Severity |", "|---|---|---|---|---|---|"]
+            lines += [f"| {d.case_id} | {_md(d.mutation)} | {_md(d.field)} | {_md(d.legacy)} | {_md(d.new)} | "
+                      f"{d.severity} |" for d in fz.divergences[:50]]
     comp = load_composite(project)
     if comp is not None:
         tot = ", ".join(f"{k} {v}" for k, v in sorted(comp.totals.items())) or "no cases"
@@ -992,7 +1050,11 @@ def register(groups) -> None:
     @click.option("--max-usd", type=float, default=None)
     @click.option("--config", "config_path", type=click.Path(exists=True, path_type=Path), default=None)
     @click.option("--timeout", type=float, default=10.0, show_default=True)
-    def run_cmd(project: Path, slice_id, all_, legacy_url, new_url, triage, offline, max_usd, config_path, timeout):
+    @click.option("--reset/--no-reset", default=True, show_default=True,
+                  help="Restart the harness services first (harness mode only) so both start from the same seeded "
+                       "state; with URLs you run yourself nothing is restarted.")
+    def run_cmd(project: Path, slice_id, all_, legacy_url, new_url, triage, offline, max_usd, config_path, timeout,
+                reset):
         """Run a slice's cases (+ approved slices' cases) against both services and classify the differences."""
         from .contract import ContractError, require_contract
         p = _project(project)
@@ -1012,7 +1074,7 @@ def register(groups) -> None:
                 click.echo("--offline: triage skipped")
             bad = 0
             for sid in ids:
-                rep = run_equivalence(p, sid, lu, nu, llm=llm, timeout_s=timeout)
+                rep = run_equivalence(p, sid, lu, nu, llm=llm, timeout_s=timeout, reset=reset)
                 reg = sum(d.classification == "regression" for d in rep.diffs)
                 unk = sum(d.classification == "unknown" for d in rep.diffs)
                 bad += reg + unk
@@ -1043,6 +1105,45 @@ def register(groups) -> None:
             raise click.ClickException(str(e))
         echo_composite(rep)
         if not rep.ok:
+            raise SystemExit(1)
+
+    @grp.command("fuzz")
+    @click.argument("project", type=click.Path(exists=True, path_type=Path))
+    @click.option("--slice", "slice_id", default=None, help="SLICE-NNNN to fuzz.")
+    @click.option("--all", "all_", is_flag=True, help="Every slice in plan order.")
+    @click.option("--legacy-url", default=None)
+    @click.option("--new-url", default=None)
+    @click.option("--max-variants", type=click.IntRange(1, 64), default=8, show_default=True,
+                  help="Mutated variants per recorded case.")
+    @click.option("--timeout", type=float, default=10.0, show_default=True)
+    @click.option("--reset/--no-reset", default=True, show_default=True,
+                  help="Restart the harness services first (harness mode only) so both start from the same state.")
+    def fuzz_cmd(project: Path, slice_id, all_, legacy_url, new_url, max_variants, timeout, reset):
+        """Differential fuzzing: mutate recorded HTTP cases and compare legacy with new (advisory; never a gate)."""
+        from .contract import ContractError, require_contract
+        from .differential import run_fuzz
+        p = _project(project)
+        if bool(slice_id) == bool(all_):
+            raise click.ClickException("give exactly one of --slice SLICE-NNNN or --all")
+        try:
+            require_contract(p)
+        except ContractError as e:
+            raise click.ClickException(f"contract gate: {e}")
+        try:
+            lu, nu = resolve_urls(p, legacy_url, new_url)
+            ids = [slice_id] if slice_id else [s.id for s in sorted(_plan(p).slices, key=lambda s: (s.order, s.id))]
+            high = 0
+            for sid in ids:
+                if reset:
+                    reset_harness_sides(p, lu, nu)
+                r = run_fuzz(p, sid, lu, nu, max_variants=max_variants, timeout_s=timeout)
+                high += len(r.high)
+                click.echo(f"{sid}: {r.variants_run} variant(s), {len(r.divergences)} divergence(s) ({len(r.high)} "
+                           f"high), {r.variants_skipped_unstable} skipped unstable, {r.variants_not_answered} not answered")
+        except EquivalenceError as e:
+            raise click.ClickException(str(e))
+        click.echo(f"report: {Phase2Layout(p).rel(Phase2Layout(p).equivalence_report_md)}")
+        if high:
             raise SystemExit(1)
 
     @grp.command("approve-mask")

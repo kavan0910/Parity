@@ -229,3 +229,16 @@ def test_classify_extra_channels_when_observed():
     diffs, info = eq.classify_case(case, res(lo), res(no), ["content-type"], [])
     assert [(d["field"], d["classification"]) for d in diffs] == [("db_after", "regression")]
     assert info["not_compared"] == ["messages"]
+
+
+def test_timestamps_between_separately_seeded_instances_are_noise_but_real_bugs_are_not():
+    from migration_agent.migrate.harness_runner.jsonpath import json_equal, timestamps_close as f
+    assert json_equal({"createdAt": "2026-11-15T05:43:41Z"}, {"createdAt": "2026-11-15T05:44:41Z"})
+    assert not json_equal({"createdAt": "2026-11-15T05:43:41Z"}, {"createdAt": "2026-11-15T09:44:41Z"})
+    assert not json_equal({"name": "pen"}, {"name": "pencil"})
+    assert f("2026-11-15T05:43:41.345Z", "2026-11-15T05:44:33.447Z")                 # seeded 52 s apart
+    assert f("2026-11-15 05:43:41", "2026-11-15T05:43:44")                          # space or T
+    assert not f("2026-11-15T05:43:41Z", "2026-11-15T10:43:41Z")                    # hours apart: a real bug
+    assert not f("2026-11-15T05:43:41Z", "2026-11-15T05:43:41")                     # zoned vs naive: format changed
+    assert not f("2026-11-15T05:43:41Z", "yesterday") and not f(1, 2) and not f(None, None)
+    assert not f("2026-11-15T05:43:41Z", "2026-11-15T05:50:00Z")                    # outside the 300 s window

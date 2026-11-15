@@ -211,3 +211,12 @@ def test_stub_server(tmp_path):
         assert calls[0]["body"] == {"amount": 5}
         observe(_case("/__stub/reset", method="POST"), cfg)
         assert observe(_case("/__stub/calls"), cfg).observed.body == []
+
+
+def test_injected_headers_are_overridden_or_removed_by_a_case():
+    from migration_agent.migrate.harness_runner.wire import merge_headers
+    inj = {"X-API-Token": "secret", "X-Static": "1"}
+    assert merge_headers(inj, None) == inj
+    assert merge_headers(inj, {"x-api-token": "wrong"}) == {"X-Static": "1", "x-api-token": "wrong"}   # case wins, any case
+    assert merge_headers(inj, {"X-API-Token": ""}) == {"X-Static": "1"}                                # empty removes it
+    assert merge_headers(None, {"Accept": "text/plain", "X-Nope": ""}) == {"Accept": "text/plain"}

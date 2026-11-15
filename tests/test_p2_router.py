@@ -327,6 +327,7 @@ def test_compose_new_and_composite(proj):
 
 # ------------------------------------------------------------------ build / up / down with a scripted docker
 def test_new_and_composite_build_up_down(proj, monkeypatch):
+    monkeypatch.setattr(H, "replay_seeds", lambda *a, **k: {"requests": 0, "ok": True})   # seeds: see test_p2_seed.py
     fd = _fake(monkeypatch)
     assert H.build(proj, "legacy")["ok"]
     with pytest.raises(H.HarnessError, match="M4"):

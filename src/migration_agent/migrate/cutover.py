@@ -274,7 +274,26 @@ def _c_equivalence(project, plan) -> Check:
         elif rep.unexplained:
             bl.append(f"{s.id}: {len(rep.unexplained)} regression/unknown diff(s): "
                       + ", ".join(d.id for d in rep.unexplained[:10]))
-    return Check(name="equivalence", ok=not bl, detail="every slice report clean" if not bl else "", blockers=bl)
+    warn = []
+    try:
+        from .differential import load_fuzz_reports
+        for fz in load_fuzz_reports(project):
+            if fz.high:
+                warn.append(f"{fz.slice}: differential fuzzing found {len(fz.high)} high-severity divergence(s) "
+                            "(advisory; see equivalence/report.md)")
+            elif fz.divergences:
+                warn.append(f"{fz.slice}: differential fuzzing found {len(fz.divergences)} divergence(s) (advisory)")
+        for s in _ordered(plan):
+            from .equivalence import load_run_meta
+            meta = load_run_meta(project, s.id)
+            slow = ((meta.latency or {}).get("slower") if meta else None) or []
+            if slow:
+                warn.append(f"{s.id}: {len(slow)} case(s) answered much slower by the new service (advisory latency "
+                            "comparison)")
+    except Exception:  # noqa: BLE001 - advisory checks never break readiness
+        pass
+    return Check(name="equivalence", ok=not bl, detail="every slice report clean" if not bl else "", blockers=bl,
+                 warnings=warn)
 
 
 def _full_suite_candidates(project, plan) -> list[FullSuite]:
@@ -345,6 +364,21 @@ def _c_full_suite(project, plan, head: str) -> tuple[Check, FullSuite | None]:
                   f"HEAD is {head[:12]}: re-run the full suite on the final tree")
     return Check(name="full_suite", ok=not bl, blockers=bl,
                  detail=f"{fs.kind} run {fs.created}: {fs.cases_equivalent}/{fs.cases_total} equivalent"), fs
+
+
+def _supply_chain_warnings(project) -> list[str]:
+    """Advisory: lockfile and pinning findings of the last build of each service (harness/state.json)."""
+    out = []
+    try:
+        from .harness import load_state as _hs
+        st = _hs(project)
+    except Exception:  # noqa: BLE001
+        return out
+    for role in ("new", "legacy"):
+        sc = (st.get(role) or {}).get("supply_chain") or {}
+        for w in (sc.get("warnings") or [])[:5]:
+            out.append(f"{role} build: {w}")
+    return out
 
 
 def _c_target_code(project) -> Check:
@@ -460,6 +494,9 @@ def readiness(project) -> Readiness:
             c = Check(name="full_suite", ok=False, blockers=[f"cannot evaluate: {_first_line(e)}"])
         checks.append(c)
     checks.append(_check("target_code", _c_target_code, project))
+    sc_warn = _supply_chain_warnings(project)
+    if sc_warn:
+        checks.append(Check(name="supply_chain", ok=True, detail="advisory", warnings=sc_warn))
     checks.append(_check("coverage", _c_coverage, project))
     checks.append(_check("config", _c_config, project))
     checks.append(_check("schema", _c_schema, project))

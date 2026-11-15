@@ -48,6 +48,7 @@ def m5(tmp_path, tmp_path_factory):
 # ------------------------------------------------------------------ run_cases_in_network
 def test_run_cases_in_network_argv_mounts_network_and_results(m5, monkeypatch):
     p, *_ = m5
+    monkeypatch.setattr(H, "replay_seeds", lambda *a, **k: {"requests": 0, "ok": True})   # seeds: test_p2_seed.py
     with Svc("legacy") as legacy:
         fd = runner_fake(monkeypatch, {"http://legacy:3000": legacy.base_url})
         H.import_source(p, from_original=True)

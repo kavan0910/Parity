@@ -176,6 +176,7 @@ def test_spec_rejects_escapes_and_composite_new_are_explained():
 
 # ------------------------------------------------------------------ build / up / down with a scripted docker
 def test_build_up_down_flow(proj, monkeypatch):
+    monkeypatch.setattr(H, "replay_seeds", lambda *a, **k: {"requests": 0, "ok": True})   # seeds: see test_p2_seed.py
     fd = _fake(monkeypatch)
     H.import_source(proj, from_original=True)
     ent = H.build(proj, "legacy")
@@ -267,6 +268,7 @@ def test_up_requires_successful_build(proj, monkeypatch):
 
 # ------------------------------------------------------------------ CLI
 def test_cli_commands_registered_and_flow(proj, monkeypatch):
+    monkeypatch.setattr(H, "replay_seeds", lambda *a, **k: {"requests": 0, "ok": True})   # seeds: see test_p2_seed.py
     r = _cli("harness", "--help")
     for c in ("import-source", "build", "up", "down", "status"):
         assert c in r.output
