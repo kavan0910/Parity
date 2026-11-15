@@ -10,7 +10,12 @@ from .project import Project
 @click.group()
 @click.version_option(package_name="migration-agent")
 def main() -> None:
-    """Read-only legacy service analysis."""
+    """Migrate a legacy app to a newer version or a different stack, and prove it behaves the same.
+
+    Steps: understand (init, ingest, extract, analyze, verify, review), approve (decide, status, approve), then
+    migrate, prove and cut over (target, plan, harness, tests, generate, equivalence, cutover). Understanding never
+    executes your code; the migration steps run code only in Docker sandboxes.
+    """
     from .config_env import configure_logging
     from .dotenv import load_dotenv, project_root
     load_dotenv(project_root() / ".env")

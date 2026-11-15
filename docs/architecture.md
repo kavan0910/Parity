@@ -1,5 +1,10 @@
 # Architecture
 
+migration-agent migrates a legacy app to the newest version of its stack, or to a different technology, and proves the
+new app behaves like the old one. The migration has five steps (understand, approve, migrate, prove, cut over); the
+components below implement them. Phase 1 (understand, approve) is the foundation every later step points back to, and
+Phase 2 (migrate, prove, cut over) is what delivers the migrated app.
+
 ## Goals and constraints
 
 1. **Evidence or it did not happen.** Every graph node and edge carries file/line/quote evidence that is checked

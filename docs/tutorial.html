@@ -191,10 +191,10 @@ main>h1{display:none}
 <a class="skip" href="#main">Skip to the tutorial</a>
 <header class="hero"><div class="hero-in">
 <div class="topbar"><span class="brand"><b>migration</b> agent / tutorial</span><button class="btn" id="theme" type="button" aria-label="Toggle light and dark theme">Toggle theme</button></div>
-<span class="eyebrow">CLI &middot; complete tutorial</span>
-<h1>Read it, approve it, <em>migrate</em> it.</h1>
-<p class="lede">Read a legacy codebase without ever running it. Get an evidence-backed understanding document, a knowledge graph and a blind check against your own docs. Approve it, then migrate slice by slice and prove the new service behaves like the old one.</p>
-<div class="chips"><span class="chip"><b>Version</b> 0.2.0 + unreleased 0.3.0 work</span><span class="chip"><b>Phase 2</b> command-line beta</span><span class="chip"><b>Source access</b> read-only in Phase 1</span></div>
+<span class="eyebrow">Legacy app migration &middot; CLI tutorial</span>
+<h1>Migrate your legacy app. <em>Prove</em> it still behaves the same.</h1>
+<p class="lede">This tutorial takes an existing legacy application to a migrated one: the newest version of its stack, or a different technology. You understand the legacy app (step 1), approve that map (step 2), then migrate it slice by slice in a sandbox, prove each slice against the running legacy app, and plan the cut-over (steps 3 to 5).</p>
+<div class="chips"><span class="chip"><b>Goal</b> migrate a legacy app, with proof</span><span class="chip"><b>Version</b> 0.2.0 + unreleased 0.3.0 work</span><span class="chip"><b>Phase 2</b> command-line beta</span><span class="chip"><b>Source access</b> read-only in Phase 1</span></div>
 </div></header>
 <div class="layout" id="top">
 <aside class="side" aria-label="Tutorial contents"><b class="h">On this page</b><a class="toc" href="#what">What it is</a><a class="toc" href="#setup">Install and set up</a><a class="toc" href="#walkthrough">Walkthrough</a><a class="toc" href="#review">The review loop</a><a class="toc" href="#approve">Approve (Phase 1 gate)</a><a class="toc" href="#phase2">Phase 2: migrate</a><a class="toc" href="#ops">Docker, safety, help</a></aside>
@@ -202,6 +202,8 @@ main>h1{display:none}
 
 <section id="what">
 <h2><span class="n">1</span>What it is</h2>
+<div class="call"><span class="t">The MVP</span><p><strong>Legacy app in, migrated app out, with proof.</strong> Point the tool at an existing application, choose the target (a newer version of the same stack, or a different technology), and get a migrated application, an equivalence report against the running legacy app, and a cut-over plan. Targets covered today: Java 8 to 21, Spring Boot 2 to 3, Django 3 to 5, Express to Fastify, JavaScript to Go. The migration has five steps: <strong>understand, approve, migrate, prove, cut over</strong>. Understanding the legacy app is step 1, not the goal.</p></div>
+
 <p>Every claim the tool makes cites a file, line range and a verbatim quote from your code, so you can check it. A second, <strong>blind Verifier</strong> then compares that document against your existing documentation, without seeing how the document was built, and flags where the two disagree. You review those disagreements in a local web UI.</p>
 <div class="cards">
   <div class="card"><b>Read-only</b>It never executes or modifies the analysed code. Model access is limited to path-jailed read-only tools.</div>

@@ -1,5 +1,8 @@
 # Platform contract (hosted product)
 
+The hosted product is the web front end of a legacy-app migration tool (legacy app in, migrated app and proof out).
+Today it runs step 1, understanding the legacy app; approval and the migration steps run in the CLI.
+
 Single source of truth shared by the parallel workstreams. Implements `product-architecture.md` Phases 1 to 3,
 **except billing**: no payment provider, no checkout, no invoices. Billing stays a `BillingProvider` interface with a
 `NoBilling` implementation (decision deferred by the owner).

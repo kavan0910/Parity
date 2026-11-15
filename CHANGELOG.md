@@ -90,6 +90,15 @@ The version lives in `pyproject.toml` only.
   workdir-masking guard.
 - Docs: `docs/remaining-work.md` (what is built, verified and left, against every plan).
 
+### Changed: positioning (the product is the migration)
+- Everything now states the MVP: take an existing legacy app, choose the target (a newer version or a different stack),
+  and get a migrated app plus proof that it behaves like the original. Understanding the legacy app is step 1 of five
+  (understand, approve, migrate, prove, cut over), not the product. Updated: README, package description, CLI help,
+  every doc, the three hand-built HTML pages, `docs/product-architecture.md` (which had argued for selling "verified
+  understanding"; withdrawn), both landing pages, and the web app (landing, a migration-journey component, the dashboard
+  now titled "Your migrations", the new-project and project pages). Status labels are unchanged and honest: the hosted
+  app runs step 1; steps 2 to 5 run in the CLI (beta).
+
 ### Changed: landing pages
 - Both landing pages (`landing/` and the web app's `/`) describe the whole product: understand and approve (Phase 1), then
   migrate with proof (Phase 2, a command-line beta), what runs where (the hosted app runs Phase 1 only), the sandbox

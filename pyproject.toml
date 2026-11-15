@@ -1,7 +1,7 @@
 [project]
 name = "migration-agent"
 version = "0.2.0"
-description = "Read-only legacy service analysis: evidence-backed understanding docs and knowledge graph, with a blind Verifier and human review loop"
+description = "Migrate a legacy app to the newest version of its stack or to a different technology, and prove the new app behaves like the old one: evidence-backed understanding, human approval, sandboxed slice-by-slice migration and equivalence checks"
 readme = "README.md"
 requires-python = ">=3.11"
 keywords = ["legacy", "migration", "static-analysis", "llm", "documentation"]

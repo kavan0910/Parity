@@ -1,14 +1,40 @@
 # migration-agent
 
-A CLI that helps migrate a legacy service in two phases.
+**Migrate a legacy app to the newest version of its stack, or to a different technology, and prove that the new app
+behaves like the old one.**
 
-**Phase 1: understand, verify, approve.** It ingests a codebase, extracts static facts, and uses an LLM to build an
+> **The MVP.** Point it at an existing legacy application, choose the target, and get a migrated application plus
+> evidence that it behaves like the original.
+>
+> * **In:** your legacy app (a source folder, an archive or a git URL). It is copied; your repository is never touched.
+> * **Choose:** the target, a newer version of the same stack or a different technology. The target-fit tables cover
+>   Java 8 to 21, Spring Boot 2 to 3, Django 3 to 5, Express to Fastify and JavaScript to Go.
+> * **Out:** the migrated app in its own folder, an equivalence report against the running legacy app, and a cut-over
+>   plan you approve. Nothing is deployed for you.
+
+The migration has five steps. Understanding the legacy app is step 1, not the goal: you cannot migrate safely what
+you cannot describe, and every later step points back to that approved map.
+
+| Step | What happens | Phase | Where it runs today |
+|---|---|---|---|
+| 1. Understand | Read the legacy app; every claim cites a file and line | 1 | CLI and the hosted web app |
+| 2. Approve | Sign off the map; decide per quirk whether to keep or fix it | 1 | CLI |
+| 3. Migrate | Generate the new app slice by slice in a Docker sandbox | 2 | CLI (beta, needs Docker) |
+| 4. Prove | Compare the new app with the running legacy app, case by case | 2 | CLI (beta) |
+| 5. Cut over | Route traffic slice by slice, with a plan you approve | 2 | CLI (beta) |
+
+**Status:** beta. Every step is built and tested; the sandbox has run for real on three sample apps; no migration stage
+has run with a real model yet, so the quality of model-written code is unmeasured (see Status below).
+
+## How it works
+
+**Phase 1 (steps 1 and 2): understand, verify, approve.** It ingests a codebase, extracts static facts, and uses an LLM to build an
 **evidence-backed knowledge graph and understanding document** (every claim cites file, lines and a verbatim
 quote). A **blind Verifier** compares the document with your existing documentation. Humans resolve the findings
 (targeted re-analysis, changelog), decide per quirk whether to preserve or fix it, and **approve** the result. The
 approval writes `docs/migration_contract.json`, the input of Phase 2.
 
-**Phase 2: migrate and prove equivalence.** Starting from the approved contract it:
+**Phase 2 (steps 3 to 5): migrate and prove equivalence.** Starting from the approved contract it:
 
 1. checks the target fit (`target init`, `target fit`): library and API risks from mapping tables plus verified
    model findings;

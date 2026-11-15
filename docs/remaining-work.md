@@ -1,5 +1,10 @@
 # What is built, what is verified, and what is left
 
+The product is a legacy-app migration: it takes an existing application and migrates it to the newest version of its
+stack or to a different technology, and proves the new app behaves like the old one. This page measures how far each
+part of that is built and verified. Understanding the legacy app is step 1 of the migration; the migration itself is
+steps 3 to 5.
+
 Last updated 2026-11-15. This page compares the code with every plan that defines the product:
 
 * the design grill, `.lavish/migration-agent-grill.html` (Q1 to Q18, Phase 1: understand and verify);

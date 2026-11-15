@@ -1,5 +1,9 @@
 # Product architecture and roadmap: from CLI engine to hosted service
 
+**The product:** migrate a legacy app to the newest version of its stack, or to a different technology, and prove the
+new app behaves like the old one. The hosted service described here is the web front end of that; today it runs step 1
+(understanding the legacy app), and the migration steps run in the CLI.
+
 Status: proposal, v1. Scope: architecture and plan only. No code changed, **no billing provider chosen or built**
 (decision deferred by the owner; this plan only leaves clean seams for it).
 Evidence is cited as `path:line` or `path`. **[Inferred]** = my judgement from the code, **[Unknown]** = needs an answer
@@ -23,9 +27,12 @@ Top risks, in order:
    is a strong base, but it is built for one trusted operator.
 3. **State model does not fit multi-tenant SaaS.** The folder is the state (`src/migration_agent/project.py`), writes use
    local `os.replace` and `flock`. Fine on one disk, wrong for stateless workers.
-4. **Positioning.** The tool is called migration-agent but what it delivers is *verified understanding of a legacy
-   system*. That is a sharper, more defensible promise than "migration", and it should drive the name, the landing page
-   and the first customer segment. **[Inferred]**
+4. **Positioning (decided: the product is the migration).** The MVP is taking an existing legacy app and migrating it
+   to the newest version of its stack or to a different technology, and proving the new app behaves like the old one.
+   The evidence-backed understanding is step 1 of that migration and the contract every later step is built on, not
+   the product on its own. (An earlier draft of this document argued for selling "verified understanding" instead of
+   "migration"; that was a misreading of the product and is withdrawn.) Name, landing pages and first customer segment
+   follow the migration promise.
 
 Recommendation: keep the engine as a library, wrap it in a conventional, boring SaaS (Next.js, FastAPI, Postgres,
 object storage, one job queue), and spend the first phase on proving quality and unit economics before building UI.
@@ -247,7 +254,7 @@ real customers will matter more than breadth of features. **[Inferred]** I have 
 ## 15. Decisions needed from the owner
 
 1. **Who is the first customer?** (agency doing modernisation, in-house platform team, acquirer doing diligence?)
-2. **Name and positioning:** keep "migration-agent" or rebrand around verified understanding?
+2. **Name:** decided. Keep "migration-agent": the product is the migration (legacy app in, migrated app out, with proof). Understanding the legacy app is step 1 of it.
 3. **Open-core or closed?** Is the CLI free and public, with the hosted service as the paid product?
 4. **Hosting preference and budget** (single cloud, region, data-residency promises).
 5. **Data policy you are willing to promise** (retention period, model provider terms, BYO key).

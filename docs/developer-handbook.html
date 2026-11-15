@@ -265,10 +265,10 @@ nav#toc a.hide{display:none}
 <a class="skip" href="#main">Skip to the handbook</a>
 <header class="hero"><div class="hero-in">
 <div class="topbar"><span class="brand"><b>migration</b> agent / developer handbook</span><button class="btn" id="theme" type="button" aria-label="Toggle light and dark theme">Toggle theme</button></div>
-<span class="eyebrow">For engineers joining the project</span>
+<span class="eyebrow">Legacy app migration &middot; for engineers joining the project</span>
 <h1 style="max-width:none">migration-agent: <em>developer</em> handbook</h1>
-<p class="lede">Read a legacy codebase without ever running it, produce an evidence-backed knowledge graph, and let humans review it. This handbook explains how the whole repository works so you can ship your first change on day one.</p>
-<div class="chips"><span class="chip"><b>Engine</b> 0.2.0</span><span class="chip"><b>Platform and Phase 2</b> 0.3.0 (unreleased)</span><span class="chip"><b>Updated</b> 2026-11-15</span></div>
+<p class="lede">migration-agent migrates a legacy app to the newest version of its stack, or to a different technology, and proves the new app behaves like the old one. This handbook explains how the whole repository works so you can ship your first change on day one.</p>
+<div class="chips"><span class="chip"><b>Goal</b> migrate a legacy app, with proof</span><span class="chip"><b>Engine</b> 0.2.0</span><span class="chip"><b>Platform and Phase 2</b> 0.3.0 (unreleased)</span><span class="chip"><b>Updated</b> 2026-11-15</span></div>
 <div class="meta">Every statement was checked against the code at the time of writing. Items I could not verify are marked <span class="b warn">unverified</span> or <span class="b no">not built</span>. When this page and the code disagree, the code wins: please fix the page.</div>
 </div></header>
 <div class="layout" id="top">
@@ -289,8 +289,9 @@ nav#toc a.hide{display:none}
 
 <div class="sub" id="what">
 <h3>One paragraph</h3>
-<p><strong>migration-agent</strong> reads a legacy service's source code (a directory, zip, tarball or public git URL) and produces an <strong>evidence-backed understanding document</strong> (<code>docs/understanding.latest.md</code>, 15 sections) plus a <strong>knowledge graph</strong> (components, endpoints, data entities, business rules, config, ...). Every claim carries a file, a line range and a verbatim quote that is re-checked against the real source. A second pass, the <strong>blind Verifier</strong>, compares that document with the documentation the team already has, <em>without ever seeing the code</em>, and reports contradictions. A human review loop (comments, resolutions, targeted re-analysis, changelog) refines the graph. In Phase 1 it never executes or modifies the analysed code. A person then approves the result (<code>decide</code>, <code>status</code>, <code>approve</code>), which writes a <strong>migration contract</strong>. <strong>Phase 2</strong> (chapter 14) starts from that contract: it plans slices, generates a new service in a sandbox and proves, case by case against the running legacy service, that it behaves the same.</p>
-<p>It exists in two shapes that share one engine: a <strong>CLI</strong> (<code>migration-agent</code>, pip-installable, state in one folder) and a <strong>hosted platform in development</strong> (FastAPI backend and worker, Next.js web app, docker-compose stack). The product owner's positioning note is that what it really delivers is <em>verified understanding of a legacy system</em>, more than "migration" (<code>product-architecture.md</code> section 1).</p>
+<div class="note"><p><strong>The MVP:</strong> migration-agent takes an existing legacy application and migrates it to the newest version of its stack, or to a different technology, and proves the new app behaves like the old one. Legacy app in; migrated app, an equivalence report and a cut-over plan out. Targets covered today: Java 8 to 21, Spring Boot 2 to 3, Django 3 to 5, Express to Fastify, JavaScript to Go. Everything in this handbook serves that.</p></div>
+<p>The migration has five steps: <strong>understand, approve, migrate, prove, cut over</strong>. <strong>Step 1</strong> reads the legacy service's source code (a directory, zip, tarball or public git URL) and produces an <strong>evidence-backed understanding document</strong> (<code>docs/understanding.latest.md</code>, 15 sections) plus a <strong>knowledge graph</strong>. Every claim carries a file, a line range and a verbatim quote that is re-checked against the real source, and a <strong>blind Verifier</strong> compares the document with the team's own docs. In <strong>step 2</strong> a person approves the result (<code>decide</code>, <code>status</code>, <code>approve</code>), which writes a <strong>migration contract</strong>. <strong>Steps 3 to 5</strong> (chapter 14) start from that contract: plan slices, generate the new app in a sandbox, prove case by case against the running legacy app that it behaves the same, and gate the cut-over. Phase 1 is steps 1 and 2; Phase 2 is steps 3 to 5. Understanding never executes or modifies the analysed code.</p>
+<p>It exists in two shapes that share one engine: a <strong>CLI</strong> (<code>migration-agent</code>, pip-installable, state in one folder), which runs all five steps, and a <strong>hosted platform in development</strong> (FastAPI backend and worker, Next.js web app, docker-compose stack), which runs step 1 today. The positioning is settled: the product is the migration; the understanding is its foundation, not an alternative product (<code>product-architecture.md</code> section 1).</p>
 </div>
 
 <div class="sub" id="who">
@@ -1692,7 +1693,7 @@ def stats(ctx: ProjectCtx = Depends(project_ctx)):
 <li><strong>Later.</strong> Self-hosted/BYO-key tier, more languages, CI integration (analyse on merge, drift alerts), API/webhooks, a pluggable engine <code>Storage</code>, engine cancellation hook.</li>
 </ol>
 <h4>Owner decisions still open (<code>product-architecture.md</code> section 15)</h4>
-<p>First customer segment; name and positioning ("verified understanding" vs "migration"); open-core vs closed; hosting preference and budget; data policy to promise (retention, provider terms, BYO key); access to real repos for Phase 0.</p>
+<p>First customer segment; name; open-core vs closed; hosting preference and budget; data policy to promise (retention, provider terms, BYO key); access to real repos for Phase 0.</p>
 </div>
 </section>
 
