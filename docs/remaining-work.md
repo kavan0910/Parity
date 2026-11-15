@@ -21,6 +21,9 @@ here has run with a real model for Phase 2, and nothing has been hand-scored on 
 | Hosted product (backend, web, deploy; roadmap phases 1 and 2) | API, worker, web UI, compose stack | never run end to end | Docker stack, Postgres paths, CI never exercised |
 | Commercial (roadmap phase 3) | billing seam only | no | pricing, billing, SSO, SOC 2, legal |
 
+The hosted web app and its landing page cover Phase 1 only. Approval (`decide`, `status`, `approve`) and all of Phase 2 are
+command-line features; the landing pages say so.
+
 ## Phase 1: plan against code
 
 Every grill decision (Q1 to Q18) and every implementation-plan deliverable has code and tests.

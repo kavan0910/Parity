@@ -1,7 +1,7 @@
 # Web notes (stream C)
 
 ## Built
-- Pages: landing, sign up, log in, dashboard (projects), new project (git URL or archive upload, client validation, retry-safe), project overview
+- Pages: landing (describes the whole product: understand and approve, then migrate with proof as a CLI beta; the hosted app runs Phase 1 only), sign up, log in, dashboard (projects), new project (git URL or archive upload, client validation, retry-safe), project overview
   (estimate with allowed/denied reason, budget cap, model profile, incremental, start run, live SSE progress with spend/stages/log/cancel,
   run history), understanding document (rendered markdown, contents, node-id links into the graph, export md/json/html), graph explorer
   (server-side search and type filter, version select, virtualised paged list, canvas graph with pan/zoom/focus, node detail with evidence quotes,

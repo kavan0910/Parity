@@ -90,6 +90,11 @@ The version lives in `pyproject.toml` only.
   workdir-masking guard.
 - Docs: `docs/remaining-work.md` (what is built, verified and left, against every plan).
 
+### Changed: landing pages
+- Both landing pages (`landing/` and the web app's `/`) describe the whole product: understand and approve (Phase 1), then
+  migrate with proof (Phase 2, a command-line beta), what runs where (the hosted app runs Phase 1 only), the sandbox
+  trial and the change it missed, and that no migration stage has run with a real model.
+
 ### Fixed: found by the first runs on a real Docker daemon
 All of these passed every offline test.
 - The allowlisting build proxy (Squid) died on start (`FATAL: Cannot open '/dev/stdout'`), so every build through a package

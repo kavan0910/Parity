@@ -44,7 +44,7 @@ A cookie mode is wired so the token can move to an httpOnly cookie without UI ch
 ## Layout
 
 ```
-app/            routes (landing, (auth), (app)/dashboard, projects/[pid]/{,document,graph,findings,settings}, usage, members)
+app/            routes (landing for the whole product, hosted app = Phase 1 only; (auth), (app)/dashboard, projects/[pid]/{,document,graph,findings,settings}, usage, members)
 components/     ui primitives, shell, run panel/launcher, graph explorer, canvas, virtual list, node detail
 lib/            api.ts (client), sse.ts, token.ts, graphFilter.ts, graphLayout.ts, runState.ts, mock/ (fixtures + fake API)
 tests/          Vitest + Testing Library

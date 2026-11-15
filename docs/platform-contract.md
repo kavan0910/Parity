@@ -191,7 +191,7 @@ code, SDK, keys, webhooks or pricing numbers anywhere.
 
 ## 7. Web (stream C)
 
-Next.js App Router, TypeScript strict, Tailwind. Pages: landing, sign up / log in, dashboard (projects), new project
+Next.js App Router, TypeScript strict, Tailwind. Pages: landing (whole-product description; approval and Phase 2 are CLI-only), sign up / log in, dashboard (projects), new project
 (connect git URL or upload), project overview (runs, estimate, start run with live progress via SSE), understanding
 document, graph explorer (search, filter by type, node detail with evidence quotes and confidence, version diff),
 findings review (resolve, comment), usage and plan, workspace members, settings (delete project/data). Typed API
