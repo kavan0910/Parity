@@ -1,6 +1,9 @@
 /** Single source for everything search engines and social cards read. The page renders from the same data. */
 export const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3100").replace(/\/$/, "");
 export const SITE_NAME = "Parity";
+/** Optional public contact address. When unset, no mailto links are rendered. */
+export const CONTACT_EMAIL = process.env.NEXT_PUBLIC_CONTACT_EMAIL || "";
+export const LEGAL_UPDATED = "2026-11-15";
 
 // <title> <= 60 characters, description <= 160.
 export const HOME_TITLE = "Parity: Legacy App Migration, Upgrade or Replatform, Proven";
@@ -51,6 +54,8 @@ export const FAQ = [
   { q: "Does the AI model run my code?", a: "No. The model returns structured file edits only and has no shell or network tool. Builds and tests run in locked-down Docker containers: tests with no network, builds only through the package mirror you configure." },
   { q: "Is it production ready?", a: "It is a beta. Every step is built and tested, and the sandbox has run for real on three sample apps, but no migration stage has run with a real AI model yet, so the quality of model-written code is unmeasured. Run it on a copy and review every slice before you approve it." },
   { q: "Where does each step run?", a: "The hosted web app runs step 1, understanding the legacy app. Approval and the migration steps run in the command-line tool on your own machine, with Docker." },
+  { q: "How do I get access?", a: "Parity is in early access. Create a workspace, connect your legacy app (a git URL or an archive) and the first step runs straight away. The approval and migration steps run in the command-line tool on your own machine, with Docker." },
+  { q: "Is my code safe?", a: "Your repository is never modified: the source is copied into a project, secrets are withheld or redacted at ingest, and the analysis never executes your code. Generated code runs only in locked-down Docker containers. Excerpts of your code (redacted on a best-effort basis) are sent to the AI model provider during analysis, and there is no zero-retention agreement with a provider yet. Parity is not certified or audited." },
   { q: "How much does it cost?", a: "Billing is not enabled yet. Model usage is metered and every run can be capped with a hard budget that stops it gracefully; re-running unchanged code makes no model calls." },
 ] as const;
 

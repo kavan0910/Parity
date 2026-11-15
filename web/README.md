@@ -50,6 +50,14 @@ lib/            api.ts (client), sse.ts, token.ts, graphFilter.ts, graphLayout.t
 tests/          Vitest + Testing Library
 ```
 
+## Landing page settings
+
+* `NEXT_PUBLIC_SITE_URL`: the public origin (no trailing slash), used for canonical, sitemap and social URLs.
+* `NEXT_PUBLIC_CONTACT_EMAIL`: optional; when set, "Talk to us" and contact links appear and the legal pages show it.
+
+The 3D effects live in `app/globals.css` (`.scene`, `.stack`, `.plate`, `.tilt`, `.r3d`, `.card3d`) and the small client
+components `components/Tilt3D.tsx` and `components/Reveal3D.tsx`; `components/HeroScene.tsx` is the decorative stack.
+
 ## SEO
 
 All search and social metadata comes from `lib/site.ts` (title, description, FAQ, steps, migration paths) and is rendered

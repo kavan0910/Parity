@@ -131,6 +131,21 @@ tested on SQLite with a fake engine; the Docker stack and the Postgres paths hav
 | Operations | the full stack built and run once; backups restore-tested; CI green on the three workflows |
 | Accounts | e-mail verification, password reset, MFA, account deletion |
 
+## Before taking real customers
+
+The landing page can be launched for early access today. The platform behind it cannot yet carry paying customers. Everything
+below is open, most of it already listed above:
+
+| Area | Needed before launch |
+|---|---|
+| Landing | Set `NEXT_PUBLIC_SITE_URL` and `NEXT_PUBLIC_CONTACT_EMAIL`; add testimonials and logos only when they are real |
+| Legal | A lawyer reviews `/privacy` and `/terms` (drafted from the internal drafts, which say nothing may be promised until approved); choose hosting and subprocessors and sign their terms; decide retention periods; model-provider terms or a zero-retention agreement |
+| Security | F5 (worker holds database credentials and the model key) and F4 (Postgres row-level security) closed and verified; TLS ingress; secret manager |
+| Operations | The full Docker stack built and run once end to end; CI green; monitoring, alerting and error tracking; backups restore-tested |
+| Accounts | E-mail verification, password reset, MFA, self-service account deletion |
+| Product | Run the migration steps with a real model on real repositories and measure the result; hosted approval screens (today the approval and migration run in the CLI) |
+| Money | Pricing, billing provider, plans and invoices |
+
 ## Commercial (roadmap phase 3)
 
 Not started, and gated on real cost numbers from the Phase 0 runs: pricing, a billing provider behind the existing

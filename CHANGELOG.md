@@ -90,6 +90,18 @@ The version lives in `pyproject.toml` only.
   workdir-masking guard.
 - Docs: `docs/remaining-work.md` (what is built, verified and left, against every plan).
 
+### Changed: acquisition landing page (web app)
+- Customer-facing sections and navigation: Why Parity, How it works, Stacks, Results, Security, FAQ (replacing "The MVP",
+  "What you get", "Measured"), plus "Who it is for", an early-access section, and a footer with product, trust and
+  account links. Copy is benefit-led and every claim is either a measured number or a stated property; there are no
+  invented testimonials, logos or prices.
+- 3D effects in CSS only (no 3D library, so no load-time or SEO cost): a swaying isometric stack of five slices that light up
+  one after another, a pointer-tracking tilt with a glare on the hero and evidence cards, perspective scroll reveals and
+  hover lift on cards. All of it is off for `prefers-reduced-motion`, on touch, and without JavaScript.
+- `/privacy` and `/terms` pages (early-access wording drawn from `docs/security/data-handling-and-retention.md`), a branded
+  404 and error page, legal pages in the sitemap. Optional `NEXT_PUBLIC_CONTACT_EMAIL` adds "Talk to us" and contact links.
+- `npm audit --omit=dev`: 0 vulnerabilities.
+
 ### Changed: product name and headline
 - The product is now called **Parity** ("Migrate legacy apps. Prove parity."). Updated in prose, every HTML page, both
   landing pages, the web app (UI, metadata, social image, JSON-LD) and the CLI help. The command-line tool, the Python
