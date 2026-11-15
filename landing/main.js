@@ -70,8 +70,9 @@
   var term = document.getElementById("term");
   var script = [
     { cmd: "migration-agent ingest my-service.migration", out: ["ingested 18 files, skipped 1, secret findings 2"] },
-    { cmd: "migration-agent extract my-service.migration", out: ["inventory: 29 items {'config_key': 4, 'dependency': 3, 'route': 8, 'source_file': 14}"] },
-    { cmd: "migration-agent analyze my-service.migration --max-usd 1", out: ["plan: 1 chunk(s), estimated cost $0.01", "CH-0001: 15 nodes", "done: {'chunks': 1, 'nodes': 39, 'edges': 30, 'coverage_complete': True, …}"] }
+    { cmd: "migration-agent analyze my-service.migration --max-usd 1", out: ["plan: 1 chunk(s), estimated cost $0.01", "done: {'chunks': 1, 'nodes': 39, 'edges': 30, 'coverage_complete': True, …}"] },
+    { cmd: "migration-agent status my-service.migration", out: ["ready for approval: yes", "approval: none (not approved yet)"] },
+    { cmd: "migration-agent approve my-service.migration --by Priya", out: ["approved graph v2 by Priya", "contract:     docs/migration_contract.json"] }
   ];
   function line(html, cls) {
     var d = document.createElement("div");
@@ -158,16 +159,14 @@
   window.addEventListener("scroll", function () { if (!ticking) { ticking = true; requestAnimationFrame(updateBar); } }, { passive: true });
   updateBar();
 
-  /* graph starts when it scrolls into view */
-  var g = document.getElementById("gsvg");
-  if (g) {
-    if (reduce || !("IntersectionObserver" in window)) { g.classList.add("on"); } else {
-      var gio = new IntersectionObserver(function (en) {
-        if (en[0].isIntersecting) { g.classList.add("on"); gio.disconnect(); }
-      }, { threshold: 0.3 });
-      gio.observe(g);
-    }
-  }
+  /* graphs start when they scroll into view */
+  document.querySelectorAll(".gsvg").forEach(function (g) {
+    if (reduce || !("IntersectionObserver" in window)) { g.classList.add("on"); return; }
+    var gio = new IntersectionObserver(function (en) {
+      if (en[0].isIntersecting) { g.classList.add("on"); gio.disconnect(); }
+    }, { threshold: 0.3 });
+    gio.observe(g);
+  });
 
   /* count up stats once */
   var counters = document.querySelectorAll("[data-count]");
@@ -176,7 +175,7 @@
     function step(ts) {
       if (t0 === null) t0 = ts;
       var p = Math.min(1, (ts - t0) / dur), e = 1 - Math.pow(1 - p, 4);
-      el.textContent = Math.round(to * e);
+      el.textContent = Math.round(to * e).toLocaleString("en-US");
       if (p < 1) requestAnimationFrame(step);
     }
     el.textContent = "0"; requestAnimationFrame(step);
@@ -191,17 +190,24 @@
   /* hero headline: words rise in one after another */
   var h1 = document.querySelector(".hero h1");
   if (h1 && !reduce) {
-    var words = h1.textContent.trim().split(/\s+/);
+    // keep the authored line breaks: split on <br>, then animate word by word
+    var lines = h1.innerHTML.split(/<br\s*\/?>/i).map(function (l) { return l.replace(/<[^>]*>/g, "").trim(); });
+    var all = [];
     h1.textContent = "";
-    h1.setAttribute("aria-label", words.join(" "));
-    words.forEach(function (w, i) {
-      var s = document.createElement("span");
-      s.setAttribute("aria-hidden", "true");
-      s.textContent = w;
-      s.style.cssText = "display:inline-block;opacity:0;transform:translateY(24px);transition:opacity 700ms cubic-bezier(0.22,1,0.36,1) " + (i * 70) + "ms,transform 700ms cubic-bezier(0.22,1,0.36,1) " + (i * 70) + "ms";
-      h1.appendChild(s);
-      if (i < words.length - 1) h1.appendChild(document.createTextNode(" "));
+    lines.forEach(function (ln, li) {
+      var words = ln.split(/\s+/).filter(Boolean);
+      words.forEach(function (w, wi) {
+        var i = all.length; all.push(w);
+        var s = document.createElement("span");
+        s.setAttribute("aria-hidden", "true");
+        s.textContent = w;
+        s.style.cssText = "display:inline-block;opacity:0;transform:translateY(24px);transition:opacity 700ms cubic-bezier(0.22,1,0.36,1) " + (i * 70) + "ms,transform 700ms cubic-bezier(0.22,1,0.36,1) " + (i * 70) + "ms";
+        h1.appendChild(s);
+        if (wi < words.length - 1) h1.appendChild(document.createTextNode(" "));
+      });
+      if (li < lines.length - 1) { h1.appendChild(document.createElement("br")); h1.appendChild(document.createTextNode(" ")); }
     });
+    h1.setAttribute("aria-label", all.join(" "));
     requestAnimationFrame(function () { requestAnimationFrame(function () {
       h1.querySelectorAll("span").forEach(function (s) { s.style.opacity = "1"; s.style.transform = "none"; });
     }); });

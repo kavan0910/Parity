@@ -3,13 +3,17 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>migration agent: understand a legacy service before you migrate it</title>
-  <meta name="description" content="A read only CLI that maps a legacy service, cites a file and line for every claim, and checks the result against your own requirements docs. Runs locally.">
+  <title>migration agent: understand a legacy service, then migrate it with proof</title>
+  <meta name="description" content="A CLI that maps a legacy service with a file and line cited for every claim, asks you to approve that map, then migrates it slice by slice and checks each slice against responses recorded from the old service.">
   <meta property="og:type" content="website">
-  <meta property="og:title" content="Understand a legacy service before you migrate it">
-  <meta property="og:description" content="Every claim cites a file and line. Your docs get checked against the code. Runs locally in a read only sandbox.">
+  <meta property="og:title" content="Understand a legacy service, then migrate it with proof">
+  <meta property="og:description" content="Every claim cites a file and line. You approve the map. Each migrated slice is compared with responses recorded from the running legacy service.">
   <meta property="og:image" content="og.jpg">
+  <meta property="og:image:alt" content="migration agent terminal and knowledge graph">
   <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Understand a legacy service, then migrate it with proof">
+  <meta name="twitter:description" content="Evidence on every claim, an approval you sign, and a migration checked against the old service's own responses.">
+  <meta name="twitter:image" content="og.jpg">
   <meta name="theme-color" content="#000000">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23000'/%3E%3Cpath d='M8 21l5-5-5-5M15 22h9' stroke='%235eead4' stroke-width='2.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -19,8 +23,12 @@
   <script>(function(){try{var t=localStorage.getItem("ma-theme");if(!t){t=window.matchMedia("(prefers-color-scheme: light)").matches?"light":"dark";}document.documentElement.setAttribute("data-theme",t);}catch(e){document.documentElement.setAttribute("data-theme","dark");}})();</script>
   <link rel="stylesheet" href="styles.css">
   <script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[
-    {"@type":"Question","name":"Does it change my code?","acceptedAnswer":{"@type":"Answer","text":"No. It copies your source into a project folder and reads only that copy."}},
-    {"@type":"Question","name":"Which models can it use?","acceptedAnswer":{"@type":"Answer","text":"Any provider LiteLLM supports. Sample configs are included for Gemini and Anthropic."}}]}</script>
+    {"@type":"Question","name":"Does it change my code?","acceptedAnswer":{"@type":"Answer","text":"No. Ingest copies your source into a project folder and analysis reads only that copy. The migration writes the new service into target_code inside the project folder, never into your repository."}},
+    {"@type":"Question","name":"Does the model run any code?","acceptedAnswer":{"@type":"Answer","text":"No. The model returns structured file edits only and has no shell, exec or network tool. Builds and tests run in a Docker sandbox: tests with no network, builds only through the package mirror you configure."}},
+    {"@type":"Question","name":"Where does the expected behaviour come from?","acceptedAnswer":{"@type":"Answer","text":"From your running legacy service. The model only proposes test inputs. Each case runs twice against the old service, values that differ are masked as noise, and the recorded response becomes the expected result."}},
+    {"@type":"Question","name":"Which migrations does it support?","acceptedAnswer":{"@type":"Answer","text":"The first supported target is Java 8 with Spring Boot 2 to Java 21 with Spring Boot 3. Library tables also cover Django 3.2 to 5, Express to Fastify and JavaScript to Go."}},
+    {"@type":"Question","name":"Is the migration phase production ready?","acceptedAnswer":{"@type":"Answer","text":"Not yet. It is implemented and its automated tests pass offline, but it has not yet run against a real Docker daemon or a real model."}},
+    {"@type":"Question","name":"Which models can I use?","acceptedAnswer":{"@type":"Answer","text":"Any provider LiteLLM supports. Sample configs are included for Gemini and Anthropic."}}]}</script>
 </head>
 <body>
   <a class="skip body-5" href="#main">Skip to content</a>
@@ -32,6 +40,7 @@
       <nav class="nav-links body-5" aria-label="Primary">
         <a href="#benefits">Benefits</a>
         <a href="#how">How it works</a>
+        <a href="#migrate">Migrate</a>
         <a href="#proof">Proof</a>
         <a href="#faq">FAQ</a>
       </nav>
@@ -43,9 +52,10 @@
   <div class="panel" id="panel" data-open="false" aria-hidden="true">
     <a class="plink" style="--i:0" href="#benefits">Benefits</a>
     <a class="plink" style="--i:1" href="#how">How it works</a>
-    <a class="plink" style="--i:2" href="#proof">Proof</a>
-    <a class="plink" style="--i:3" href="#faq">FAQ</a>
-    <a class="plink" style="--i:4" href="#quickstart">Quickstart</a>
+    <a class="plink" style="--i:2" href="#migrate">Migrate</a>
+    <a class="plink" style="--i:3" href="#proof">Proof</a>
+    <a class="plink" style="--i:4" href="#faq">FAQ</a>
+    <a class="plink" style="--i:5" href="#quickstart">Quickstart</a>
   </div>
 
   <main id="main">
@@ -59,20 +69,20 @@
         <span class="c" style="left:30vw;top:130px;width:12px;height:12px;--x:16px;--y:24px;--t:9s"></span>
       </div>
       <div class="container hero-inner">
-        <h1 class="heading-1 reveal">Understand a legacy service before you migrate it</h1>
-        <p class="sub title-2 reveal" data-d="1">migration agent reads your code in a read only sandbox and writes an understanding doc and a knowledge graph. Every claim cites a file and a line.</p>
+        <h1 class="heading-1 reveal">Understand legacy code,<br> then migrate with proof</h1>
+        <p class="sub title-2 reveal" data-d="1">migration agent maps your code and cites a file and line for every claim. You approve that map. Then it rebuilds the service slice by slice and compares each slice with responses recorded from the old one.</p>
         <div class="hero-cta reveal" data-d="2">
-          <a class="btn btn-primary btn-lg" href="#quickstart">Run the quickstart <i class="ph ph-arrow-right" aria-hidden="true"></i></a>
-          <span class="proof body-6"><i class="ph ph-seal-check" aria-hidden="true"></i>Tested on three reference repos: Express, Spring and Django</span>
+          <a class="btn btn-primary btn-lg button-lg" href="#quickstart">Run the quickstart <i class="ph ph-arrow-right" aria-hidden="true"></i></a>
+          <span class="proof body-6"><i class="ph ph-seal-check" aria-hidden="true"></i>Mapped Spring PetClinic, 4,297 lines, for $0.077 in 51 seconds</span>
         </div>
         <div class="hero-visual reveal" data-d="3">
-          <div class="term" role="img" aria-label="Terminal showing migration agent ingesting, extracting and analyzing a service">
+          <div class="term" role="img" aria-label="Terminal showing migration agent ingesting and analyzing a service, reporting it ready for approval, then writing the approved doc and the migration contract">
             <div class="term-bar"><b></b><b></b><b></b><span>~/legacy-service</span></div>
             <div class="term-body" id="term" aria-hidden="true"></div>
           </div>
           <div class="gcard" role="img" aria-label="Knowledge graph: the orders endpoint calls orderService.js, which reads and writes the Order and Product entities and implements the Bulk Order Discount rule">
             <header><span class="title-3">Knowledge graph</span><span class="live caption-4"><b></b>39 nodes, 30 edges</span></header>
-            <svg class="gsvg" id="gsvg" viewBox="0 0 460 340" aria-hidden="true">
+            <svg class="gsvg" viewBox="0 0 460 340" aria-hidden="true">
               <g stroke-linecap="round">
                 <line class="edge" style="--i:3" x1="105" y1="72" x2="105" y2="136" />
                 <line class="edge" style="--i:5" x1="85" y1="192" x2="90" y2="262" />
@@ -108,15 +118,15 @@
       <div class="container">
         <div class="section-head reveal">
           <span class="eyebrow caption-1"><i class="ph ph-list-checks" aria-hidden="true"></i>Benefits</span>
-          <h2 class="heading-2">A map of the service you can check, not a summary you have to trust</h2>
+          <h2 class="heading-2">Evidence you can check at every step, from the first map to the last slice</h2>
         </div>
         <div class="grid-3">
           <article class="card reveal"><span class="ic"><i class="ph ph-seal-check" aria-hidden="true"></i></span><h3 class="title-1">Evidence on every claim</h3><p class="body-6">Each node and edge carries a file and line range. Evidence that does not exist in the code is dropped before it reaches the doc.</p></article>
           <article class="card reveal" data-d="1"><span class="ic"><i class="ph ph-git-diff" aria-hidden="true"></i></span><h3 class="title-1">A Verifier that never sees your code</h3><p class="body-6">It compares the generated doc with your own requirements docs and reports contradictions, doc only items and code only gaps. Every quote is string checked.</p></article>
-          <article class="card reveal" data-d="2"><span class="ic"><i class="ph ph-lock-key" aria-hidden="true"></i></span><h3 class="title-1">Read only and local</h3><p class="body-6">It works on a copy of your source. Secrets are redacted at ingest, and the review server listens on <code>127.0.0.1</code> behind a token.</p></article>
-          <article class="card reveal"><span class="ic"><i class="ph ph-coins" aria-hidden="true"></i></span><h3 class="title-1">A hard budget and cheap re runs</h3><p class="body-6">Set <code>--max-usd</code> to stop a run gracefully. An incremental re run of unchanged code makes zero model calls.</p></article>
-          <article class="card reveal" data-d="1"><span class="ic"><i class="ph ph-plugs-connected" aria-hidden="true"></i></span><h3 class="title-1">Bring your own model</h3><p class="body-6">Any provider LiteLLM supports, set per task. Sample configs for Gemini and Anthropic are included, and a custom endpoint is one setting.</p></article>
-          <article class="card reveal" data-d="2"><span class="ic"><i class="ph ph-chat-circle-text" aria-hidden="true"></i></span><h3 class="title-1">A review loop that stays small</h3><p class="body-6">Comment on an item or resolve a finding, and only the code around that node is re analyzed. A changelog records what changed and why.</p></article>
+          <article class="card reveal" data-d="2"><span class="ic"><i class="ph ph-signature" aria-hidden="true"></i></span><h3 class="title-1">An approval you sign, and that expires</h3><p class="body-6"><code>status</code> lists what blocks approval. <code>approve</code> writes a fixed copy of the doc and a migration contract. If the graph changes later, the approval turns stale.</p></article>
+          <article class="card reveal"><span class="ic"><i class="ph ph-record" aria-hidden="true"></i></span><h3 class="title-1">Expected results from the real service</h3><p class="body-6">Tests are recorded from your running legacy service, twice, with noise masked. The model proposes inputs and never writes an expected answer.</p></article>
+          <article class="card reveal" data-d="1"><span class="ic"><i class="ph ph-shield-check" aria-hidden="true"></i></span><h3 class="title-1">The model edits, the sandbox runs</h3><p class="body-6">The model returns file edits and never gets a shell. Builds and tests run in Docker: tests with no network, builds through your package mirror, no secrets.</p></article>
+          <article class="card reveal" data-d="2"><span class="ic"><i class="ph ph-coins" aria-hidden="true"></i></span><h3 class="title-1">Your model, your budget</h3><p class="body-6">Any provider LiteLLM supports, set per task. <code>--max-usd</code> stops a run gracefully, and a re run of unchanged code makes zero model calls.</p></article>
         </div>
       </div>
     </section>
@@ -124,7 +134,7 @@
     <!-- Tagline reveal -->
     <section class="tagline" aria-label="Our promise">
       <div class="container">
-        <p id="tagline">Every claim points to a line of code. Every document is checked against the code. Nothing leaves your machine except the model call you configure.</p>
+        <p id="tagline">Every claim points to a line of code. Every migrated slice is checked against what the old service actually returned.</p>
       </div>
     </section>
 
@@ -175,48 +185,116 @@
       <div class="container">
         <div class="section-head reveal">
           <span class="eyebrow caption-1"><i class="ph ph-path" aria-hidden="true"></i>How it works</span>
-          <h2 class="heading-2">Three steps from source folder to reviewed doc</h2>
+          <h2 class="heading-2">Three steps from source folder to migrated service</h2>
         </div>
         <div class="steps">
-          <article class="step reveal"><span class="n caption-1">01</span><h3 class="title-1">Ingest and extract</h3><p class="body-6">Copy the source into the project, redact secrets, then pull static facts: routes, config keys, dependencies and file to file imports.</p><pre><code>migration-agent init ./service
-migration-agent ingest service.migration
-migration-agent extract service.migration</code></pre></article>
-          <article class="step reveal" data-d="1"><span class="n caption-1">02</span><h3 class="title-1">Analyze</h3><p class="body-6">The model reads chunks of code and returns nodes, edges and business rules. Each one is checked against the real file and line, and coverage is reported.</p><pre><code>migration-agent analyze service.migration \
+          <article class="step reveal"><span class="n caption-1">01</span><h3 class="title-1">Map the service</h3><p class="body-6">Copy the source into a project, redact secrets and pull static facts. The model then reads the code in chunks and returns nodes, edges and business rules, each checked against the real file and line.</p><pre><code>migration-agent init ./svc
+migration-agent ingest svc.migration
+migration-agent extract svc.migration
+migration-agent analyze svc.migration \
   --config gemini.config.json --max-usd 1</code></pre></article>
-          <article class="step reveal" data-d="2"><span class="n caption-1">03</span><h3 class="title-1">Verify and review</h3><p class="body-6">Drop your requirements into the project, run the Verifier, then resolve findings in the local review page. Only the touched nodes are re analyzed.</p><pre><code>migration-agent verify service.migration
-migration-agent review service.migration
-migration-agent resolve service.migration F-0001</code></pre></article>
+          <article class="step reveal" data-d="1"><span class="n caption-1">02</span><h3 class="title-1">Check it and approve it</h3><p class="body-6">Run the Verifier against your docs and resolve or defer each finding. Mark every quirk or suspected bug to preserve (the default) or fix. Approval is refused while any blocker is open.</p><pre><code>migration-agent verify svc.migration
+migration-agent resolve svc.migration \
+  F-0001 --status accepted_code
+migration-agent decide svc.migration \
+  RULE-0003 --fix
+migration-agent status svc.migration
+migration-agent approve svc.migration \
+  --by "Your Name"</code></pre></article>
+          <article class="step reveal" data-d="2"><span class="n caption-1">03</span><h3 class="title-1">Migrate with proof</h3><p class="body-6">Describe the target, plan slices from the approved contract, then generate and verify one slice at a time. Each slice waits for your approval. <a class="inline" href="#migrate">See the four stages</a></p><pre><code>migration-agent target init \
+  svc.migration --runtime 21 \
+  --framework spring-boot@3.3
+migration-agent plan svc.migration
+migration-agent generate \
+  svc.migration --slice SLICE-0001</code></pre></article>
         </div>
       </div>
     </section>
 
+    <!-- Migrate with proof -->
+    <section class="section" id="migrate">
+      <div class="container">
+        <div class="section-head reveal">
+          <span class="eyebrow caption-1"><i class="ph ph-git-merge" aria-hidden="true"></i>Migrate with proof</span>
+          <h2 class="heading-2">A slice ships only when it answers like the old service</h2>
+          <p class="body-3">The migration starts from your approved contract and moves one slice at a time. The first supported target is Java 8 with Spring Boot 2 to Java 21 with Spring Boot 3.</p>
+        </div>
+        <div class="notice reveal" role="note"><i class="ph ph-flask" aria-hidden="true"></i><p class="body-6"><strong class="body-4">Preview.</strong> Every stage below is built and covered by automated tests that run offline. It has not yet run against a real Docker daemon or a real model.</p></div>
+        <div class="mgrid">
+          <ol class="mlist">
+            <li class="mstep reveal"><span class="ic"><i class="ph ph-target" aria-hidden="true"></i></span><div><h3 class="title-1">Check the target fits</h3><p class="body-6"><code>target fit</code> reads fixed library tables for Java 8 to 21, Spring Boot 2 to 3, Django 3.2 to 5, Express to Fastify and JavaScript to Go. Risks the model adds are kept only when their cited evidence exists.</p></div></li>
+            <li class="mstep reveal" data-d="1"><span class="ic"><i class="ph ph-record" aria-hidden="true"></i></span><div><h3 class="title-1">Record what the old service does</h3><p class="body-6">The planner cuts the service into slices in dependency order. The model proposes test inputs, each case runs twice against the live legacy service, and the recorded response becomes the expected result.</p></div></li>
+            <li class="mstep reveal" data-d="2"><span class="ic"><i class="ph ph-shield-check" aria-hidden="true"></i></span><div><h3 class="title-1">Generate inside a sandbox</h3><p class="body-6">The model returns structured edits and never gets a shell. Builds and tests run in Docker, and a reviewer in a fresh session checks the slice without the generation history.</p></div></li>
+            <li class="mstep reveal" data-d="3"><span class="ic"><i class="ph ph-arrows-split" aria-hidden="true"></i></span><div><h3 class="title-1">Prove it, approve it, flip it</h3><p class="body-6">Legacy and new run the same cases and every difference is listed. You approve each slice, the strangler fig router moves its routes, and the cutover plan needs its own approval.</p></div></li>
+          </ol>
+          <div class="gcard reveal" data-d="1" role="img" aria-label="Diagram: one recorded case is sent to both the legacy service and the new slice, the two responses are compared field by field, and only a matching slice moves on to your approval and a route flip">
+            <header><span class="title-3">One case, two services</span><span class="live caption-4"><b></b>equivalence run</span></header>
+            <svg class="gsvg" viewBox="0 0 460 340" aria-hidden="true">
+              <g stroke-linecap="round">
+                <line class="edge" style="--i:2" x1="200" y1="64" x2="110" y2="112" />
+                <line class="edge" style="--i:2" x1="260" y1="64" x2="350" y2="112" />
+                <line class="edge" style="--i:4" x1="110" y1="168" x2="200" y2="212" />
+                <line class="edge" style="--i:4" x1="350" y1="168" x2="260" y2="212" />
+                <line class="edge" style="--i:6" x1="230" y1="264" x2="230" y2="280" />
+              </g>
+              <circle class="dot" style="--i:2;--dx:-90px;--dy:48px;--d:2.6s" cx="200" cy="64" r="4" />
+              <circle class="dot" style="--i:2;--dx:90px;--dy:48px;--d:2.6s" cx="260" cy="64" r="4" />
+              <circle class="dot" style="--i:4;--dx:90px;--dy:44px;--d:2.8s" cx="110" cy="168" r="4" />
+              <circle class="dot" style="--i:4;--dx:-90px;--dy:44px;--d:2.8s" cx="350" cy="168" r="4" />
+              <g class="node rule" style="--i:1"><rect x="130" y="12" width="200" height="52" rx="12"/><text x="146" y="34">Recorded case</text><text class="sub" x="146" y="52">recorded twice</text></g>
+              <g class="node ent" style="--i:3"><rect x="20" y="112" width="190" height="56" rx="12"/><text x="36" y="136">Legacy service</text><text class="sub" x="36" y="154">Java 8, Spring Boot 2</text></g>
+              <g class="node comp" style="--i:3"><rect x="250" y="112" width="190" height="56" rx="12"/><text x="266" y="136">New slice</text><text class="sub" x="266" y="154">Java 21, Spring Boot 3</text></g>
+              <rect class="pulse" x="130" y="212" width="200" height="52" rx="12" />
+              <g class="node comp" style="--i:5"><rect x="130" y="212" width="200" height="52" rx="12"/><text x="146" y="234">Equivalence diff</text><text class="sub" x="146" y="252">field by field</text></g>
+              <g class="node rule" style="--i:7"><rect x="90" y="280" width="280" height="52" rx="12"/><text x="106" y="302">You approve, routes flip</text><text class="sub" x="106" y="320">approve-slice, harness flip</text></g>
+            </svg>
+          </div>
+        </div>
+        <p class="note body-6">Config keys are mapped to the target convention with secrets written as references only. <code>metrics</code> reports cost per slice and how often people had to edit the generated code.</p>
+      </div>
+    </section>
+
     <!-- Proof -->
-    <section class="section" id="proof">
+    <section class="section" id="proof" style="background:var(--surface-1)">
       <div class="container">
         <div class="section-head reveal">
           <span class="eyebrow caption-1"><i class="ph ph-chart-bar" aria-hidden="true"></i>Proof</span>
-          <h2 class="heading-2">Measured against hand labelled answers</h2>
-          <p class="body-3">We labelled the expected components, endpoints, entities, rules and edges for three small reference repos, and score every run against them.</p>
-        </div>
-        <div class="stats">
-          <div class="stat reveal"><b class="mono"><span data-count="100">100</span>%</b><span class="body-6">of cited evidence points to a real file and line range</span></div>
-          <div class="stat reveal" data-d="1"><b class="mono"><span data-count="0">0</span></b><span class="body-6">prompt injection canary strings found in the generated graph</span></div>
-          <div class="stat reveal" data-d="2"><b class="mono"><span data-count="576">576</span></b><span class="body-6">automated tests, including 133 red team tests</span></div>
+          <h2 class="heading-2">Real runs on real repos, with the gaps written down</h2>
+          <p class="body-3">The mapping phase ran end to end on three small open source repos. These are first cost numbers. No claim in these runs has been hand scored yet, so they say nothing about accuracy.</p>
         </div>
         <div class="table-wrap reveal">
           <table>
-            <caption class="body-6 muted" style="text-align:left;padding:var(--s-200) var(--s-300)">F1 score per category on the Express sample (latest run)</caption>
-            <thead><tr><th scope="col">Category</th><th scope="col">F1</th><th scope="col">What it measures</th></tr></thead>
+            <caption class="body-6 muted" style="text-align:left;padding:var(--s-200) var(--s-300)">Mapping runs with <code>init</code>, <code>ingest</code>, <code>extract</code> and <code>analyze --max-usd 1</code></caption>
+            <thead><tr><th scope="col">Repository</th><th scope="col">Source lines</th><th scope="col">Model</th><th scope="col">Cost</th><th scope="col">Wall clock</th></tr></thead>
             <tbody>
-              <tr><td>Components</td><td class="num"><span class="barcell"><span>0.96</span><span class="bar" aria-hidden="true"><i style="--v:0.96;--k:0"></i></span></span></td><td>One per source file, matched by file</td></tr>
-              <tr><td>Endpoints</td><td class="num"><span class="barcell"><span>1.00</span><span class="bar" aria-hidden="true"><i style="--v:1.00;--k:1"></i></span></span></td><td>Method and full path, including router mount prefixes</td></tr>
-              <tr><td>Entities</td><td class="num"><span class="barcell"><span>1.00</span><span class="bar" aria-hidden="true"><i style="--v:1.00;--k:2"></i></span></span></td><td>Data models and tables</td></tr>
-              <tr><td>Business rules</td><td class="num"><span class="barcell"><span>0.92</span><span class="bar" aria-hidden="true"><i style="--v:0.92;--k:3"></i></span></span></td><td>Matched by file and overlapping evidence lines</td></tr>
-              <tr><td>Edges</td><td class="num"><span class="barcell"><span>0.57</span><span class="bar weak" aria-hidden="true"><i style="--v:0.57;--k:4"></i></span></span></td><td>Calls and dependencies. This is our weakest category.</td></tr>
+              <tr><td><code>spring-petclinic</code></td><td class="num">4,297</td><td>Gemini 3 Flash preview</td><td class="num">$0.077</td><td class="num">51 s</td></tr>
+              <tr><td><code>django-realworld</code></td><td class="num">1,778</td><td>Gemini 3.1 Flash Lite</td><td class="num">$0.021</td><td class="muted">not timed</td></tr>
+              <tr><td><code>node-express-realworld</code></td><td class="num">2,374</td><td>Gemini 3.1 Flash Lite</td><td class="num">$0.026</td><td class="muted">not timed</td></tr>
             </tbody>
           </table>
         </div>
-        <p class="note body-6">The labels are small and hand written, so treat these as a regression guide, not a benchmark. The Spring and Django samples score in a similar range, and edges are lowest on both.</p>
+        <p class="note body-6">Two models were used because the first hit a quota, so the rows are not comparable with each other. Every repo was small enough to fit in one chunk. No migration has run against a live service yet, so there are no Phase 2 numbers to show.</p>
+        <div class="stats">
+          <div class="stat reveal"><b class="mono"><span data-count="100">100</span>%</b><span class="body-6">evidence validity is a gate: a cited file or line range that does not exist fails the run</span></div>
+          <div class="stat reveal" data-d="1"><b class="mono"><span data-count="1159">1,159</span></b><span class="body-6">automated tests pass offline, 191 of them red team tests, with 7 skipped</span></div>
+          <div class="stat reveal" data-d="2"><b class="mono"><span data-count="0">0</span></b><span class="body-6">prompt injection canary strings found in the generated graph of the Express sample</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Status -->
+    <section class="section" id="status">
+      <div class="container">
+        <div class="section-head reveal">
+          <span class="eyebrow caption-1"><i class="ph ph-traffic-signal" aria-hidden="true"></i>Status</span>
+          <h2 class="heading-2">Where it stands today</h2>
+        </div>
+        <div class="grid-3">
+          <article class="card reveal"><span class="badge ok caption-4"><i class="ph ph-check-circle" aria-hidden="true"></i>Available</span><h3 class="title-1">Understand and approve</h3><p class="body-6">Map, verify, review and approve a service from the CLI. It ran end to end on the three repos above.</p></article>
+          <article class="card reveal" data-d="1"><span class="badge warn caption-4"><i class="ph ph-flask" aria-hidden="true"></i>Preview</span><h3 class="title-1">Migrate with proof</h3><p class="body-6">Built and covered by the offline test suite. Not yet run against a real Docker daemon or a real model.</p></article>
+          <article class="card reveal" data-d="2"><span class="badge caption-4"><i class="ph ph-terminal-window" aria-hidden="true"></i>CLI only</span><h3 class="title-1">Runs on your machine</h3><p class="body-6">Use it as a CLI on your own hardware. No hosted service is available, and you bring your own model key.</p></article>
+        </div>
+        <p class="note body-6">Try it before you spend anything: <code>analyze --dry-run</code> prints the plan and a cost estimate without a model call, and <code>--max-usd</code> stops any run at your limit while keeping partial results.</p>
       </div>
     </section>
 
@@ -225,21 +303,42 @@ migration-agent resolve service.migration F-0001</code></pre></article>
       <div class="container">
         <div class="section-head reveal">
           <span class="eyebrow caption-1"><i class="ph ph-rocket-launch" aria-hidden="true"></i>Quickstart</span>
-          <h2 class="heading-2">Run it on your own service in about five minutes</h2>
-          <p class="body-3">Needs Python 3.12 and an API key for the model you choose. Put the key in a <code>.env</code> file in the project root, never on the command line.</p>
+          <h2 class="heading-2">Map your own service, then try the migration preview</h2>
+          <p class="body-3">Needs Python 3.11 or newer and an API key for the model you choose. Put the key in a <code>.env</code> file in the project root, never on the command line. The migration steps also need Docker.</p>
         </div>
         <div class="qs reveal">
           <div class="qs-head"><span class="caption-1 muted mono">terminal</span><button class="copy button-sm" id="copy" data-state="idle" type="button"><i class="ph ph-copy" aria-hidden="true"></i><span>Copy</span></button></div>
 <pre id="cmds"><code><span class="c"># get the source: {{repository url}}</span>
-uv pip install -e ".[llm]"
-echo "GEMINI_API_KEY=your key here" &gt; .env
+pip install ".[llm]"
+cp .env.example .env   <span class="c"># add GEMINI_API_KEY or ANTHROPIC_API_KEY</span>
 
+<span class="c"># 1. understand</span>
 migration-agent init ./my-service
 migration-agent ingest my-service.migration
 migration-agent extract my-service.migration
 migration-agent analyze my-service.migration --dry-run   <span class="c"># estimate first</span>
 migration-agent analyze my-service.migration --config gemini.config.json --max-usd 1
-migration-agent review my-service.migration</code></pre>
+migration-agent review my-service.migration
+
+<span class="c"># 2. approve</span>
+migration-agent status my-service.migration
+migration-agent approve my-service.migration --by "Your Name"
+
+<span class="c"># 3. migrate (preview, needs Docker)</span>
+migration-agent doctor my-service.migration
+migration-agent target init my-service.migration --runtime 21 --framework spring-boot@3.3
+migration-agent target fit my-service.migration --max-usd 1
+migration-agent plan my-service.migration
+migration-agent harness import-source my-service.migration --from-original
+migration-agent harness build my-service.migration --legacy
+migration-agent harness up my-service.migration --legacy
+migration-agent tests generate my-service.migration
+migration-agent tests record my-service.migration --harness
+migration-agent generate my-service.migration --slice SLICE-0001
+migration-agent harness build my-service.migration --new
+migration-agent harness up my-service.migration --new
+migration-agent equivalence run my-service.migration --slice SLICE-0001
+migration-agent approve-slice my-service.migration SLICE-0001 --by "Your Name"</code></pre>
           <p class="qs-msg body-6" id="copymsg" role="status" aria-live="polite"></p>
         </div>
       </div>
@@ -253,12 +352,16 @@ migration-agent review my-service.migration</code></pre>
           <h2 class="heading-2">Questions before you try it</h2>
         </div>
         <div class="faq reveal">
-          <details><summary class="title-2">Does it change my code?<i class="ph ph-caret-down" aria-hidden="true"></i></summary><p class="a body-3">No. Ingest copies your source into a project folder, and every later step reads that copy only. Archives and git sources are validated for path traversal, symlink escapes and decompression bombs.</p></details>
-          <details><summary class="title-2">Which languages and frameworks does it understand?<i class="ph ph-caret-down" aria-hidden="true"></i></summary><p class="a body-3">Static extraction covers Python, JavaScript, TypeScript and Java files. Route extractors cover Express, Spring, Flask, FastAPI, Rails, ASP.NET and Django. Schema extractors cover Flyway, Alembic, Prisma and TypeORM, and OpenAPI and proto files are parsed. The model fills in everything else.</p></details>
-          <details><summary class="title-2">Which models can I use?<i class="ph ph-caret-down" aria-hidden="true"></i></summary><p class="a body-3">Any provider LiteLLM supports, chosen per task in a config file or with <code>MA_*</code> environment variables. We have run it with Gemini models. Sample configs for Anthropic models are included but we have not run them.</p></details>
-          <details><summary class="title-2">What does a run cost?<i class="ph ph-caret-down" aria-hidden="true"></i></summary><p class="a body-3">Run <code>analyze --dry-run</code> for an estimate before spending anything. On the 18 file Express sample the plan estimated $0.01. <code>--max-usd</code> is a hard stop, and a run that reaches it keeps its partial results.</p></details>
-          <details><summary class="title-2">What happens to secrets in my repo?<i class="ph ph-caret-down" aria-hidden="true"></i></summary><p class="a body-3">Ingest redacts credential patterns and withholds key and environment files before anything reaches a prompt, a cache or a document. Redaction is pattern based, so unusual secrets can still slip through. The threat model lists this as a known risk.</p></details>
-          <details><summary class="title-2">Does anything leave my machine?<i class="ph ph-caret-down" aria-hidden="true"></i></summary><p class="a body-3">Only the calls to the model endpoint you configure, plus a git clone if your source is a git URL. The offline commands open no outside connections, and the review server binds to <code>127.0.0.1</code> with a per run token.</p></details>
+          <details><summary class="title-2">Does it change my code?<i class="ph ph-caret-down" aria-hidden="true"></i></summary><p class="a body-3">No. Ingest copies your source into a project folder, and analysis reads that copy only. The migration writes the new service into <code>target_code/</code> inside the project folder as git commits, so your repository is never edited. Archives and git sources are validated for path traversal, symlink escapes and decompression bombs.</p></details>
+          <details><summary class="title-2">Does the model run any code?<i class="ph ph-caret-down" aria-hidden="true"></i></summary><p class="a body-3">No. While migrating, the model returns structured file edits and nothing else. It has no shell, exec or network tool. The tool applies the edits, then builds and tests run in a Docker sandbox: tests with no network at all, builds with access only to the package mirror you configure.</p></details>
+          <details><summary class="title-2">Where does the expected behaviour come from?<i class="ph ph-caret-down" aria-hidden="true"></i></summary><p class="a body-3">From your running legacy service. The model only proposes test inputs. Each case runs twice against the old service, values that differ between the two runs are masked as noise, and the recorded response becomes the expected result. For a quirk you chose to fix, you approve the specified result instead.</p></details>
+          <details><summary class="title-2">What happens to secrets?<i class="ph ph-caret-down" aria-hidden="true"></i></summary><p class="a body-3">Ingest redacts credential patterns and withholds key and environment files before anything reaches a prompt, a cache or a document. Recorded results mask values that look like secrets, sandbox jobs refuse secret environment values, and the config map writes secrets as references such as <code>${DB_PASSWORD}</code>, never as values. Redaction is pattern based, so unusual secrets can still slip through. The threat model lists this as a known risk.</p></details>
+          <details><summary class="title-2">Which migrations does it support?<i class="ph ph-caret-down" aria-hidden="true"></i></summary><p class="a body-3">The first supported target is Java 8 with Spring Boot 2 to Java 21 with Spring Boot 3. Library tables also cover Django 3.2 to 5, Express to Fastify and JavaScript to Go, but the Java path is the one being finished first.</p></details>
+          <details><summary class="title-2">Is the migration phase production ready?<i class="ph ph-caret-down" aria-hidden="true"></i></summary><p class="a body-3">Not yet. It is implemented and its automated tests pass offline, but it has not yet run against a real Docker daemon or a real model. Treat it as a preview: run it on a copy and review every slice before you approve it.</p></details>
+          <details><summary class="title-2">What does approval lock in?<i class="ph ph-caret-down" aria-hidden="true"></i></summary><p class="a body-3"><code>approve</code> is refused while coverage is incomplete, a Verifier finding is unresolved, a re analysis or comment is pending, or the doc on disk is out of date. On success it writes a read only copy of the doc and <code>docs/migration_contract.json</code> with your preserve or fix decisions and any deferred findings. A later change to the graph makes the approval stale.</p></details>
+          <details><summary class="title-2">Which languages and frameworks does it understand?<i class="ph ph-caret-down" aria-hidden="true"></i></summary><p class="a body-3">Python, JavaScript, TypeScript, Java, Go and C# files are parsed into syntax trees. Files in other languages such as COBOL, Ruby or PHP are recognised but not parsed. Route extractors cover Express, Spring, Flask, FastAPI, Django, Rails and ASP.NET. Schema extractors cover Flyway, Alembic, Prisma and TypeORM, and OpenAPI and proto files are parsed.</p></details>
+          <details><summary class="title-2">Which models can I use, and what does a run cost?<i class="ph ph-caret-down" aria-hidden="true"></i></summary><p class="a body-3">Any provider LiteLLM supports, chosen per task in a config file or with <code>MA_*</code> environment variables. We have run it with Gemini models; the Anthropic sample configs are included but untested. Mapping the three small repos above cost between $0.021 and $0.077. Run <code>analyze --dry-run</code> for an estimate first.</p></details>
+          <details><summary class="title-2">Does anything leave my machine?<i class="ph ph-caret-down" aria-hidden="true"></i></summary><p class="a body-3">Only the calls to the model endpoint you configure, a git clone if your source is a git URL, and in the migration phase, build jobs that reach your package mirror. Test jobs run with no network. The review server binds to <code>127.0.0.1</code> with a per run token.</p></details>
           <details><summary class="title-2">Can it handle a large repository?<i class="ph ph-caret-down" aria-hidden="true"></i></summary><p class="a body-3">Chunk planning handled a synthetic 2,420 file repo in about a tenth of a second in our tests, and incremental runs re analyze only changed files and their direct importers. We have not run a model over a repo that size yet.</p></details>
           <details><summary class="title-2">Is it open source, and what does it cost?<i class="ph ph-caret-down" aria-hidden="true"></i></summary><p class="a body-3">{{license and pricing}}</p></details>
         </div>
@@ -269,9 +372,9 @@ migration-agent review my-service.migration</code></pre>
     <section class="section final">
       <div class="container">
         <div class="in reveal">
-          <h2 class="heading-3">Find out what your service really does</h2>
-          <p class="body-3">Run it on a copy of your code. It stays read only, it stays local, and you set the budget.</p>
-          <a class="btn btn-primary btn-lg" href="#quickstart">Run the quickstart <i class="ph ph-arrow-right" aria-hidden="true"></i></a>
+          <h2 class="heading-3">Find out what your service really does before you move it</h2>
+          <p class="body-3">Start with a dry run that spends nothing. The mapping stays read only and local, and you set the budget for every model call.</p>
+          <a class="btn btn-primary btn-lg button-lg" href="#quickstart">Run the quickstart <i class="ph ph-arrow-right" aria-hidden="true"></i></a>
         </div>
       </div>
     </section>
