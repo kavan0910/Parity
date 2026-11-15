@@ -119,3 +119,15 @@ in this order, none confirmed:
 4. Org/enterprise policy that requires pinning actions to full commit SHAs (the workflows use version tags).
 5. Look at the run page annotation or `gh run view <id> --log`/`gh api repos/<o>/<r>/actions/runs/<id>` for the exact message.
 Until a run succeeds, treat every CI job in this repo as **unverified** and run the same commands locally.
+
+## 11. Phase 2 (migration) is not part of the hosted stack
+Phase 2 (`target`, `plan`, `tests`, `harness`, `generate`, `equivalence`, `approve-slice`, `cutover` ...) runs only
+from the CLI on a machine the customer controls (decision P2-Q13, `docs/phase2-plan.md` section 14). It builds and
+runs legacy and generated code in Docker containers.
+- The hosted worker runs only the Phase 1 stages (`backend/app/worker.py`: ingest, extract, analyze, verify,
+  resolve). Do not add Phase 2 run types to the backend.
+- Never give the worker (or any container of this stack) access to a Docker socket, and never run Phase 2 exec on a
+  host that holds database credentials, `MODEL_API_KEY` in its container env, or customer data of other tenants.
+- A hosted Phase 2 needs a separate credential-free exec runner (ephemeral VM or Firecracker preferred) and its own
+  security review. Neither exists.
+- If a customer asks for help running Phase 2, point them at `docs/user-guide.md` section 9.

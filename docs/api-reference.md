@@ -73,8 +73,9 @@ IDs are allocated by `graph/registry.json` and never reused.
 {"schema_version": 1, "resolutions": [{"finding_id": "F-0001", "status": "accepted_doc",
    "note": "25% from 10 items", "affected_node_ids": ["RULE-0003"], "created": "2026-11-06T23:40:00+00:00"}]}
 ```
-`status`: `open | accepted_doc | accepted_code | dismissed | needs_reanalysis | resolved`. `accepted_doc` and
-`needs_reanalysis` are pending for re-analysis; the engine sets `resolved` afterwards. `affected_node_ids` is copied from the finding.
+`status`: `open | accepted_doc | accepted_code | dismissed | needs_reanalysis | resolved | deferred`. `accepted_doc`
+and `needs_reanalysis` are pending for re-analysis; the engine sets `resolved` afterwards. `deferred` postpones the
+finding to the migration phase (no re-analysis; listed in the contract's `deferred_findings`). `affected_node_ids` is copied from the finding.
 
 `feedback/comments.json`:
 ```json
@@ -83,6 +84,12 @@ IDs are allocated by `graph/registry.json` and never reused.
 ```
 `item_id` must be an existing node or edge id. `processed` becomes true once re-analysis consumed it.
 `feedback/reanalysis_log.json` records each re-analysis run.
+
+`feedback/decisions.json` (written by `decide` and `POST /api/decisions`): migration decision per quirk / suspected
+bug, `{"schema_version": 1, "decisions": [{"item_id", "decision": "preserve"|"fix", "note", "created"}]}`; items without an
+entry default to preserve. `feedback/approvals.json`: approval history, the last entry is current.
+`docs/migration_contract.json`: `MigrationContract`, fields listed in [user-guide.md](user-guide.md) (`approve`);
+schema 2 adds `source_hash`. `migration-agent contract schema` prints its JSON Schema.
 
 ## 4. Other files
 
@@ -102,15 +109,30 @@ Base URL `http://127.0.0.1:<port>/<token>/` (printed by `review`). The token may
 | Route | Method | Description |
 |---|---|---|
 | `/` | GET | HTML UI (sets the cookie) |
-| `/api/state` | GET | Project name, findings, resolutions, comments, graph `versions`, document `sections`, coverage, non-fatal `errors` |
+| `/api/state` | GET | Project name, `readiness` (blockers, warnings), `approval` (state `none|approved|stale`), quirk `decisions`, findings, resolutions, comments, graph `versions`, document `sections`, coverage, `known_ids`, `p2` (below), non-fatal `errors` |
 | `/api/diff?a=N&b=M` | GET | Graph diff between versions N and M (`added/removed/changed` nodes and edges) |
 | `/graph[?v=N&prev=M]` | GET | Interactive graph page for a version, optionally highlighting changes since `prev` |
 | `/api/comments` | POST | Body `{"item_id": str(1..64), "text": str(1..5000), "author": str(<=64, default "user")}` -> 201 with the comment |
 | `/api/resolutions` | POST | Body `{"finding_id": str, "status": <status>, "note": str(<=5000)}` -> 201 with the resolution |
+| `/api/decisions` | POST | Body `{"item_id": str(1..64), "decision": "preserve"|"fix", "note": str(<=5000)}` -> 201 with the decision; re-renders the document offline. 404 unknown item, 400 not a quirk/bug |
+| `/api/approve` | POST | Body `{"approved_by": str(1..64), "note": str(<=5000)}` -> 201 with the approval record; 400 with the blocker list when not ready |
+
+Phase 2 routes. `p2` in `/api/state` is `null` for a Phase 1-only project, else `{present, fit, plan, comments,
+known_ids, errors}` (`plan.slices[]` carries `status`, `iteration`, `equivalence_pct`, `unexplained`, `approved`).
+Phase 2 problems are reported in `p2.errors` and never break the Phase 1 view.
+
+| Route | Method | Description |
+|---|---|---|
+| `/api/p2/slice?id=SLICE-NNNN` | GET | Slice detail: `slice`, `state`, `iterations`, latest `build`/`tests`, `review` findings, `diff` (git), `equivalence` report, `run` meta, `cases`, `blockers`, `decisions`, `fix_requests`, `masks`, `approval`, `human_commits`, `comments`. 400 bad id, 404 unknown slice |
+| `/api/p2/comments` | POST | Body `{"item_id": str(1..64), "text": str(1..5000), "author": str(<=64), "file": str|null (target_code-relative), "line": int>=1|null}` -> 201; text redacted; 404 unknown item or file |
+| `/api/p2/approve-slice` | POST | Body `{"slice_id", "approved_by", "note"}` -> 201 with the `SliceApproval`; 409 with the blocker list when refused |
+| `/api/p2/reject-slice` | POST | Body `{"slice_id", "by", "reason" (required)}` -> 201; 409 when the slice cannot be rejected |
+| `/api/p2/resolve-risk` | POST | Body `{"risk_id", "status": "accepted"|"mitigate"|"wont_fix", "note" (required), "by"}` -> 201 with the `FitResolution` |
+| `/api/p2/approve-mask` | POST | Body `{"eq_id", "by" (required), "reason"}` -> 201 with the approved mask; 404 when the id is not a diff |
 
 POST requires `Content-Type: application/json` (415 otherwise), `Content-Length` (411), body at most 64 KB (413).
-Validation failures return 400 with a short message. The server records feedback only; re-analysis is triggered by
-`migration-agent resolve PROJECT`.
+Validation failures return 400 with a short message. The server records feedback and approvals only; re-analysis
+is triggered by `migration-agent resolve PROJECT`, generation and equivalence by the CLI.
 
 ## 6. Python entry points
 
@@ -128,3 +150,38 @@ Validation failures return 400 with a short message. The server records feedback
 from migration_agent.config_env import load_llm_config_from_env, load_settings_from_env
 cfg, st = load_llm_config_from_env(), load_settings_from_env()
 ```
+
+* `migration_agent.service`: `run_stage` (Phase 1 and Phase 2 stages), `metrics`, `estimate`, `review_state` and the
+  other functions in [platform-contract.md](platform-contract.md) section 2.
+* Phase 2 library functions (`migration_agent.migrate.*`): see [phase2-architecture.md](phase2-architecture.md).
+
+## 7. Phase 2 files
+
+Formats are pydantic models in `migration_agent.migrate.models` (shared) or in the module that writes the file.
+All are strict (`extra="forbid"`) and carry `schema_version` where they are top-level files.
+
+| File | Model | Module |
+|---|---|---|
+| `target/target.yaml` | `TargetSpec` | `migrate/models.py` |
+| `target/fit_report.json` | `FitReport` of `Risk` | `migrate/models.py` |
+| `target/fit_resolutions.json` | `FitResolutionsFile` | `migrate/fit.py` |
+| `plan/migration_plan.json` | `MigrationPlan` of `Slice` | `migrate/models.py` |
+| `plan/planner_report.json` | `PlannerReport` | `migrate/planner.py` |
+| `characterization/cases/*/CT-NNNN.json` | `CharacterizationCase` | `migrate/models.py` |
+| `characterization/coverage.json` | `CoverageReport` | `migrate/recorder.py` |
+| `slices/SLICE-NNNN/state.json` | `SliceState` | `migrate/models.py` (written by `migrate/state.py`) |
+| `slices/SLICE-NNNN/equivalence.json` | `EquivalenceReport` | `migrate/models.py` |
+| `slices/SLICE-NNNN/fix_requests.json` | `FixRequestsFile` | `migrate/equivalence.py` |
+| `slices/SLICE-NNNN/decisions.json` | `SliceDecisionsFile` | `migrate/approvals.py` |
+| `slices/SLICE-NNNN/approval.json` | `SliceApproval` | `migrate/models.py` |
+| `migration/comments.json` | `P2CommentsFile` | `migrate/approvals.py` |
+| `migration/runtime_findings.json` | `RuntimeFindingsFile` | `migrate/models.py` |
+| `runs/RUN-NNNN/meta.json` | `{"job": ExecJob, "result": ExecResult}` | `migrate/models.py` |
+| `equivalence/masks.json` | `MasksFile` | `migrate/equivalence.py` |
+| `equivalence/composite.json` | `CompositeReport` | `migrate/equivalence.py` |
+| `config/config_map.json` | `ConfigMap` | `migrate/configmap.py` |
+| `data/schema_compat.json` | `SchemaCompatReport` | `migrate/schemacompat.py` |
+| `cutover/approval.json` | `CutoverApproval` | `migrate/models.py` |
+
+Phase 2 audit records include the actions `exec_run` (agent `exec`), `slice_transition` (agent `slice_runner`) and
+`generate_step` spans; model calls made for a slice carry `slice=SLICE-NNNN`.

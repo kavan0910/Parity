@@ -3,9 +3,16 @@
 migration-agent reads a legacy service's source code and produces an **evidence-backed understanding document**
 (`docs/understanding.latest.md`) plus a **knowledge graph** (components, endpoints, data entities, business rules,
 ...). Every claim cites file and line range with a verbatim quote. A **blind Verifier** then compares the document
-with the documentation your team already has and reports contradictions, so humans can resolve them.
+with the documentation your team already has and reports contradictions, so humans can resolve them. A human then
+approves the understanding, which writes the **migration contract** (`docs/migration_contract.json`).
 
-The tool never executes the code it analyses and never modifies the source.
+That is **Phase 1** (sections 1 to 8). Phase 1 never executes the code it analyses and never modifies the source.
+
+**Phase 2** (section 9) starts from the approved contract and migrates the service slice by slice: target-fit
+analysis, a slice plan, characterization tests recorded from the running legacy service, a sandboxed generation loop,
+equivalence checks legacy vs new, per-slice approvals, an optional strangler router, and a final cut-over approval.
+Phase 2 does build and run code, but only inside network-isolated Docker containers (section 9.1). Phase 2 is
+implemented and tested offline; it has not yet run against a real Docker daemon or a real model.
 
 ## 1. Install
 
@@ -47,11 +54,17 @@ svc.migration/
   graph/                snapshots/vNNN.json, latest.json, registry.json     <- analyze/resolve
   checkpoint/           per-chunk analysis patches (lets analyze resume)
   llm_cache/            cached model responses keyed by prompt hash
-  docs/                 understanding.latest.md, graph.html, changelog.md
+  docs/                 understanding.latest.md, graph.html, changelog.md,
+                        understanding.vN.approved.md, migration_contract.json   <- approve
   user_docs/            YOUR existing docs (.md .txt .html .docx .pdf), for the Verifier only
-  feedback/             findings.json, resolutions.json, comments.json, reanalysis_log.json
+  feedback/             findings.json, resolutions.json, comments.json, reanalysis_log.json,
+                        decisions.json, approvals.json
   audit/                audit.jsonl (append-only)
 ```
+
+Phase 2 adds more folders (`target/`, `plan/`, `characterization/`, `harness/`, `legacy_src/`, `target_code/`,
+`slices/`, `runs/`, `migration/`, `config/`, `data/`, `equivalence/`, `cutover/`) the first time a Phase 2 command
+writes; section 9.4 lists them. A project that never runs Phase 2 keeps exactly this layout.
 
 `graph/registry.json` keeps IDs (`COMP-0001`, `RULE-0003`...) stable across re-analyses so references in your
 reviews and docs do not break. `llm_cache/` contains prompts' responses derived from your code: treat it as
@@ -68,10 +81,14 @@ migration-agent analyze legacy-orders.migration --dry-run          # plan + cost
 migration-agent analyze legacy-orders.migration --max-usd 5
 migration-agent verify  legacy-orders.migration
 migration-agent review  legacy-orders.migration      # opens the local review UI
+migration-agent status  legacy-orders.migration      # Phase 1 readiness: blockers and warnings
+migration-agent approve legacy-orders.migration --by "Jane Doe"   # writes docs/migration_contract.json
 ```
 
 Try the pipeline without any model: `migration-agent analyze PROJECT --offline` (deterministic stand-in; produces
 the facts-level graph and documents, not a real analysis).
+
+After approval, Phase 2 continues in section 9.
 
 ## 4. Commands
 
@@ -131,14 +148,67 @@ Starts the local review UI (section 6). Prints a URL containing a one-time token
 ### `resolve PROJECT [FINDING_ID] [--status S] [--note TEXT] [--comment ITEM_ID] [--reanalyze/--no-reanalyze] [--config PATH] [--max-usd FLOAT]`
 Records a decision, then runs **targeted re-analysis** of only the affected nodes and regenerates the changelog.
 Statuses: `accepted_doc` (the document is right, the code differs: re-analyse), `accepted_code` (code is the truth),
-`dismissed`, `needs_reanalysis`.
+`dismissed`, `needs_reanalysis`, `deferred` (acknowledged, to be handled during the migration: no re-analysis, it does
+not block approval, and it is listed under `deferred_findings` in the migration contract).
 ```bash
 migration-agent resolve orders.migration F-0001 --status accepted_doc --note "Discount is 25% from 10 items"
 migration-agent resolve orders.migration --comment RULE-0003 --note "Check the VIP exception in pricing.py"
 migration-agent resolve orders.migration F-0004 --status dismissed --no-reanalyze
+migration-agent resolve orders.migration F-0005 --status deferred --note "Decide with the payments team"
 ```
 Your note is passed to the model as untrusted *data*; every resulting claim still needs verbatim code evidence.
 If the budget stops a re-analysis, nothing is written.
+
+### `decide PROJECT ITEM_ID (--preserve | --fix) [--note TEXT]`
+Records the migration decision for a quirk or suspected bug (section 12 of the document) in
+`feedback/decisions.json`, then re-renders `docs/understanding.latest.md` from the latest graph without any model
+call. Items without a decision default to **preserve**, because silently changing behaviour is the main migration
+risk; the document shows `Migration decision: preserve (default)`, `preserve`, or `fix - <note>`. Only nodes flagged
+as quirk or suspected bug in the latest graph accept a decision. Decisions are keyed by stable ID and survive
+re-analysis.
+```bash
+migration-agent decide orders.migration RULE-0007 --fix --note "Refund window is off by one day"
+migration-agent decide orders.migration COMP-0012 --preserve --note "Clients depend on the trailing slash"
+```
+
+### `status PROJECT`
+Prints Phase 1 readiness and the approval state (`none`, `approved`, `stale`). Always exits 0.
+Blockers (approval is refused while any exists): no graph or no understanding doc; coverage incomplete (unmapped
+inventory items); a Verifier finding with no resolution or with status `open`; a resolution waiting for
+re-analysis (`accepted_doc`, `needs_reanalysis`); a comment not yet used by re-analysis; a document on disk that
+does not match a fresh offline render of the latest graph. Warnings (shown, recorded in the contract, not
+blocking): deferred findings; Verifier never run; open questions; quirks/bugs still on the default decision;
+low or no confidence nodes.
+
+### `approve PROJECT --by NAME [--note TEXT]`
+The Phase 1 exit gate. Exits non-zero and lists the blockers when the project is not ready (there is no
+`--force`). On success it:
+
+* appends the approval to `feedback/approvals.json` (history; the last entry is current);
+* writes a read-only copy `docs/understanding.vN.approved.md` (N = graph version; `.rK` is added when the same graph
+  version is approved again) with a header giving approver, time, graph version and both sha256 values;
+* writes `docs/migration_contract.json` (below), the input of the migration phase;
+* records an `approve` event in the audit log.
+
+The approval pins the graph (sha256 of `graph/snapshots/vNNN.json`) and the document (sha256 of its text). Any
+later snapshot (analyze, resolve, render) or document change (for example a changed decision) makes the approval
+`stale`; run `status` and `approve` again.
+
+`docs/migration_contract.json` (`MigrationContract` in `migration_agent.verify.models`):
+
+| Field | Meaning |
+|---|---|
+| `schema_version` | 1 |
+| `project_name`, `project_source` | from `project.json` |
+| `graph_version`, `graph_sha256` | approved snapshot and the sha256 of its file bytes |
+| `doc_sha256` | sha256 of the approved document text |
+| `approved_by`, `approved_at`, `note` | who, when (ISO UTC), why |
+| `approved_doc`, `graph_snapshot` | project-relative paths of the approved copy and the snapshot |
+| `decisions` | every quirk/bug: `item_id`, `name`, `quirk`, `suspected_bug`, `decision`, `note`, `explicit` (false = default preserve) |
+| `deferred_findings` | `id`, `kind`, `title`, `item_ids`, `note` of findings resolved as `deferred` |
+| `open_questions`, `assumptions` | from the document (section 14) |
+| `coverage` | `mapped`, `unmapped`, `excluded`, `complete` |
+| `warnings` | readiness warnings at approval time |
 
 ### `changelog PROJECT`
 Regenerates `docs/changelog.md` from consecutive graph snapshots, annotated with the comment or resolution that
@@ -188,13 +258,17 @@ described in [deployment.md](deployment.md). Responses are cached in `llm_cache/
 
 1. `verify` produces findings. 2. `review` shows the document (with coverage and confidence), findings, graph
 versions and diffs, and lets you comment on any graph item and resolve findings. 3. `resolve` (or the UI)
-triggers targeted re-analysis -> new graph version -> `docs/changelog.md`.
+triggers targeted re-analysis -> new graph version -> `docs/changelog.md`. 4. The **Approval** tab shows readiness
+(blockers, warnings), the approval state, a preserve/fix control for every quirk and suspected bug (also in the
+item drawer), and an Approve button that stays disabled while blockers exist. Findings can also be answered
+"Decide during migration (defer)".
 
 Review server security: it binds **127.0.0.1 only** (refuses anything else), picks a random port unless
 `--port` is given, and every request needs an unguessable token (URL path or `HttpOnly; SameSite=Strict`
 cookie, constant-time compare). It validates the `Host` header (DNS-rebinding defence), rejects cross-origin POSTs,
-requires `application/json`, caps bodies at 64 KB and texts at 5,000 characters, and exposes only comments and
-resolutions for writing. Do not forward the port. It cannot be used from inside a container; run it on the host.
+requires `application/json`, caps bodies at 64 KB and texts at 5,000 characters, and exposes only comments,
+resolutions, quirk decisions and approval for writing (plus, once Phase 2 files exist, Phase 2 comments, slice
+approve/reject, fit-risk decisions and mask approvals; section 9.8). Do not forward the port. It cannot be used from inside a container; run it on the host.
 
 ## 7. Security model
 
@@ -215,6 +289,9 @@ resolutions for writing. Do not forward the port. It cannot be used from inside 
   the document's blind-spots section.
 * **Data leaves your machine only to the configured model endpoint.** Chunks of code go to that provider; use
   `--offline`, a self-hosted gateway (`MA_LLM_API_BASE`) or a no-retention provider plan if that matters.
+* **Phase 2 changes two of these rules.** It executes the legacy service and the generated code, and it uses the
+  original unredacted source (`legacy_src/`). Both happen only inside network-isolated exec containers; the model
+  still sees only redacted text. Details in section 9.1.
 
 ## 8. Troubleshooting
 
@@ -230,3 +307,358 @@ resolutions for writing. Do not forward the port. It cannot be used from inside 
 | `not a project folder` | The folder lacks `project.json`; run `init` first. |
 | `verify` reports nothing | `user_docs/` is empty or the formats are unsupported (`.pdf` needs `pypdf`, which is not installed by default). |
 | `review` cannot be reached from a container | By design it binds to loopback; run it on the host. |
+
+## 9. Phase 2: migrate and prove equivalence
+
+Phase 2 turns the approved understanding into a new service and shows, case by case, that it behaves like the old
+one. The running legacy service is the oracle: expected outputs are recorded from it, never written by the model
+(except for behaviour you decided to `fix`, and only after you approve the corrected expectation).
+
+Status: implemented and covered by offline unit and integration tests. It has **not** run against a real Docker
+daemon or a real model yet. Treat the first real runs as a trial. Design: [phase2-plan.md](phase2-plan.md); code map:
+[phase2-architecture.md](phase2-architecture.md).
+
+Phase 2 is CLI and self-hosted only. The hosted platform does not run it (section 9.11).
+
+### 9.1 Trust change
+
+Phase 1 promises that nothing from the source is executed and that the model sees only redacted text. Phase 2 keeps
+the second promise and relaxes the first one, inside a boundary:
+
+* **Code runs, but only in exec containers.** Legacy builds, the legacy service, generated code, codemods, test
+  runners, the router and schema probes all run in disposable Docker containers started by `DockerBackend`
+  (`migrate/exec/docker.py`): fixed argv, `--cap-drop ALL`, `no-new-privileges`, non-root user, read-only root
+  filesystem, pids/memory/CPU/time limits, images never pulled, gVisor when installed. The host never imports or runs
+  that code.
+* **Test phase has no network.** Test jobs run with `--network none`, or on an `--internal` Docker network with no
+  route out (harness services). Build jobs reach only the package-mirror hosts you configure, through an
+  allowlisting proxy; with no mirror configured, builds are offline too.
+* **`legacy_src/` holds the original, unredacted source.** Many legacy builds fail on redacted files, so
+  `harness import-source` copies the original source into `legacy_src/`, after checking it against the contract
+  `source_hash`. It is mounted only into exec containers. The model's read-only tools are rooted at `code/` (the
+  redacted copy) and cannot reach `legacy_src/`. Credential files stay withheld (empty placeholders).
+* **No real secrets in containers.** Job environment values that look like secrets are refused; required secrets get
+  random synthetic values per run (`synthetic_secrets`). No model key, git or cloud credentials are passed.
+* **Generated code is checked before it is committed.** Every model edit is path-jailed to `target_code/`, scanned
+  for secrets, checked against the dependency allow/deny list and, after the build, reviewed by a fresh model
+  session plus static deny checks (outbound HTTP to undeclared hosts, `eval`/`exec`, shell spawning, reading
+  credential-like environment variables).
+
+Threat model: [threat-model.md](threat-model.md) section 9.
+
+### 9.2 Prerequisites
+
+* An approved Phase 1 project: `migration-agent status PROJECT` shows `approved`, and
+  `migration-agent contract check PROJECT` prints `contract: OK`.
+* **Docker** (engine plus CLI on `PATH`) on the machine that runs Phase 2. Rootless Docker or Podman is preferred.
+* **Images present locally.** Phase 2 never pulls images (`--pull never`, `docker build --pull=false`). Pull them
+  yourself, pinned by digest where you can:
+  * the legacy base image named in your harness Dockerfile (the fixtures use `node:20.18.0-bookworm`,
+    `maven:3.9.9-eclipse-temurin-17`, `python:3.10.15-slim-bookworm`);
+  * the target base image from `target.yaml` `target.base_image`;
+  * `python:3.12.7-alpine3.20` (in-network case runner, router and schema probe);
+  * `ubuntu/squid:6.6-24.04_beta` (egress proxy, only when a mirror is configured; override with `proxy_image`);
+  * database and stub images named in `harness.yaml`;
+  * codemod images when the codemods apply: `maven:3.9-eclipse-temurin-21` (OpenRewrite), `python:3.12-slim`
+    (django-upgrade + pyupgrade).
+* **Package mirror (optional).** List mirror hosts in `<project>/harness/mirror.json`:
+  ```json
+  {"hosts": ["nexus.corp.example"], "ports": [443], "runtime": "auto"}
+  ```
+  or set `MA_MIRROR_HOSTS=nexus.corp.example,pypi.corp.example` (overrides `hosts`). Without hosts, builds run with
+  `--network none` and dependencies must come from the per-project cache (`harness/cache/`). A customer-controlled
+  mirror is the strong option; public registries through the proxy are a weaker one.
+* **gVisor (optional, recommended).** `runsc` is used automatically when Docker lists it. `MA_EXEC_RUNTIME=runsc`
+  requires it (the backend reports unavailable otherwise); `MA_EXEC_RUNTIME=runc` disables it. The same setting is
+  `runtime` in `mirror.json`.
+* **git** on `PATH` (`target_code/` is a git repository).
+* A model key as in section 1, unless you use `--offline` everywhere (offline runs produce placeholder output and
+  are for trying the flow, not for real migrations).
+* A project budget: `target init --budget-usd N`. Every model call in Phase 2 is capped by what remains of it,
+  across sessions.
+
+Check with:
+```bash
+migration-agent doctor orders.migration           # contract, exec sandbox, git, budget; exit 1 if any fails
+```
+`doctor` does not check that images are present or that the mirror is reachable; `harness build` reports those.
+
+### 9.3 The harness spec (`harness/harness.yaml`)
+
+The harness describes how to build and start the legacy service (and later the new one) in the sandbox. On the
+first `harness build`, the tool copies it from `legacy_src/harness/harness.yaml` (or `harness.yaml.in`) into
+`<project>/harness/harness.yaml` if you have not written one there. The eval fixtures ship examples in
+`eval/repos/<repo>/harness/harness.yaml.in`. Main fields (full reference in the `migrate/harness.py` docstring):
+
+```yaml
+schema_version: 1
+name: express-crud
+legacy:
+  image: ma-fixture/express-crud:legacy     # tag built from `dockerfile` with docker build --network none
+  dockerfile: harness/Dockerfile            # relative to the source tree, else to <project>/harness/
+  context: harness
+  workdir: /work/app
+  build:                                    # build-phase job in a writable copy of legacy_src/
+    command: [sh, -c, "npm install --no-audit --no-fund --cache /cache --prefer-offline"]
+    network: mirror                         # mirror hosts from mirror.json / MA_MIRROR_HOSTS
+    cache: harness/cache/npm                # project-relative cache mounted at /cache
+    timeout_s: 1800
+  start: [node, src/server.js]              # test phase, internal network only
+  port: 3000
+  healthcheck: {path: /api/products}
+  env: {PORT: "3000"}
+  synthetic_secrets: [API_TOKEN]            # random value per `harness up`
+db:
+  engine: sqlite                            # sqlite | postgres | mysql | none
+  # image, command, migrate, seed for server engines
+stubs: []                                   # stub servers for external systems
+# new: {...}        optional; default derived from target/target.yaml
+# router: {image: "ma-router:1", port: 8080}
+# schema_check: {...}                       # for `config schema-check`
+```
+
+### 9.4 What Phase 2 writes in the project folder
+
+| Folder | Written by | Content |
+|---|---|---|
+| `target/` | `target init`, `target fit`, `target resolve` | `target.yaml`, `fit_report.json`, `fit_report.md`, `fit_resolutions.json` |
+| `plan/` | `plan` | `migration_plan.json`, `migration_plan.md`, `versions/vNNN.json` (immutable), `planner_report.json` |
+| `legacy_src/` | `harness import-source` | original unredacted source (exec containers only) |
+| `harness/` | `harness ...` | `harness.yaml`, `state.json`, `compose.<role>.yml` (for inspection), `legacy_src.json` (import manifest), `synthetic_secrets.json` (0600), `logs/`, `new/Dockerfile`, `router/`, `routes.json`, `flips.json` |
+| `characterization/` | `tests ...` | `cases/SLICE-NNNN/CT-NNNN.json` (or `cases/UNPLANNED/` before a plan exists), `hypotheses.json`, `untestable.json`, `testgen_report.json`, `coverage.json`, `recordings/RUN-NNNN/`, `results/RUN-NNNN/` |
+| `target_code/` | `generate`, codemods, you | the new service, a git repo; tags `slice/SLICE-NNNN/iter-K` and `slice/SLICE-NNNN/approved` |
+| `slices/SLICE-NNNN/` | `plan`, `generate`, `equivalence`, approvals | `state.json`, `iterations/K/*.json`, `review.json`, `decisions.json`, `equivalence.json`, `equivalence_run.json`, `fix_requests.json`, `approval.json` |
+| `runs/RUN-NNNN/` | every exec job | `meta.json` (job + result, image digest), `logs/` (capped, redacted), `reports/`, `work/` |
+| `migration/` | several | `ids.json`, `comments.json`, `runtime_findings.json`, `codemods.json` |
+| `config/` | `config map`, `config set` | `config_map.json` (no values), `config_map.md`, `decisions.json`, `generated/` |
+| `data/` | you, `config schema-check` | optional `schema_changes.yaml` and `mapping.yaml`; `schema_compat.json`, `schema_compat.md` |
+| `equivalence/` | `equivalence ...` | `report.md`, `masks.json`, `composite.json`, `composite_history.jsonl` |
+| `cutover/` | `cutover` | `plan.md`, `approval.json`, `hashes.json` |
+
+All writes are atomic. Every command can be re-run; the folder is the state.
+
+### 9.5 Commands in order
+
+Every Phase 2 command that writes runs the contract gate first. If the graph was re-analysed after approval, approve
+again, or pass `--pin-contract` to work from the approved snapshot (a warning). `--accept-unmapped` accepts unmapped
+inventory items (logged in the audit). Run `migration-agent COMMAND --help` for the full option list.
+
+**1. Check the entry gate.**
+```bash
+migration-agent contract check orders.migration          # exit 1 on any error; lists deferred findings as blockers
+migration-agent contract schema --out contract.schema.json
+migration-agent doctor orders.migration
+```
+
+**2. Describe the target.** `target init` detects the source stack from the manifests and takes the target from
+flags. The kind is inferred (`version_upgrade`, `framework_move`, `language_move`) unless you give `--kind`; the
+strategy defaults to `in_place` for version upgrades and `strangler` otherwise.
+```bash
+migration-agent target init orders.migration --runtime 21 --framework spring-boot@3.3 --build maven \
+  --base-image eclipse-temurin:21-jre@sha256:<digest> --budget-usd 25
+migration-agent target show orders.migration             # validate and print target/target.yaml
+```
+
+**3. Target-fit analysis.** A deterministic layer matches the libmap tables (Java 8 to 21, Spring Boot 2 to 3, Django
+3 to 5, Express to Fastify, JS to Go) against dependencies, code lines and config keys. A model layer adds risks
+whose evidence quotes must verify against `code/`; unverified risks are dropped and counted.
+```bash
+migration-agent target fit orders.migration --max-usd 2          # or --offline: deterministic layer only
+migration-agent target resolve orders.migration RISK-0003 --status mitigate --note "Replace springfox with springdoc"
+```
+Statuses: `accepted`, `mitigate`, `wont_fix`. Open high-severity risks become blockers on the slices they touch.
+
+**4. Plan.** The planner orders slices from the approved graph: foundation slices (build, config, cross-cutting, data,
+shared code) first, then entry slices (endpoint groups, jobs, consumers), then bootstrap. Every in-scope node lands
+in exactly one slice. `dead_code` nodes are listed, not migrated, unless `--include-dead-code`.
+```bash
+migration-agent plan orders.migration --dry-run          # print, write nothing
+migration-agent plan orders.migration                    # writes plan/ and slices/*/state.json (planned)
+```
+`--name-with-model` adds an optional naming pass; `--max-slice-tokens N` splits large slices (default 60000).
+Re-planning keeps slice ids for the same node sets.
+
+**5. Import the original source and start the legacy harness.**
+```bash
+migration-agent harness import-source orders.migration --from-original   # or --from PATH; checked against source_hash
+migration-agent harness build orders.migration           # legacy is the default role
+migration-agent harness up orders.migration              # waits for the health check
+migration-agent harness status orders.migration
+```
+`import-source` refuses a source whose hash differs from the contract. A contract without `source_hash` needs
+`--accept-unpinned` (audited). `--force` replaces an existing `legacy_src/`.
+
+**6. Characterization tests.** `tests generate` proposes request inputs per endpoint, job, business rule, quirk and
+suspected bug. The model never writes expected values for preserved behaviour.
+```bash
+migration-agent tests generate orders.migration --max-usd 3       # or --offline
+migration-agent tests record orders.migration --harness           # every case twice against the running legacy harness
+migration-agent tests coverage orders.migration --fail-on-gaps
+migration-agent tests mark-untestable orders.migration JOB-0002 --reason "Needs the mainframe feed" --by alice
+migration-agent tests approve-spec orders.migration CT-0014 --by alice     # fix-decision cases only
+```
+Recording runs each case twice. Fields that differ between the two runs become masks; secret-looking values are
+masked too. Outcomes: `recorded`, `harness_issue` (no response; fix the harness), `unstable` (status differs),
+`not_implemented` (gRPC and message cases are not supported yet). Instead of `--harness` you can point
+`--base-url` (and `--second-base-url`) at a legacy instance you run yourself. Recordings that contradict a business
+rule, or consistent 5xx answers, become runtime findings in `migration/runtime_findings.json`.
+
+**7. Generate.** The generation loop works per slice, in plan order: context pack, model edits, validation, commit,
+build in the sandbox, unit tests and the characterization suite against the new service (in-network), a fresh review,
+then `awaiting_human`. Failures go back into a fix iteration until `--max-iterations` (default 4), then the slice is
+`blocked` with a reason.
+```bash
+migration-agent generate orders.migration --all --dry-run         # per-slice token and USD estimate
+migration-agent generate orders.migration --slice SLICE-0001 --max-usd 5
+migration-agent generate orders.migration --all --max-usd 20 --max-usd-per-slice 4
+```
+The loop refuses blocked slices, slices with unaccepted blockers, slices whose dependencies are not approved, entry
+slices without recorded cases, and a `target_code/` with uncommitted edits. For `in_place` version upgrades, the
+codemods (OpenRewrite for Maven projects, django-upgrade + pyupgrade) run once in the sandbox before the first slice.
+A run can be killed and resumed: each step is a file under `slices/SLICE-NNNN/iterations/K/`, so at most one model
+call is lost.
+
+**8. Equivalence.** Runs the slice's cases, plus every case of earlier approved slices, against legacy and new, and
+classifies each difference as `match`, `noise`, `intended_divergence`, `regression` or `unknown`. Exit 1 when any
+regression or unknown diff remains.
+```bash
+migration-agent harness build orders.migration --new && migration-agent harness up orders.migration --new
+migration-agent equivalence orders.migration --slice SLICE-0001             # in-network against both harnesses
+migration-agent equivalence orders.migration --all --triage --max-usd 1     # cheap model explains unknown diffs
+migration-agent equivalence orders.migration --slice SLICE-0001 --legacy-url http://127.0.0.1:8080 --new-url http://127.0.0.1:8081
+```
+`equivalence PROJECT ...` is the same as `equivalence run PROJECT ...`. Results: `slices/SLICE-NNNN/equivalence.json`
+and `equivalence/report.md`. Regressions and `new_bug` triage become fix requests that the next `generate` run
+picks up. A `legacy_bug` becomes a decision for you; a `harness_issue` becomes a mask proposal; a `spec_ambiguity`
+blocks the slice until answered.
+
+**9. Review and approve each slice** (section 9.6 and 9.8).
+
+**10. Config and schema.**
+```bash
+migration-agent config map orders.migration              # writes config/ and generated files in target_code/
+migration-agent config set orders.migration DB_URL --status renamed --target-key spring.datasource.url
+migration-agent config set orders.migration LEGACY_FLAG --status dropped --reason "Feature removed in 2019"
+migration-agent config schema-check orders.migration     # sandbox; --static compares Phase 1 facts without Docker
+migration-agent config schema-blockers orders.migration
+```
+Secrets map to references only (`${NAME}` or a required env var) plus a deploy-time checklist; values are never
+read or written. The default is no schema change (decision P2-Q10). Declared changes go in
+`data/schema_changes.yaml` and are applied only to the ephemeral sandbox database.
+
+**11. Strangler routing** (strategy `strangler`). The composite harness runs legacy, new and a router on one
+internal network. Flipping a slice sends its endpoints to the new service; everything else stays on legacy.
+```bash
+migration-agent harness build orders.migration --composite && migration-agent harness up orders.migration --composite
+migration-agent harness flip orders.migration SLICE-0003 --by alice --reason "approved"
+migration-agent harness routes orders.migration
+migration-agent equivalence composite orders.migration
+migration-agent harness unflip orders.migration SLICE-0003 --by alice --reason "rollback test"
+```
+Only approved slices can be flipped. `--force-for-testing` flips an unapproved slice for sandbox testing and is
+audited. When the composite is up, `flip` and `unflip` run the composite suite afterwards (`--no-verify` skips it).
+With `db.engine` `sqlite` or `none`, each service keeps its own private database in the composite
+(`db_shared: false`), so the composite does not test a shared database in that case.
+
+**12. Cut-over.**
+```bash
+migration-agent cutover orders.migration                 # readiness + cutover/plan.md; exit 1 while not ready
+migration-agent cutover orders.migration --approve --by alice --note "Go for Tuesday"
+```
+
+**13. Metrics.**
+```bash
+migration-agent metrics orders.migration                 # or --format json
+```
+
+**Harness clean-up:** `migration-agent harness down PROJECT [--legacy|--new|--composite]`.
+
+### 9.6 Blockers
+
+A slice cannot be generated or approved while it has open blockers. `approve-slice` lists every one.
+
+| Blocker | Where it comes from | How to clear it |
+|---|---|---|
+| `F-NNNN` deferred Verifier finding | contract `deferred_findings` touching the slice's items | `migration-agent slice accept-observed PROJECT SLICE-NNNN F-NNNN --by NAME --note "..."` (migrate as observed), or resolve it in Phase 1 and approve again |
+| `RISK-NNNN` | open high-severity fit risk on the slice | `migration-agent target resolve PROJECT RISK-NNNN --status ... --note ...` |
+| Open `legacy_bug` decision | equivalence triage | `migration-agent slice decide PROJECT SLICE-NNNN EQ-NNNN --choice preserve|fix --by NAME` |
+| Open `spec_ambiguity` question (slice `blocked`) | equivalence triage | `slice decide ... --choice answered --by NAME --note "..."`; the slice returns to its previous status once no question is open |
+| Pending fix request | equivalence regression or `new_bug` | `migration-agent generate PROJECT --slice SLICE-NNNN`, then `equivalence` again |
+| Unapproved mask proposal | `harness_issue` triage | `migration-agent equivalence approve-mask PROJECT EQ-NNNN --by NAME --reason "..."` (applies from the next run) |
+| Unapproved specified expectation | fix-decision case | `migration-agent tests approve-spec PROJECT CT-NNNN --by NAME` |
+| Schema blind spot | stored procedure / trigger not in the repo, or a `blind_spots:` table | supply a schema export (`schema_export:` in `data/schema_changes.yaml`) or list it under `accepted:` |
+
+### 9.7 Slice approval and human edits
+
+`migration-agent approve-slice PROJECT SLICE-NNNN --by NAME [--note TEXT]` is refused unless: the contract gate
+passes; the slice is `awaiting_human`; the latest build is green; the latest suite is green except approved intended
+divergences; the latest equivalence report has no `regression` or `unknown` diff; `target_code` HEAD has not changed
+since that equivalence run; all blockers are cleared. On success it writes `slices/SLICE-NNNN/approval.json` (who,
+when, commit, report hashes) and tags `slice/SLICE-NNNN/approved` in `target_code/`.
+`migration-agent reject-slice PROJECT SLICE-NNNN --by NAME --reason TEXT` rejects a slice awaiting review.
+
+You may edit `target_code/` yourself and commit with git. A commit after the equivalence run (yours or the agent's)
+makes approval wait for a new equivalence run. The agent never overwrites uncommitted edits: `generate` refuses a
+dirty tree. Human commits count in the human-edit metric.
+
+Comments: `migration-agent slice comment PROJECT ITEM_ID --text "..." [--file F --line N] [--by NAME]`, where
+`ITEM_ID` is a `SLICE-`, `CT-`, `EQ-`, `RISK-` or graph id and `--file` a `target_code`-relative path.
+`migration-agent generate PROJECT --slice SLICE-NNNN --from-comments` runs a fix iteration with the unprocessed
+comments and reopens `awaiting_human`, `rejected` or `approved` slices.
+
+### 9.8 Review UI for Phase 2
+
+`migration-agent review PROJECT` shows extra tabs once Phase 2 files exist (`target/fit_report.json`,
+`plan/migration_plan.json` or `slices/`): **Target fit** (risks, resolve), **Plan** (slices, status, estimate,
+equivalence %), **Slice** (state, iterations, build and test results, git diff, review findings, equivalence diffs,
+blockers, approve and reject buttons, mask approvals) and **Comments**. There is no cut-over tab; use the CLI. The
+same loopback, token and Origin checks apply.
+
+### 9.9 Cut-over
+
+`cutover` checks readiness and (re)writes `cutover/plan.md`. Every failing check is a blocker: contract gate; a valid
+plan; every slice `approved` with a valid approval file; every slice's equivalence report free of regression and
+unknown diffs; a full-suite run on the current `target_code` HEAD that covers every case of the plan (the composite
+report for strangler projects, else the newest equivalence run covering all slices); a clean `target_code/`; no
+coverage gaps; no open config entries; no schema blockers and no incompatible schema report; findings and risks
+accepted; spend within the project budget.
+
+`cutover/plan.md` is deterministic: route-flip order, rollback per step, config and secret checklist (names only),
+schema steps, monitoring per endpoint, open risks. `cutover --approve --by NAME` re-checks readiness and writes
+`cutover/approval.json` with the sha256 of the contract and the plan, the `target_code` HEAD (or a tree hash) and a
+digest over every equivalence artifact (`cutover/hashes.json`). A later change to any of them makes the approval
+stale; `cutover` reports it.
+
+The tool does not deploy anything. The cut-over plan is for your team to execute.
+
+### 9.10 Metrics
+
+`metrics` derives everything from the audit log, slice files, recordings and `target_code` git history: cost per
+slice, per node and per 1k legacy lines; cache hit rate; iterations to green; build success on the first try;
+characterization pass rate; equivalence %; unknown-diff rate; mask additions; human-edit rate; wall-clock split model
+vs exec; runtime findings. A metric without data shows `n/a`, never 0. Reviewer precision is always `n/a` today
+because nothing records which review findings a human accepted.
+
+### 9.11 Hosted platform
+
+Phase 2 runs only from the CLI on a machine you control (decision P2-Q13). The hosted worker in `backend/` runs only
+the Phase 1 stages (ingest, extract, analyze, verify, resolve) and must not run Phase 2 exec: it holds database
+credentials and is not an isolated job runner. `migration_agent.service.run_stage` exposes Phase 2 stages for
+self-hosted integrations only ([platform-contract.md](platform-contract.md) section 2).
+
+### 9.12 Troubleshooting
+
+| Symptom | Cause and fix |
+|---|---|
+| `contract gate: ...` | The contract is stale or missing. Run `contract check`; re-approve, or use `--pin-contract` |
+| `doctor`: exec sandbox fail | Docker CLI missing, daemon not running, or `MA_EXEC_RUNTIME=runsc` without gVisor installed |
+| `harness build` cannot find an image | Images are never pulled. `docker pull` the image named in the error (pin by digest) |
+| Build fails resolving dependencies | No mirror configured (offline build). Add hosts to `harness/mirror.json` or `MA_MIRROR_HOSTS`, or pre-fill `harness/cache/` |
+| `import-source` refuses the source | Its hash differs from the contract `source_hash`: use the exact source that was approved |
+| Many `harness_issue` recordings | The legacy service did not answer: check `harness status`, `harness/logs/`, the health check and seed data |
+| `unstable` recordings | The status differs between two runs (clock, randomness, order). Stabilise seeds or mark the node untestable |
+| `generate` refuses a slice | Read the reason: blockers, dependencies not approved, no recorded cases, or uncommitted edits in `target_code/` |
+| Characterization suite `skipped` | The new service could not be built or reached in the sandbox; the slice stays `built`. Check `runs/RUN-NNNN/logs/` |
+| Slice `blocked` after the iteration cap | Read `slices/SLICE-NNNN/iterations/K/outcome.json`; add a comment and use `--from-comments`, or edit and commit yourself |
+| `approve-slice` refused after an edit | HEAD changed since the last equivalence run: run `equivalence` again |
+| Budget stop | The run or slice cap was reached. Raise `--max-usd` / `--max-usd-per-slice` or `budget_usd` in `target.yaml`, then re-run |

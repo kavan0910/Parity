@@ -30,7 +30,7 @@ other than the configured model endpoint. All must be importable without the `ll
 
 ```python
 class StageResult(BaseModel):
-    stage: str                        # ingest | extract | analyze | verify | resolve
+    stage: str                        # ingest | extract | analyze | verify | resolve, or a Phase 2 stage (below)
     status: Literal["ok", "stopped_budget", "failed"]
     summary: dict                     # stage specific counts (nodes, edges, findings, chunks ...)
     cost_usd: float
@@ -44,7 +44,8 @@ def run_stage(project_dir: Path, stage: str, *, source: str | None = None, confi
               max_usd: float | None = None, workers: int = 1, incremental: bool = False, offline: bool = False,
               on_event: Callable[[Event], None] | None = None, llm: object | None = None,
               finding_id: str | None = None, status: str | None = None, note: str | None = None,
-              reanalyze: bool = False) -> StageResult
+              reanalyze: bool = False, options: dict | None = None) -> StageResult
+def metrics(project_dir: Path) -> dict             # Phase 2 metrics, same dict as `migration-agent metrics --format json`
 def estimate(project_dir: Path, config: dict | None = None, incremental: bool = False) -> dict   # {"chunks":int,"usd":float}
 def review_state(project_dir: Path) -> dict        # same shape the review UI serves at /api/state
 def graph_snapshot(project_dir: Path, version: int | None = None) -> dict   # {"version","nodes":[...],"edges":[...]}
@@ -60,7 +61,33 @@ def unpack_project(data: bytes, dest: Path) -> None                           # 
 
 Rules: `on_event` is called from worker threads safely; budget is enforced inside the engine (`max_usd`); the engine
 never reads credentials from the process environment when `config` carries an explicit `api_key`; `llm` allows tests to
-inject `FakeLLM`/`OfflineLLM`; the CLI keeps working unchanged; the existing 582 tests stay green.
+inject `FakeLLM`/`OfflineLLM`; the CLI keeps working unchanged; the existing tests stay green.
+
+### Phase 2 stages (self-hosted only)
+
+`run_stage` also accepts the Phase 2 stages below (`service.P2_STAGES`). Each needs an approved migration contract
+(the stage fails with the gate error otherwise). Spend is capped by `max_usd` and by what remains of the project
+budget in `target/target.yaml` (`migrate/ledger.py`). `offline=True` uses the deterministic offline clients.
+Stage-specific inputs go in `options`. Expected failures come back as `status="failed"`; a budget stop as
+`stopped_budget`.
+
+| Stage | Does | `options` | `summary` keys |
+|---|---|---|---|
+| `target_fit` | target-fit analysis -> `target/fit_report.json|md` | none | `risks`, `by_severity`, `needs_decision`, `dropped_unverified`, `model_calls`, `blockers` |
+| `plan` | slice plan -> `plan/migration_plan.json|md` | `dry_run`, `name_with_model` | `version`, `slices`, `dry_run`, `excluded_nodes`, `plan_blockers`, `warnings`, `estimate_usd` |
+| `tests` | `tests generate`; optionally records against a running legacy service | `node_ids`, `record_url`, `record_url2` | `created`, `kept`, `dropped`, `needs_approval`, `provisional`, `nodes`; with `record_url`: `recorded`, `record_issues` |
+| `generate` | slice generation loop (runs exec jobs) | `slice_id` (default: all slices), `max_usd_per_slice`, `max_iterations`, `from_comments` | `outcomes`, `warnings`, `awaiting_human` |
+| `equivalence` | legacy vs new per slice, in plan order (in-network exec jobs unless URLs are given or the harness reports host URLs) | `slice_id`, `legacy_url`, `new_url`, `triage` | `slices` (`cases`, `equivalent`, `pct`, `regressions`, `unknown` per slice), `unexplained` |
+| `cutover` | readiness + `cutover/plan.md`; optional approval | `approve`, `by`, `note` | `ready`, `blockers`, `warnings`, `approval`, `plan`; with `approve`: `approved` (refused while not ready -> `failed`) |
+
+There is no `metrics` stage: call `service.metrics(project_dir)`. Harness, recording against the sandbox, flips,
+slice approvals and config/schema commands are CLI only.
+
+**Hosted mode does not run Phase 2.** Decision P2-Q13: Phase 2 is CLI/self-hosted only. The hosted worker
+(`backend/app/worker.py`) runs only `ingest`, `extract`, `analyze`, `verify` and `resolve`, and must not run Phase 2
+stages: `generate` and `equivalence` (without URLs) start exec containers, and `tests` with `record_url` calls a
+running legacy service. The worker holds database credentials and is not a credential-free exec runner.
+`run_stage` itself does not enforce this; the caller must.
 
 ## 3. HTTP API (`/v1`, stream B implements, stream C consumes)
 

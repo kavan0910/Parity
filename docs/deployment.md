@@ -2,7 +2,8 @@
 
 The supported deployment is a **run-to-completion container** (batch job or on-demand) that mounts the source
 read-only and the project folder read-write. There is no long-running service; the review UI runs on a
-reviewer's machine against the project folder.
+reviewer's machine against the project folder. This covers Phase 1. Phase 2 (migration) runs from a host install
+next to Docker; see "Phase 2 (migration) deployment" at the end.
 
 ## Image
 
@@ -138,3 +139,36 @@ Delete the folder to remove all derived data.
   caveats in `src/migration_agent/sandbox/README.md`).
 * The Docker files have been reviewed but not exercised on the authoring machine (no Docker available); run a smoke test
   (`docker run --rm --read-only --network none --tmpfs /tmp migration-agent:<v> --help`) in your environment. CI does this on every build.
+
+## Phase 2 (migration) deployment
+
+Phase 2 is **CLI/self-hosted only** (decision P2-Q13). It is not part of the hosted platform in `deploy/`, and the
+hosted worker must not run exec jobs (it holds database credentials).
+
+Phase 2 builds and runs code through the Docker CLI on the machine where you run `migration-agent`. The
+`docker/Dockerfile` engine image has no Docker CLI and the compose profiles above give it no Docker socket; keep it
+that way. Run the Phase 2 commands from a host install (`pip install ".[llm]"`) on a machine with Docker, in a
+project folder on local disk. Mounting the Docker socket into the engine container would give the model-facing
+process control of the host and is not supported.
+
+Host requirements (details in [user-guide.md](user-guide.md) section 9.2):
+
+* Docker engine and CLI; rootless Docker or Podman preferred; gVisor (`runsc`) recommended
+  (`MA_EXEC_RUNTIME=runsc` requires it, `runc` disables it, `auto` uses it when installed).
+* Every image used by the harness, the runner (`python:3.12.7-alpine3.20`), the egress proxy and the codemods present
+  locally; Phase 2 never pulls. Pin them by digest.
+* Optional package mirror: `<project>/harness/mirror.json` or `MA_MIRROR_HOSTS`. Builds reach only those hosts through
+  a per-run Squid proxy; with none configured, builds are offline.
+* `git` on `PATH`.
+* The model key in the environment of the CLI process only. It is never passed to containers.
+
+Environment variables used by Phase 2:
+
+| Variable | Meaning |
+|---|---|
+| `MA_MIRROR_HOSTS` | Comma-separated package-mirror hosts; overrides `hosts` in `harness/mirror.json` |
+| `MA_EXEC_RUNTIME` | `auto` (default), `runsc` (require gVisor) or `runc`; overrides `runtime` in `harness/mirror.json` |
+
+Back up the project folder as for Phase 1. Treat `legacy_src/` (unredacted source) and `harness/synthetic_secrets.json`
+as sensitive; exclude both from shared backups. `harness/cache/` can be deleted to reset the dependency cache. Keep
+`runs/` while a migration is in progress: iteration and approval files refer to its logs and reports.
