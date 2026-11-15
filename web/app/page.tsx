@@ -20,6 +20,7 @@ export default function Landing() {
           <Logo />
           <nav aria-label="Primary" className="flex items-center gap-1">
             <a href="#how" className="hidden rounded-lg px-3 py-2 text-sm hover:bg-surface-2 sm:block">How it works</a>
+            <a href="#migrate" className="hidden rounded-lg px-3 py-2 text-sm hover:bg-surface-2 sm:block">Migrate</a>
             <a href="#honest" className="hidden rounded-lg px-3 py-2 text-sm hover:bg-surface-2 sm:block">Measured</a>
             <ThemeToggle />
             <Link href="/login" className="rounded-lg px-3 py-2 text-sm font-medium hover:bg-surface-2">Log in</Link>
@@ -39,6 +40,7 @@ export default function Landing() {
               <p className="rise rise-2 mt-6 max-w-xl text-lg text-muted">
                 Migration Agent reads your code in a read-only sandbox and produces an understanding document and a knowledge graph.
                 Every claim cites a file and a line, so a reviewer can check it in seconds instead of trusting a summary.
+                When you are ready to rewrite, the command-line tool migrates it slice by slice and checks each slice against the old service.
               </p>
               <div className="rise rise-3 mt-8 flex flex-wrap gap-3">
                 <LinkButton href="/signup" variant="primary" className="min-h-12 px-6 text-base">Create a workspace</LinkButton>
@@ -109,14 +111,48 @@ export default function Landing() {
           </div>
         </section>
 
+        <section id="migrate" className="mx-auto max-w-6xl scroll-mt-20 px-4 py-20 sm:px-6">
+          <p className="eyebrow mb-3">Then migrate, with proof</p>
+          <h2 className="display max-w-3xl text-4xl sm:text-5xl">A slice ships only when it answers like the old service.</h2>
+          <p className="mt-4 max-w-2xl text-muted">
+            You sign off on the understanding, then the command-line tool moves one slice at a time. The expected behaviour is recorded from your
+            running legacy service, never written by the model. This part is a <strong className="text-ink">beta</strong>: it runs on your own machine with
+            Docker, and the hosted app does not run it.
+          </p>
+          <ol className="mt-10 grid gap-px overflow-hidden rounded-2xl border border-line bg-line md:grid-cols-4">
+            {[
+              ["01", "Approve", "Decide per quirk whether to preserve or fix it. Approval pins the exact graph and document, and goes stale if either changes."],
+              ["02", "Record", "Cases run twice against the live old service in a sandbox. Services that need a token get a random one on every request."],
+              ["03", "Compare", "Old and new restart from the same data and run the same cases. Every difference is listed; a fuzzer and a latency check add warnings."],
+              ["04", "Cut over", "You approve each slice, a router moves its routes, and the cut-over plan needs its own approval. Nothing is deployed for you."],
+            ].map(([n, t, d]) => (
+              <li key={n} className="bg-surface p-6">
+                <span className="font-mono text-sm text-accent">{n}</span>
+                <h3 className="display mt-5 text-2xl">{t}</h3>
+                <p className="mt-2 text-sm text-muted">{d}</p>
+              </li>
+            ))}
+          </ol>
+          <div className="mt-8 rounded-2xl border border-line-strong bg-surface p-6">
+            <p className="eyebrow mb-2">Sandbox trial, no model</p>
+            <p className="text-sm text-muted">
+              On the Express sample, the sandbox built the old service, recorded 24 authenticated cases, and ran a copy as the new one:
+              24 of 24 matched and 90 fuzz variants found no difference. A deliberately changed status code was caught.
+              A second, subtler change (a price boundary) was <strong className="text-ink">not</strong> caught, because the offline cases never reach it.
+              Model-written cases are meant to cover that, and they have not run yet.
+            </p>
+          </div>
+        </section>
+
         <section id="honest" className="mx-auto max-w-6xl scroll-mt-20 px-4 py-20 sm:px-6">
           <p className="eyebrow mb-3">Measured, including the weak parts</p>
           <h2 className="display max-w-3xl text-4xl sm:text-5xl">We publish what we can prove and what we cannot.</h2>
-          <dl className="mt-10 grid gap-6 sm:grid-cols-3">
+          <dl className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
             {[
               ["100%", "of cited evidence points to a real file and line range."],
               ["0", "prompt-injection canary strings found in generated graphs."],
               ["0.57", "F1 for edges on the Express sample. It is our weakest category and we say so."],
+              ["0", "migration stages run with a real model so far. Accuracy on large real repositories is also unmeasured."],
             ].map(([v, l]) => (
               <div key={v} className="border-t-2 border-ink pt-4">
                 <dt className="display text-6xl tnum">{v}</dt>
@@ -124,13 +160,13 @@ export default function Landing() {
               </div>
             ))}
           </dl>
-          <p className="mt-8 max-w-2xl text-sm text-muted">Labels are small and hand written: treat these as a regression guide, not a benchmark.</p>
+          <p className="mt-8 max-w-2xl text-sm text-muted">Labels are small and hand written: treat these as a regression guide, not a benchmark. The first live run of the migration sandbox found seven bugs that every offline test had missed; all are fixed.</p>
         </section>
 
         <section className="px-4 pb-24 sm:px-6">
           <div className="mx-auto max-w-6xl rounded-3xl bg-ink px-6 py-14 text-center text-bg sm:px-14">
             <h2 className="display text-4xl sm:text-6xl">Find out what your service really does.</h2>
-            <p className="mx-auto mt-3 max-w-lg opacity-75">Billing is not enabled yet. Create a workspace and run your first analysis under the internal plan.</p>
+            <p className="mx-auto mt-3 max-w-lg opacity-75">Billing is not enabled yet. Create a workspace and run your first analysis under the internal plan. Approval and migration are available in the command-line tool.</p>
             <LinkButton href="/signup" variant="primary" className="mt-8 min-h-12 px-8 text-base">Create a workspace</LinkButton>
           </div>
         </section>
