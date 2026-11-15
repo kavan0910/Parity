@@ -27,7 +27,7 @@
     {"@type":"Question","name":"Does the model run any code?","acceptedAnswer":{"@type":"Answer","text":"No. The model returns structured file edits only and has no shell, exec or network tool. Builds and tests run in a Docker sandbox: tests with no network, builds only through the package mirror you configure."}},
     {"@type":"Question","name":"Where does the expected behaviour come from?","acceptedAnswer":{"@type":"Answer","text":"From your running legacy service. The model only proposes test inputs. Each case runs twice against the old service, values that differ are masked as noise, and the recorded response becomes the expected result."}},
     {"@type":"Question","name":"Which migrations does it support?","acceptedAnswer":{"@type":"Answer","text":"The first supported target is Java 8 with Spring Boot 2 to Java 21 with Spring Boot 3. Library tables also cover Django 3.2 to 5, Express to Fastify and JavaScript to Go."}},
-    {"@type":"Question","name":"Is the migration phase production ready?","acceptedAnswer":{"@type":"Answer","text":"Not yet. It is implemented and its automated tests pass offline, but it has not yet run against a real Docker daemon or a real model."}},
+    {"@type":"Question","name":"Is the migration phase production ready?","acceptedAnswer":{"@type":"Answer","text":"It is in beta. Every stage is built and tested offline, and it has run in a real Docker sandbox on three sample services: it built and started them, recorded their responses, compared a copy against the original, routed traffic through the strangler router and caught a deliberately seeded regression. It has not yet run with a real model, so the quality of model-written code is unmeasured."}},
     {"@type":"Question","name":"Which models can I use?","acceptedAnswer":{"@type":"Answer","text":"Any provider LiteLLM supports. Sample configs are included for Gemini and Anthropic."}}]}</script>
 </head>
 <body>
@@ -219,13 +219,13 @@ migration-agent generate \
           <h2 class="heading-2">A slice ships only when it answers like the old service</h2>
           <p class="body-3">The migration starts from your approved contract and moves one slice at a time. The first supported target is Java 8 with Spring Boot 2 to Java 21 with Spring Boot 3.</p>
         </div>
-        <div class="notice reveal" role="note"><i class="ph ph-flask" aria-hidden="true"></i><p class="body-6"><strong class="body-4">Preview.</strong> Every stage below is built and covered by automated tests that run offline. It has not yet run against a real Docker daemon or a real model.</p></div>
+        <div class="notice reveal" role="note"><i class="ph ph-flask" aria-hidden="true"></i><p class="body-6"><strong class="body-4">Beta.</strong> Every stage below is built, covered by automated tests, and has run in a real Docker sandbox on three sample services. It has not yet run with a real model, so the quality of model-written code is unmeasured.</p></div>
         <div class="mgrid">
           <ol class="mlist">
             <li class="mstep reveal"><span class="ic"><i class="ph ph-target" aria-hidden="true"></i></span><div><h3 class="title-1">Check the target fits</h3><p class="body-6"><code>target fit</code> reads fixed library tables for Java 8 to 21, Spring Boot 2 to 3, Django 3.2 to 5, Express to Fastify and JavaScript to Go. Risks the model adds are kept only when their cited evidence exists.</p></div></li>
-            <li class="mstep reveal" data-d="1"><span class="ic"><i class="ph ph-record" aria-hidden="true"></i></span><div><h3 class="title-1">Record what the old service does</h3><p class="body-6">The planner cuts the service into slices in dependency order. The model proposes test inputs, each case runs twice against the live legacy service, and the recorded response becomes the expected result.</p></div></li>
+            <li class="mstep reveal" data-d="1"><span class="ic"><i class="ph ph-record" aria-hidden="true"></i></span><div><h3 class="title-1">Record what the old service does</h3><p class="body-6">The planner cuts the service into slices in dependency order. The model proposes test inputs, each case runs twice against the live legacy service, and the recorded response becomes the expected result. Services that need a token get the sandbox's random one on every request.</p></div></li>
             <li class="mstep reveal" data-d="2"><span class="ic"><i class="ph ph-shield-check" aria-hidden="true"></i></span><div><h3 class="title-1">Generate inside a sandbox</h3><p class="body-6">The model returns structured edits and never gets a shell. Builds and tests run in Docker, and a reviewer in a fresh session checks the slice without the generation history.</p></div></li>
-            <li class="mstep reveal" data-d="3"><span class="ic"><i class="ph ph-arrows-split" aria-hidden="true"></i></span><div><h3 class="title-1">Prove it, approve it, flip it</h3><p class="body-6">Legacy and new run the same cases and every difference is listed. You approve each slice, the strangler fig router moves its routes, and the cutover plan needs its own approval.</p></div></li>
+            <li class="mstep reveal" data-d="3"><span class="ic"><i class="ph ph-arrows-split" aria-hidden="true"></i></span><div><h3 class="title-1">Prove it, approve it, flip it</h3><p class="body-6">Both services restart from the same data and run the same cases, and every difference is listed. A fuzzer and a latency check add advisory warnings. You approve each slice, the strangler fig router moves its routes, and the cutover plan needs its own approval, in the review UI or the CLI.</p></div></li>
           </ol>
           <div class="gcard reveal" data-d="1" role="img" aria-label="Diagram: one recorded case is sent to both the legacy service and the new slice, the two responses are compared field by field, and only a matching slice moves on to your approval and a route flip">
             <header><span class="title-3">One case, two services</span><span class="live caption-4"><b></b>equivalence run</span></header>
@@ -273,11 +273,13 @@ migration-agent generate \
             </tbody>
           </table>
         </div>
-        <p class="note body-6">Two models were used because the first hit a quota, so the rows are not comparable with each other. Every repo was small enough to fit in one chunk. No migration has run against a live service yet, so there are no Phase 2 numbers to show.</p>
+        <p class="note body-6">Two models were used because the first hit a quota, so the rows are not comparable with each other. Every repo was small enough to fit in one chunk.</p>
+        <p class="note body-6"><strong>Migration sandbox trial, no model.</strong> On the Express sample the sandbox built the legacy service, replayed seed data with its synthetic token, recorded 24 authenticated cases twice, and ran a copy of the service as the new one: 24 of 24 cases matched and 90 fuzz variants found no divergence. A deliberately changed status code was caught. A second, subtler change (a price boundary) was <em>not</em> caught, because the offline cases never reach it. That is what the model-written cases are for, and they have not run yet.</p>
         <div class="stats">
           <div class="stat reveal"><b class="mono"><span data-count="100">100</span>%</b><span class="body-6">evidence validity is a gate: a cited file or line range that does not exist fails the run</span></div>
-          <div class="stat reveal" data-d="1"><b class="mono"><span data-count="1159">1,159</span></b><span class="body-6">automated tests pass offline, 191 of them red team tests, with 7 skipped</span></div>
+          <div class="stat reveal" data-d="1"><b class="mono"><span data-count="1195">1,195</span></b><span class="body-6">automated tests pass, including red team tests and live sandbox tests when Docker is present</span></div>
           <div class="stat reveal" data-d="2"><b class="mono"><span data-count="0">0</span></b><span class="body-6">prompt injection canary strings found in the generated graph of the Express sample</span></div>
+          <div class="stat reveal" data-d="3"><b class="mono"><span data-count="7">7</span></b><span class="body-6">sandbox bugs the first live Docker run found that every offline test had missed, all fixed</span></div>
         </div>
       </div>
     </section>
@@ -291,7 +293,7 @@ migration-agent generate \
         </div>
         <div class="grid-3">
           <article class="card reveal"><span class="badge ok caption-4"><i class="ph ph-check-circle" aria-hidden="true"></i>Available</span><h3 class="title-1">Understand and approve</h3><p class="body-6">Map, verify, review and approve a service from the CLI. It ran end to end on the three repos above.</p></article>
-          <article class="card reveal" data-d="1"><span class="badge warn caption-4"><i class="ph ph-flask" aria-hidden="true"></i>Preview</span><h3 class="title-1">Migrate with proof</h3><p class="body-6">Built and covered by the offline test suite. Not yet run against a real Docker daemon or a real model.</p></article>
+          <article class="card reveal" data-d="1"><span class="badge warn caption-4"><i class="ph ph-flask" aria-hidden="true"></i>Beta</span><h3 class="title-1">Migrate with proof</h3><p class="body-6">Built, tested, and run in a real Docker sandbox on three samples. Not yet run with a real model, so generated-code quality is unmeasured.</p></article>
           <article class="card reveal" data-d="2"><span class="badge caption-4"><i class="ph ph-terminal-window" aria-hidden="true"></i>CLI only</span><h3 class="title-1">Runs on your machine</h3><p class="body-6">Use it as a CLI on your own hardware. No hosted service is available, and you bring your own model key.</p></article>
         </div>
         <p class="note body-6">Try it before you spend anything: <code>analyze --dry-run</code> prints the plan and a cost estimate without a model call, and <code>--max-usd</code> stops any run at your limit while keeping partial results.</p>
@@ -303,7 +305,7 @@ migration-agent generate \
       <div class="container">
         <div class="section-head reveal">
           <span class="eyebrow caption-1"><i class="ph ph-rocket-launch" aria-hidden="true"></i>Quickstart</span>
-          <h2 class="heading-2">Map your own service, then try the migration preview</h2>
+          <h2 class="heading-2">Map your own service, then try the migration beta</h2>
           <p class="body-3">Needs Python 3.11 or newer and an API key for the model you choose. Put the key in a <code>.env</code> file in the project root, never on the command line. The migration steps also need Docker.</p>
         </div>
         <div class="qs reveal">
@@ -324,7 +326,7 @@ migration-agent review my-service.migration
 migration-agent status my-service.migration
 migration-agent approve my-service.migration --by "Your Name"
 
-<span class="c"># 3. migrate (preview, needs Docker)</span>
+<span class="c"># 3. migrate (beta, needs Docker; set request_headers in harness.yaml if your service needs a token)</span>
 migration-agent doctor my-service.migration
 migration-agent target init my-service.migration --runtime 21 --framework spring-boot@3.3
 migration-agent target fit my-service.migration --max-usd 1
@@ -338,7 +340,9 @@ migration-agent generate my-service.migration --slice SLICE-0001
 migration-agent harness build my-service.migration --new
 migration-agent harness up my-service.migration --new
 migration-agent equivalence run my-service.migration --slice SLICE-0001
-migration-agent approve-slice my-service.migration SLICE-0001 --by "Your Name"</code></pre>
+migration-agent equivalence fuzz my-service.migration --slice SLICE-0001   <span class="c"># advisory</span>
+migration-agent approve-slice my-service.migration SLICE-0001 --by "Your Name"
+migration-agent cutover my-service.migration   <span class="c"># readiness + plan; approve it in the review UI or with --approve</span></code></pre>
           <p class="qs-msg body-6" id="copymsg" role="status" aria-live="polite"></p>
         </div>
       </div>
@@ -357,7 +361,7 @@ migration-agent approve-slice my-service.migration SLICE-0001 --by "Your Name"</
           <details><summary class="title-2">Where does the expected behaviour come from?<i class="ph ph-caret-down" aria-hidden="true"></i></summary><p class="a body-3">From your running legacy service. The model only proposes test inputs. Each case runs twice against the old service, values that differ between the two runs are masked as noise, and the recorded response becomes the expected result. For a quirk you chose to fix, you approve the specified result instead.</p></details>
           <details><summary class="title-2">What happens to secrets?<i class="ph ph-caret-down" aria-hidden="true"></i></summary><p class="a body-3">Ingest redacts credential patterns and withholds key and environment files before anything reaches a prompt, a cache or a document. Recorded results mask values that look like secrets, sandbox jobs refuse secret environment values, and the config map writes secrets as references such as <code>${DB_PASSWORD}</code>, never as values. Redaction is pattern based, so unusual secrets can still slip through. The threat model lists this as a known risk.</p></details>
           <details><summary class="title-2">Which migrations does it support?<i class="ph ph-caret-down" aria-hidden="true"></i></summary><p class="a body-3">The first supported target is Java 8 with Spring Boot 2 to Java 21 with Spring Boot 3. Library tables also cover Django 3.2 to 5, Express to Fastify and JavaScript to Go, but the Java path is the one being finished first.</p></details>
-          <details><summary class="title-2">Is the migration phase production ready?<i class="ph ph-caret-down" aria-hidden="true"></i></summary><p class="a body-3">Not yet. It is implemented and its automated tests pass offline, but it has not yet run against a real Docker daemon or a real model. Treat it as a preview: run it on a copy and review every slice before you approve it.</p></details>
+          <details><summary class="title-2">Is the migration phase production ready?<i class="ph ph-caret-down" aria-hidden="true"></i></summary><p class="a body-3">It is in beta. It is built, tested, and has run in a real Docker sandbox on three sample services, but it has not yet run with a real model, so the quality of model-written code is unmeasured. Run it on a copy and review every slice before you approve it.</p></details>
           <details><summary class="title-2">What does approval lock in?<i class="ph ph-caret-down" aria-hidden="true"></i></summary><p class="a body-3"><code>approve</code> is refused while coverage is incomplete, a Verifier finding is unresolved, a re analysis or comment is pending, or the doc on disk is out of date. On success it writes a read only copy of the doc and <code>docs/migration_contract.json</code> with your preserve or fix decisions and any deferred findings. A later change to the graph makes the approval stale.</p></details>
           <details><summary class="title-2">Which languages and frameworks does it understand?<i class="ph ph-caret-down" aria-hidden="true"></i></summary><p class="a body-3">Python, JavaScript, TypeScript, Java, Go and C# files are parsed into syntax trees. Files in other languages such as COBOL, Ruby or PHP are recognised but not parsed. Route extractors cover Express, Spring, Flask, FastAPI, Django, Rails and ASP.NET. Schema extractors cover Flyway, Alembic, Prisma and TypeORM, and OpenAPI and proto files are parsed.</p></details>
           <details><summary class="title-2">Which models can I use, and what does a run cost?<i class="ph ph-caret-down" aria-hidden="true"></i></summary><p class="a body-3">Any provider LiteLLM supports, chosen per task in a config file or with <code>MA_*</code> environment variables. We have run it with Gemini models; the Anthropic sample configs are included but untested. Mapping the three small repos above cost between $0.021 and $0.077. Run <code>analyze --dry-run</code> for an estimate first.</p></details>

@@ -153,7 +153,8 @@ th { color: var(--muted); font-weight: 500; }
 tr:last-child td { border-bottom: 0; }
 td.num { font-family: var(--mono); }
 .note { color: var(--muted); margin-top: var(--s-200); max-width: 680px; }
-.stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--s-300); margin-bottom: var(--s-300); }
+.stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--s-300); margin-bottom: var(--s-300); }
+@media (max-width: 1023px) { .stats { grid-template-columns: repeat(2, 1fr); } }
 @media (max-width: 767px) { .stats { grid-template-columns: 1fr; } }
 .stat { background: var(--surface-2); border: 1px solid var(--border); border-radius: 16px; padding: var(--s-300); }
 .stat b { display: block; font-size: 48px; line-height: 48px; font-weight: 600; letter-spacing: -0.02em; margin-bottom: var(--s-75); }
