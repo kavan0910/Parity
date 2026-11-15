@@ -1,7 +1,7 @@
 import re
 
-from migration_agent.graph.models import Edge, Evidence, Graph, Node
-from migration_agent.render import SECTIONS, render_changelog, render_understanding
+from parity_migrate.graph.models import Edge, Evidence, Graph, Node
+from parity_migrate.render import SECTIONS, render_changelog, render_understanding
 
 
 def ev(f="src/a.py", s=3, e=9, sym="foo", q="def foo():"):

@@ -19,7 +19,7 @@ x-hardening: &hardening
   security_opt: ["no-new-privileges:true"]
 
 x-backend-env: &backend-env
-  DATABASE_URL: postgresql+psycopg://ma_app:${MA_APP_PASSWORD:?set MA_APP_PASSWORD}@postgres:5432/${POSTGRES_DB:-migration_agent}
+  DATABASE_URL: postgresql+psycopg://ma_app:${MA_APP_PASSWORD:?set MA_APP_PASSWORD}@postgres:5432/${POSTGRES_DB:-parity_migrate}
   AUTH_MODE: ${AUTH_MODE:-dev}
   ENVIRONMENT: ${ENVIRONMENT:-production}
   STORE_BACKEND: ${STORE_BACKEND:-local}
@@ -34,7 +34,7 @@ services:
     image: postgres:16-alpine
     restart: unless-stopped
     environment:
-      POSTGRES_DB: ${POSTGRES_DB:-migration_agent}
+      POSTGRES_DB: ${POSTGRES_DB:-parity_migrate}
       POSTGRES_USER: ${POSTGRES_USER:-ma_admin}      # bootstrap superuser: init only, never used by the app
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}
       MA_OWNER_PASSWORD: ${MA_OWNER_PASSWORD:?set MA_OWNER_PASSWORD}
@@ -54,7 +54,7 @@ services:
 
   # One-shot schema migration as the schema OWNER role. The long-running api/worker never see these credentials.
   migrate:
-    image: migration-agent-backend:${IMAGE_TAG:-local}
+    image: parity-backend:${IMAGE_TAG:-local}
     build:
       context: ..
       dockerfile: deploy/Dockerfile.backend
@@ -66,13 +66,13 @@ services:
     command: ["alembic", "upgrade", "head"]
     environment:
       ENVIRONMENT: ${ENVIRONMENT:-production}
-      MIGRATION_DATABASE_URL: postgresql+psycopg://ma_owner:${MA_OWNER_PASSWORD:?set MA_OWNER_PASSWORD}@postgres:5432/${POSTGRES_DB:-migration_agent}
+      MIGRATION_DATABASE_URL: postgresql+psycopg://ma_owner:${MA_OWNER_PASSWORD:?set MA_OWNER_PASSWORD}@postgres:5432/${POSTGRES_DB:-parity_migrate}
     depends_on:
       postgres: { condition: service_healthy }
     networks: [backend]
 
   api:
-    image: migration-agent-backend:${IMAGE_TAG:-local}
+    image: parity-backend:${IMAGE_TAG:-local}
     build:
       context: ..
       dockerfile: deploy/Dockerfile.backend
@@ -128,7 +128,7 @@ services:
     networks: [backend, edge]
 
   worker:
-    image: migration-agent-backend:${IMAGE_TAG:-local}
+    image: parity-backend:${IMAGE_TAG:-local}
     restart: unless-stopped
     <<: *hardening
     user: "10001:10001"
@@ -192,7 +192,7 @@ services:
     networks: [backend, egress]
 
   web:
-    image: migration-agent-web:${IMAGE_TAG:-local}
+    image: parity-web:${IMAGE_TAG:-local}
     build:
       context: ..
       dockerfile: deploy/Dockerfile.web

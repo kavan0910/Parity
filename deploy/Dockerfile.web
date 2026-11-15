@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
 # Web image (Next.js). Build context = repo root:
-#   docker build -f deploy/Dockerfile.web --build-arg NEXT_PUBLIC_API_URL=https://api.example.com -t migration-agent-web:local .
+#   docker build -f deploy/Dockerfile.web --build-arg NEXT_PUBLIC_API_URL=https://api.example.com -t parity-web:local .
 # NEXT_PUBLIC_* values are PUBLIC and baked into the browser bundle: never pass a secret as a build arg.
 ARG NODE_IMAGE=node:22-slim
 

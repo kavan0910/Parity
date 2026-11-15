@@ -65,13 +65,13 @@ export default function Overview() {
               ? "Step 1 is done. Review the findings, then approve and migrate in the command-line tool (Docker needed, beta):"
               : "Run the analysis first. Once the map exists, approve and migrate in the command-line tool (Docker needed, beta):"}
           </p>
-          <pre className="mt-3 overflow-x-auto rounded-lg bg-ink p-3 font-mono text-[11.5px] leading-5 text-bg"><code>{`migration-agent approve <project>.migration --by "You"
-migration-agent target init <project>.migration \
+          <pre className="mt-3 overflow-x-auto rounded-lg bg-ink p-3 font-mono text-[11.5px] leading-5 text-bg"><code>{`parity approve <project>.migration --by "You"
+parity target init <project>.migration \
   --runtime 21 --framework spring-boot@3.3
-migration-agent plan <project>.migration
-migration-agent generate <project>.migration --all
-migration-agent equivalence <project>.migration --all
-migration-agent cutover <project>.migration`}</code></pre>
+parity plan <project>.migration
+parity generate <project>.migration --all
+parity equivalence <project>.migration --all
+parity cutover <project>.migration`}</code></pre>
         </Card>
         <Card className="p-5">
           <p className="eyebrow">Source</p>

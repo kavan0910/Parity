@@ -2,8 +2,8 @@ import json
 
 import pytest
 
-from migration_agent.analyze.module_analyzer import PROMPT_VERSION, AnalysisError, analyze_chunk
-from migration_agent.llm.base import FakeLLM
+from parity_migrate.analyze.module_analyzer import PROMPT_VERSION, AnalysisError, analyze_chunk
+from parity_migrate.llm.base import FakeLLM
 
 EV = {"file": "a.py", "line_start": 1, "quote": "def f():"}
 COMP = {"type": "component", "module": "m", "qualified_symbol": "f"}

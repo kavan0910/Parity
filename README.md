@@ -1,8 +1,8 @@
 # Parity
 
 > **Migrate legacy apps. Prove parity.** Parity is the product name (a working name: check trademark and domain before
-> you ship it). The command-line tool and the Python package keep the name `migration-agent`
-> (`pip install`, `migration-agent --help`, `import migration_agent`), so every command in these docs is unchanged.
+> you ship it). The command-line tool is `parity`, the Python package is `parity_migrate` and the distribution is `parity-migrate`
+> (`pip install parity-migrate`, `parity --help`). The old `migration-agent` command still works as a deprecated alias.
 
 **Migrate a legacy app to the newest version of its stack, or to a different technology, and prove that the new app
 behaves like the old one.**
@@ -94,17 +94,17 @@ Details: [docs/phase2-plan.md](docs/phase2-plan.md) ("Implementation status"), [
 ```bash
 pip install ".[llm]"
 cp .env.example .env            # add ANTHROPIC_API_KEY or GEMINI_API_KEY
-migration-agent init ./my-service
-migration-agent ingest  my-service.migration
-migration-agent extract my-service.migration
-migration-agent analyze my-service.migration --dry-run         # plan + cost estimate
-migration-agent analyze my-service.migration --max-usd 5
-migration-agent verify  my-service.migration                   # needs docs in my-service.migration/user_docs/
-migration-agent review  my-service.migration                   # resolve findings, decide quirks
-migration-agent status  my-service.migration                   # blockers and warnings
-migration-agent approve my-service.migration --by "Jane Doe"   # writes docs/migration_contract.json
+parity init ./my-service
+parity ingest  my-service.migration
+parity extract my-service.migration
+parity analyze my-service.migration --dry-run         # plan + cost estimate
+parity analyze my-service.migration --max-usd 5
+parity verify  my-service.migration                   # needs docs in my-service.migration/user_docs/
+parity review  my-service.migration                   # resolve findings, decide quirks
+parity status  my-service.migration                   # blockers and warnings
+parity approve my-service.migration --by "Jane Doe"   # writes docs/migration_contract.json
 ```
-No key yet? `migration-agent analyze my-service.migration --offline` runs the pipeline with a stand-in model.
+No key yet? `parity analyze my-service.migration --offline` runs the pipeline with a stand-in model.
 
 ## Quick start: Phase 2
 
@@ -113,22 +113,22 @@ mirror (`harness/mirror.json` or `MA_MIRROR_HOSTS`). See [user guide section 9](
 
 ```bash
 P=my-service.migration
-migration-agent contract check $P && migration-agent doctor $P
-migration-agent target init $P --runtime 21 --framework spring-boot@3.3 --build maven --budget-usd 25
-migration-agent target fit  $P --max-usd 2
-migration-agent plan        $P
-migration-agent harness import-source $P --from-original       # original source, checked against source_hash
-migration-agent harness build $P && migration-agent harness up $P
-migration-agent tests generate $P && migration-agent tests record $P --harness
-migration-agent tests coverage $P --fail-on-gaps
-migration-agent generate    $P --all --max-usd 20
-migration-agent equivalence $P --all
-migration-agent review      $P                                 # Plan and Slice tabs: diffs, blockers, approve
-migration-agent approve-slice $P SLICE-0001 --by "Jane Doe"
-migration-agent config map  $P && migration-agent config schema-check $P
-migration-agent cutover     $P                                 # readiness + cutover/plan.md
-migration-agent cutover     $P --approve --by "Jane Doe"
-migration-agent metrics     $P
+parity contract check $P && parity doctor $P
+parity target init $P --runtime 21 --framework spring-boot@3.3 --build maven --budget-usd 25
+parity target fit  $P --max-usd 2
+parity plan        $P
+parity harness import-source $P --from-original       # original source, checked against source_hash
+parity harness build $P && parity harness up $P
+parity tests generate $P && parity tests record $P --harness
+parity tests coverage $P --fail-on-gaps
+parity generate    $P --all --max-usd 20
+parity equivalence $P --all
+parity review      $P                                 # Plan and Slice tabs: diffs, blockers, approve
+parity approve-slice $P SLICE-0001 --by "Jane Doe"
+parity config map  $P && parity config schema-check $P
+parity cutover     $P                                 # readiness + cutover/plan.md
+parity cutover     $P --approve --by "Jane Doe"
+parity metrics     $P
 ```
 For strangler projects add `harness build|up $P --composite`, `harness flip $P SLICE-NNNN` and
 `equivalence composite $P` between slice approval and cut-over. `target fit`, `plan`, `tests generate`, `generate`
@@ -156,9 +156,9 @@ Web on http://localhost:3000, API on http://localhost:8000. See the [runbook](do
 
 | Path | What |
 |---|---|
-| `src/migration_agent/` | Engine and CLI (pip-installable) |
-| `src/migration_agent/migrate/` | Phase 2: contract gate, target fit, planner, tests, exec sandbox, harness, generation loop, equivalence, approvals, config/schema, router, cut-over, metrics |
-| `src/migration_agent/service.py` | Library API (`run_stage`) for the backend and other hosts |
+| `src/parity_migrate/` | Engine and CLI (pip-installable) |
+| `src/parity_migrate/migrate/` | Phase 2: contract gate, target fit, planner, tests, exec sandbox, harness, generation loop, equivalence, approvals, config/schema, router, cut-over, metrics |
+| `src/parity_migrate/service.py` | Library API (`run_stage`) for the backend and other hosts |
 | `eval/repos/` | Hand-labelled fixture repos (Phase 1 scoring) with runnable `harness/` folders |
 | `eval/targets/` | Phase 2 target pairs: target spec, hidden reference suite, quirks, canaries, recorded reference run, baseline |
 | `scripts/eval_phase2.py` | Offline Phase 2 eval gate (CI job `eval-phase2`) |

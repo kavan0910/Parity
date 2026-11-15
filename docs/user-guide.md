@@ -27,7 +27,7 @@ Requires Python 3.11 or newer.
 ```bash
 python -m venv .venv && . .venv/bin/activate
 pip install ".[llm]"          # from a checkout; "[llm]" adds LiteLLM, needed for real model calls
-migration-agent --help
+parity --help
 ```
 
 Without the `llm` extra everything works except real model calls (`analyze --offline`, `extract`, `render`,
@@ -79,19 +79,19 @@ sensitive and exclude it from sharing.
 ## 3. Quick start
 
 ```bash
-migration-agent init ./legacy-orders                 # creates ./legacy-orders.migration
-migration-agent ingest legacy-orders.migration
-migration-agent extract legacy-orders.migration
+parity init ./legacy-orders                 # creates ./legacy-orders.migration
+parity ingest legacy-orders.migration
+parity extract legacy-orders.migration
 cp requirements.md legacy-orders.migration/user_docs/   # optional: docs for the Verifier
-migration-agent analyze legacy-orders.migration --dry-run          # plan + cost estimate
-migration-agent analyze legacy-orders.migration --max-usd 5
-migration-agent verify  legacy-orders.migration
-migration-agent review  legacy-orders.migration      # opens the local review UI
-migration-agent status  legacy-orders.migration      # Phase 1 readiness: blockers and warnings
-migration-agent approve legacy-orders.migration --by "Jane Doe"   # writes docs/migration_contract.json
+parity analyze legacy-orders.migration --dry-run          # plan + cost estimate
+parity analyze legacy-orders.migration --max-usd 5
+parity verify  legacy-orders.migration
+parity review  legacy-orders.migration      # opens the local review UI
+parity status  legacy-orders.migration      # Phase 1 readiness: blockers and warnings
+parity approve legacy-orders.migration --by "Jane Doe"   # writes docs/migration_contract.json
 ```
 
-Try the pipeline without any model: `migration-agent analyze PROJECT --offline` (deterministic stand-in; produces
+Try the pipeline without any model: `parity analyze PROJECT --offline` (deterministic stand-in; produces
 the facts-level graph and documents, not a real analysis).
 
 After approval, Phase 2 continues in section 9.
@@ -99,12 +99,12 @@ After approval, Phase 2 continues in section 9.
 ## 4. Commands
 
 All commands take the project folder as the first argument. Every command appends to `audit/audit.jsonl`.
-Run `migration-agent COMMAND --help` for the authoritative option list.
+Run `parity COMMAND --help` for the authoritative option list.
 
 ### `init SOURCE [--project PATH] [--name TEXT]`
 Creates the project folder. `SOURCE` is a directory, `.zip`, tarball or git URL. Nothing is copied yet.
 ```bash
-migration-agent init https://example.com/team/orders.git --project ./orders.migration --name "Orders service"
+parity init https://example.com/team/orders.git --project ./orders.migration --name "Orders service"
 ```
 
 ### `ingest PROJECT`
@@ -133,8 +133,8 @@ then renders `docs/understanding.latest.md` and `docs/graph.html` and saves a ne
 | `--offline` | No model; deterministic stand-in. |
 
 ```bash
-migration-agent analyze orders.migration --config gemini-lite.config.json --dry-run
-migration-agent analyze orders.migration --config gemini.config.json --max-usd 3
+parity analyze orders.migration --config gemini-lite.config.json --dry-run
+parity analyze orders.migration --config gemini.config.json --max-usd 3
 ```
 
 ### `render PROJECT`
@@ -157,10 +157,10 @@ Statuses: `accepted_doc` (the document is right, the code differs: re-analyse), 
 `dismissed`, `needs_reanalysis`, `deferred` (acknowledged, to be handled during the migration: no re-analysis, it does
 not block approval, and it is listed under `deferred_findings` in the migration contract).
 ```bash
-migration-agent resolve orders.migration F-0001 --status accepted_doc --note "Discount is 25% from 10 items"
-migration-agent resolve orders.migration --comment RULE-0003 --note "Check the VIP exception in pricing.py"
-migration-agent resolve orders.migration F-0004 --status dismissed --no-reanalyze
-migration-agent resolve orders.migration F-0005 --status deferred --note "Decide with the payments team"
+parity resolve orders.migration F-0001 --status accepted_doc --note "Discount is 25% from 10 items"
+parity resolve orders.migration --comment RULE-0003 --note "Check the VIP exception in pricing.py"
+parity resolve orders.migration F-0004 --status dismissed --no-reanalyze
+parity resolve orders.migration F-0005 --status deferred --note "Decide with the payments team"
 ```
 Your note is passed to the model as untrusted *data*; every resulting claim still needs verbatim code evidence.
 If the budget stops a re-analysis, nothing is written.
@@ -173,8 +173,8 @@ risk; the document shows `Migration decision: preserve (default)`, `preserve`, o
 as quirk or suspected bug in the latest graph accept a decision. Decisions are keyed by stable ID and survive
 re-analysis.
 ```bash
-migration-agent decide orders.migration RULE-0007 --fix --note "Refund window is off by one day"
-migration-agent decide orders.migration COMP-0012 --preserve --note "Clients depend on the trailing slash"
+parity decide orders.migration RULE-0007 --fix --note "Refund window is off by one day"
+parity decide orders.migration COMP-0012 --preserve --note "Clients depend on the trailing slash"
 ```
 
 ### `status PROJECT`
@@ -200,7 +200,7 @@ The approval pins the graph (sha256 of `graph/snapshots/vNNN.json`) and the docu
 later snapshot (analyze, resolve, render) or document change (for example a changed decision) makes the approval
 `stale`; run `status` and `approve` again.
 
-`docs/migration_contract.json` (`MigrationContract` in `migration_agent.verify.models`):
+`docs/migration_contract.json` (`MigrationContract` in `parity_migrate.verify.models`):
 
 | Field | Meaning |
 |---|---|
@@ -223,7 +223,7 @@ caused each change.
 ### `audit PROJECT [--format table|json]`
 Prints the audit log with totals (calls, tokens, USD).
 ```bash
-migration-agent audit orders.migration --format json | jq '.[] | select(.status=="error")'
+parity audit orders.migration --format json | jq '.[] | select(.status=="error")'
 ```
 
 ## 5. LLM configuration
@@ -282,7 +282,7 @@ approve/reject, fit-risk decisions and mask approvals; section 9.8). Do not forw
 * **Tool sandbox.** The model only gets `read_file`, `list_dir`, `grep`, `file_stat`, jailed to `code/` (symlinks resolved,
   `..` and NUL rejected, size caps, no write/exec/network capability exists).
 * **Process guard.** An optional audit-hook tripwire blocks writes outside scratch space, process spawn and
-  non-allowlisted sockets. It is defence in depth, not a boundary (see `src/migration_agent/sandbox/README.md`).
+  non-allowlisted sockets. It is defence in depth, not a boundary (see `src/parity_migrate/sandbox/README.md`).
 * **Container boundary.** The Docker image runs non-root with a read-only root filesystem, all capabilities
   dropped, and either no network or egress only through an allowlisting proxy to the model host.
 * **Secrets.** Credential files are withheld at ingest and secret values are redacted from `code/`, reports, and user docs before they reach a prompt or `findings.json`.
@@ -356,8 +356,8 @@ Threat model: [threat-model.md](threat-model.md) section 9.
 
 ### 9.2 Prerequisites
 
-* An approved Phase 1 project: `migration-agent status PROJECT` shows `approved`, and
-  `migration-agent contract check PROJECT` prints `contract: OK`.
+* An approved Phase 1 project: `parity status PROJECT` shows `approved`, and
+  `parity contract check PROJECT` prints `contract: OK`.
 * **Docker** (engine plus CLI on `PATH`) on the machine that runs Phase 2. Rootless Docker or Podman is preferred.
 * **Images present locally.** Phase 2 never pulls images (`--pull never`, `docker build --pull=false`). Pull them
   yourself, pinned by digest where you can:
@@ -388,7 +388,7 @@ Threat model: [threat-model.md](threat-model.md) section 9.
 
 Check with:
 ```bash
-migration-agent doctor orders.migration           # contract, exec sandbox, git, budget; exit 1 if any fails
+parity doctor orders.migration           # contract, exec sandbox, git, budget; exit 1 if any fails
 ```
 `doctor` does not check that images are present or that the mirror is reachable; `harness build` reports those.
 
@@ -471,30 +471,30 @@ All writes are atomic. Every command can be re-run; the folder is the state.
 
 Every Phase 2 command that writes runs the contract gate first. If the graph was re-analysed after approval, approve
 again, or pass `--pin-contract` to work from the approved snapshot (a warning). `--accept-unmapped` accepts unmapped
-inventory items (logged in the audit). Run `migration-agent COMMAND --help` for the full option list.
+inventory items (logged in the audit). Run `parity COMMAND --help` for the full option list.
 
 **1. Check the entry gate.**
 ```bash
-migration-agent contract check orders.migration          # exit 1 on any error; lists deferred findings as blockers
-migration-agent contract schema --out contract.schema.json
-migration-agent doctor orders.migration
+parity contract check orders.migration          # exit 1 on any error; lists deferred findings as blockers
+parity contract schema --out contract.schema.json
+parity doctor orders.migration
 ```
 
 **2. Describe the target.** `target init` detects the source stack from the manifests and takes the target from
 flags. The kind is inferred (`version_upgrade`, `framework_move`, `language_move`) unless you give `--kind`; the
 strategy defaults to `in_place` for version upgrades and `strangler` otherwise.
 ```bash
-migration-agent target init orders.migration --runtime 21 --framework spring-boot@3.3 --build maven \
+parity target init orders.migration --runtime 21 --framework spring-boot@3.3 --build maven \
   --base-image eclipse-temurin:21-jre@sha256:<digest> --budget-usd 25
-migration-agent target show orders.migration             # validate and print target/target.yaml
+parity target show orders.migration             # validate and print target/target.yaml
 ```
 
 **3. Target-fit analysis.** A deterministic layer matches the libmap tables (Java 8 to 21, Spring Boot 2 to 3, Django
 3 to 5, Express to Fastify, JS to Go) against dependencies, code lines and config keys. A model layer adds risks
 whose evidence quotes must verify against `code/`; unverified risks are dropped and counted.
 ```bash
-migration-agent target fit orders.migration --max-usd 2          # or --offline: deterministic layer only
-migration-agent target resolve orders.migration RISK-0003 --status mitigate --note "Replace springfox with springdoc"
+parity target fit orders.migration --max-usd 2          # or --offline: deterministic layer only
+parity target resolve orders.migration RISK-0003 --status mitigate --note "Replace springfox with springdoc"
 ```
 Statuses: `accepted`, `mitigate`, `wont_fix`. Open high-severity risks become blockers on the slices they touch.
 
@@ -502,18 +502,18 @@ Statuses: `accepted`, `mitigate`, `wont_fix`. Open high-severity risks become bl
 shared code) first, then entry slices (endpoint groups, jobs, consumers), then bootstrap. Every in-scope node lands
 in exactly one slice. `dead_code` nodes are listed, not migrated, unless `--include-dead-code`.
 ```bash
-migration-agent plan orders.migration --dry-run          # print, write nothing
-migration-agent plan orders.migration                    # writes plan/ and slices/*/state.json (planned)
+parity plan orders.migration --dry-run          # print, write nothing
+parity plan orders.migration                    # writes plan/ and slices/*/state.json (planned)
 ```
 `--name-with-model` adds an optional naming pass; `--max-slice-tokens N` splits large slices (default 60000).
 Re-planning keeps slice ids for the same node sets.
 
 **5. Import the original source and start the legacy harness.**
 ```bash
-migration-agent harness import-source orders.migration --from-original   # or --from PATH; checked against source_hash
-migration-agent harness build orders.migration           # legacy is the default role
-migration-agent harness up orders.migration              # waits for the health check
-migration-agent harness status orders.migration
+parity harness import-source orders.migration --from-original   # or --from PATH; checked against source_hash
+parity harness build orders.migration           # legacy is the default role
+parity harness up orders.migration              # waits for the health check
+parity harness status orders.migration
 ```
 `import-source` refuses a source whose hash differs from the contract. A contract without `source_hash` needs
 `--accept-unpinned` (audited). `--force` replaces an existing `legacy_src/`.
@@ -521,11 +521,11 @@ migration-agent harness status orders.migration
 **6. Characterization tests.** `tests generate` proposes request inputs per endpoint, job, business rule, quirk and
 suspected bug. The model never writes expected values for preserved behaviour.
 ```bash
-migration-agent tests generate orders.migration --max-usd 3       # or --offline
-migration-agent tests record orders.migration --harness           # every case twice against the running legacy harness
-migration-agent tests coverage orders.migration --fail-on-gaps
-migration-agent tests mark-untestable orders.migration JOB-0002 --reason "Needs the mainframe feed" --by alice
-migration-agent tests approve-spec orders.migration CT-0014 --by alice     # fix-decision cases only
+parity tests generate orders.migration --max-usd 3       # or --offline
+parity tests record orders.migration --harness           # every case twice against the running legacy harness
+parity tests coverage orders.migration --fail-on-gaps
+parity tests mark-untestable orders.migration JOB-0002 --reason "Needs the mainframe feed" --by alice
+parity tests approve-spec orders.migration CT-0014 --by alice     # fix-decision cases only
 ```
 Recording runs each case twice. Fields that differ between the two runs become masks; secret-looking values are
 masked too. Outcomes: `recorded`, `harness_issue` (no response; fix the harness), `unstable` (status differs),
@@ -538,9 +538,9 @@ build in the sandbox, unit tests and the characterization suite against the new 
 then `awaiting_human`. Failures go back into a fix iteration until `--max-iterations` (default 4), then the slice is
 `blocked` with a reason.
 ```bash
-migration-agent generate orders.migration --all --dry-run         # per-slice token and USD estimate
-migration-agent generate orders.migration --slice SLICE-0001 --max-usd 5
-migration-agent generate orders.migration --all --max-usd 20 --max-usd-per-slice 4
+parity generate orders.migration --all --dry-run         # per-slice token and USD estimate
+parity generate orders.migration --slice SLICE-0001 --max-usd 5
+parity generate orders.migration --all --max-usd 20 --max-usd-per-slice 4
 ```
 The loop refuses blocked slices, slices with unaccepted blockers, slices whose dependencies are not approved, entry
 slices without recorded cases, and a `target_code/` with uncommitted edits. For `in_place` version upgrades, the
@@ -552,10 +552,10 @@ call is lost.
 classifies each difference as `match`, `noise`, `intended_divergence`, `regression` or `unknown`. Exit 1 when any
 regression or unknown diff remains.
 ```bash
-migration-agent harness build orders.migration --new && migration-agent harness up orders.migration --new
-migration-agent equivalence orders.migration --slice SLICE-0001             # in-network against both harnesses
-migration-agent equivalence orders.migration --all --triage --max-usd 1     # cheap model explains unknown diffs
-migration-agent equivalence orders.migration --slice SLICE-0001 --legacy-url http://127.0.0.1:8080 --new-url http://127.0.0.1:8081
+parity harness build orders.migration --new && parity harness up orders.migration --new
+parity equivalence orders.migration --slice SLICE-0001             # in-network against both harnesses
+parity equivalence orders.migration --all --triage --max-usd 1     # cheap model explains unknown diffs
+parity equivalence orders.migration --slice SLICE-0001 --legacy-url http://127.0.0.1:8080 --new-url http://127.0.0.1:8081
 ```
 `equivalence PROJECT ...` is the same as `equivalence run PROJECT ...`. In harness mode both services are restarted
 first, which re-runs the seeds, so each starts from the same data (`--no-reset` keeps their state; with
@@ -571,7 +571,7 @@ of mutations to each recorded HTTP case (empty, long, numeric-edge and unicode q
 a wrong type, empty or removed; another body shape; an unknown field or parameter), asks legacy twice so its own noise
 is masked, and reports where the new service answers differently.
 ```bash
-migration-agent equivalence fuzz orders.migration --slice SLICE-0001 --max-variants 8   # exit 1 on a high-severity divergence
+parity equivalence fuzz orders.migration --slice SLICE-0001 --max-variants 8   # exit 1 on a high-severity divergence
 ```
 Results: `equivalence/fuzz/SLICE-NNNN.json` and `equivalence/report.md`. A divergence is `high` when one side answers
 5xx and the other does not, or the status class differs. It never blocks `approve-slice`; `cutover` lists it as a
@@ -582,11 +582,11 @@ reached.
 
 **10. Config and schema.**
 ```bash
-migration-agent config map orders.migration              # writes config/ and generated files in target_code/
-migration-agent config set orders.migration DB_URL --status renamed --target-key spring.datasource.url
-migration-agent config set orders.migration LEGACY_FLAG --status dropped --reason "Feature removed in 2019"
-migration-agent config schema-check orders.migration     # sandbox; --static compares Phase 1 facts without Docker
-migration-agent config schema-blockers orders.migration
+parity config map orders.migration              # writes config/ and generated files in target_code/
+parity config set orders.migration DB_URL --status renamed --target-key spring.datasource.url
+parity config set orders.migration LEGACY_FLAG --status dropped --reason "Feature removed in 2019"
+parity config schema-check orders.migration     # sandbox; --static compares Phase 1 facts without Docker
+parity config schema-blockers orders.migration
 ```
 Secrets map to references only (`${NAME}` or a required env var) plus a deploy-time checklist; values are never
 read or written. The default is no schema change (decision P2-Q10). Declared changes go in
@@ -595,11 +595,11 @@ read or written. The default is no schema change (decision P2-Q10). Declared cha
 **11. Strangler routing** (strategy `strangler`). The composite harness runs legacy, new and a router on one
 internal network. Flipping a slice sends its endpoints to the new service; everything else stays on legacy.
 ```bash
-migration-agent harness build orders.migration --composite && migration-agent harness up orders.migration --composite
-migration-agent harness flip orders.migration SLICE-0003 --by alice --reason "approved"
-migration-agent harness routes orders.migration
-migration-agent equivalence composite orders.migration
-migration-agent harness unflip orders.migration SLICE-0003 --by alice --reason "rollback test"
+parity harness build orders.migration --composite && parity harness up orders.migration --composite
+parity harness flip orders.migration SLICE-0003 --by alice --reason "approved"
+parity harness routes orders.migration
+parity equivalence composite orders.migration
+parity harness unflip orders.migration SLICE-0003 --by alice --reason "rollback test"
 ```
 Only approved slices can be flipped. `--force-for-testing` flips an unapproved slice for sandbox testing and is
 audited. When the composite is up, `flip` and `unflip` run the composite suite afterwards (`--no-verify` skips it).
@@ -608,16 +608,16 @@ With `db.engine` `sqlite` or `none`, each service keeps its own private database
 
 **12. Cut-over.**
 ```bash
-migration-agent cutover orders.migration                 # readiness + cutover/plan.md; exit 1 while not ready
-migration-agent cutover orders.migration --approve --by alice --note "Go for Tuesday"
+parity cutover orders.migration                 # readiness + cutover/plan.md; exit 1 while not ready
+parity cutover orders.migration --approve --by alice --note "Go for Tuesday"
 ```
 
 **13. Metrics.**
 ```bash
-migration-agent metrics orders.migration                 # or --format json
+parity metrics orders.migration                 # or --format json
 ```
 
-**Harness clean-up:** `migration-agent harness down PROJECT [--legacy|--new|--composite]`.
+**Harness clean-up:** `parity harness down PROJECT [--legacy|--new|--composite]`.
 
 ### 9.6 Blockers
 
@@ -625,41 +625,41 @@ A slice cannot be generated or approved while it has open blockers. `approve-sli
 
 | Blocker | Where it comes from | How to clear it |
 |---|---|---|
-| `F-NNNN` deferred Verifier finding | contract `deferred_findings` touching the slice's items | `migration-agent slice accept-observed PROJECT SLICE-NNNN F-NNNN --by NAME --note "..."` (migrate as observed), or resolve it in Phase 1 and approve again |
-| `RISK-NNNN` | open high-severity fit risk on the slice | `migration-agent target resolve PROJECT RISK-NNNN --status ... --note ...` |
-| Open `legacy_bug` decision | equivalence triage | `migration-agent slice decide PROJECT SLICE-NNNN EQ-NNNN --choice preserve|fix --by NAME` |
+| `F-NNNN` deferred Verifier finding | contract `deferred_findings` touching the slice's items | `parity slice accept-observed PROJECT SLICE-NNNN F-NNNN --by NAME --note "..."` (migrate as observed), or resolve it in Phase 1 and approve again |
+| `RISK-NNNN` | open high-severity fit risk on the slice | `parity target resolve PROJECT RISK-NNNN --status ... --note ...` |
+| Open `legacy_bug` decision | equivalence triage | `parity slice decide PROJECT SLICE-NNNN EQ-NNNN --choice preserve|fix --by NAME` |
 | Open `spec_ambiguity` question (slice `blocked`) | equivalence triage | `slice decide ... --choice answered --by NAME --note "..."`; the slice returns to its previous status once no question is open |
-| Pending fix request | equivalence regression or `new_bug` | `migration-agent generate PROJECT --slice SLICE-NNNN`, then `equivalence` again |
-| Unapproved mask proposal | `harness_issue` triage | `migration-agent equivalence approve-mask PROJECT EQ-NNNN --by NAME --reason "..."` (applies from the next run) |
-| Unapproved specified expectation | fix-decision case | `migration-agent tests approve-spec PROJECT CT-NNNN --by NAME` |
+| Pending fix request | equivalence regression or `new_bug` | `parity generate PROJECT --slice SLICE-NNNN`, then `equivalence` again |
+| Unapproved mask proposal | `harness_issue` triage | `parity equivalence approve-mask PROJECT EQ-NNNN --by NAME --reason "..."` (applies from the next run) |
+| Unapproved specified expectation | fix-decision case | `parity tests approve-spec PROJECT CT-NNNN --by NAME` |
 | Schema blind spot | stored procedure / trigger not in the repo, or a `blind_spots:` table | supply a schema export (`schema_export:` in `data/schema_changes.yaml`) or list it under `accepted:` |
 
 ### 9.7 Slice approval and human edits
 
-`migration-agent approve-slice PROJECT SLICE-NNNN --by NAME [--note TEXT]` is refused unless: the contract gate
+`parity approve-slice PROJECT SLICE-NNNN --by NAME [--note TEXT]` is refused unless: the contract gate
 passes; the slice is `awaiting_human`; the latest build is green; the latest suite is green except approved intended
 divergences; the latest equivalence report has no `regression` or `unknown` diff; `target_code` HEAD has not changed
 since that equivalence run; all blockers are cleared. On success it writes `slices/SLICE-NNNN/approval.json` (who,
 when, commit, report hashes) and tags `slice/SLICE-NNNN/approved` in `target_code/`.
-`migration-agent reject-slice PROJECT SLICE-NNNN --by NAME --reason TEXT` rejects a slice awaiting review.
+`parity reject-slice PROJECT SLICE-NNNN --by NAME --reason TEXT` rejects a slice awaiting review.
 
 You may edit `target_code/` yourself and commit with git. A commit after the equivalence run (yours or the agent's)
 makes approval wait for a new equivalence run. The agent never overwrites uncommitted edits: `generate` refuses a
 dirty tree. Human commits count in the human-edit metric.
 
 Reviewer findings: mark each finding the reviewer raised as a real problem or as noise with
-`migration-agent slice review-finding PROJECT SLICE-NNNN K:I (--accept|--dismiss) --by NAME [--note T]` (`K` is the
+`parity slice review-finding PROJECT SLICE-NNNN K:I (--accept|--dismiss) --by NAME [--note T]` (`K` is the
 iteration, `I` the finding's position; the Slice tab has the same buttons). Your verdicts are stored in
 `slices/SLICE-NNNN/review_marks.json` and are what `metrics` uses for reviewer precision.
 
-Comments: `migration-agent slice comment PROJECT ITEM_ID --text "..." [--file F --line N] [--by NAME]`, where
+Comments: `parity slice comment PROJECT ITEM_ID --text "..." [--file F --line N] [--by NAME]`, where
 `ITEM_ID` is a `SLICE-`, `CT-`, `EQ-`, `RISK-` or graph id and `--file` a `target_code`-relative path.
-`migration-agent generate PROJECT --slice SLICE-NNNN --from-comments` runs a fix iteration with the unprocessed
+`parity generate PROJECT --slice SLICE-NNNN --from-comments` runs a fix iteration with the unprocessed
 comments and reopens `awaiting_human`, `rejected` or `approved` slices.
 
 ### 9.8 Review UI for Phase 2
 
-`migration-agent review PROJECT` shows extra tabs once Phase 2 files exist (`target/fit_report.json`,
+`parity review PROJECT` shows extra tabs once Phase 2 files exist (`target/fit_report.json`,
 `plan/migration_plan.json` or `slices/`): **Target fit** (risks, resolve), **Plan** (slices, status, estimate,
 equivalence %), **Slice** (state, iterations, build and test results, git diff, review findings, equivalence diffs,
 blockers, approve and reject buttons, mask approvals, Accept/Dismiss buttons on each reviewer finding), **Cut-over**
@@ -703,7 +703,7 @@ findings you marked that you accepted (`slice review-finding`, or the Slice tab)
 
 Phase 2 runs only from the CLI on a machine you control (decision P2-Q13). The hosted worker in `backend/` runs only
 the Phase 1 stages (ingest, extract, analyze, verify, resolve) and must not run Phase 2 exec: it holds database
-credentials and is not an isolated job runner. `migration_agent.service.run_stage` exposes Phase 2 stages for
+credentials and is not an isolated job runner. `parity_migrate.service.run_stage` exposes Phase 2 stages for
 self-hosted integrations only ([platform-contract.md](platform-contract.md) section 2).
 
 ### 9.12 Troubleshooting

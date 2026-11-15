@@ -2,9 +2,9 @@ import json
 
 import pytest
 
-from migration_agent.audit import AuditLog, read_audit
-from migration_agent.llm.base import BudgetExceeded
-from migration_agent.llm.litellm_client import Budget, LiteLLMClient, LLMConfig, estimate_cost
+from parity_migrate.audit import AuditLog, read_audit
+from parity_migrate.llm.base import BudgetExceeded
+from parity_migrate.llm.litellm_client import Budget, LiteLLMClient, LLMConfig, estimate_cost
 
 
 class Err(Exception):

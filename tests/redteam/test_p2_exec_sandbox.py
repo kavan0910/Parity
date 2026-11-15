@@ -10,9 +10,9 @@ from pydantic import ValidationError
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from migration_agent.migrate.exec.policy import PolicyViolation, check_job, scan_argv, scan_job  # noqa: E402
-from migration_agent.migrate.models import ExecJob, Limits, Mount  # noqa: E402
-from migration_agent.project import Project  # noqa: E402
+from parity_migrate.migrate.exec.policy import PolicyViolation, check_job, scan_argv, scan_job  # noqa: E402
+from parity_migrate.migrate.models import ExecJob, Limits, Mount  # noqa: E402
+from parity_migrate.project import Project  # noqa: E402
 
 from p2_exec_helpers import FakeDocker  # noqa: E402
 

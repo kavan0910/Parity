@@ -80,8 +80,8 @@ def generate_repo(root: Path, n_files: int = 2400, *, per_pkg: int = 40, cross: 
 
 def make_project(tmp: Path, n_files: int, name: str = "big", **kw):
     """init + ingest + extract a synthetic repo; returns (Project, source_dir)."""
-    from migration_agent.pipeline import run_extract, run_ingest
-    from migration_agent.project import Project
+    from parity_migrate.pipeline import run_extract, run_ingest
+    from parity_migrate.project import Project
     src = Path(tmp) / f"{name}-src"
     generate_repo(src, n_files, **kw)
     proj = Project.init(Path(tmp) / f"{name}.migration", str(src), name)

@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 
-from migration_agent.evalharness import (
+from parity_migrate.evalharness import (
     CATEGORIES, EVAL_REPOS, compare, expected_evidence, check_evidence, load_expected, score,
 )
 
@@ -39,7 +39,7 @@ def test_every_expected_evidence_is_real(repo):
 
 @pytest.mark.parametrize("repo", REPOS)
 def test_expected_edges_reference_expected_nodes(repo):
-    from migration_agent.evalharness import node_key
+    from parity_migrate.evalharness import node_key
     exp = load_expected(repo)
     keys = {node_key(n) for c in ("components", "endpoints", "entities") for n in exp[c]}
     for e in exp["edges"]:

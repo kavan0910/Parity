@@ -1,8 +1,8 @@
 import pytest
 
-from migration_agent.analyze.coverage import CoverageIncomplete, assert_complete, check_coverage
-from migration_agent.graph.models import Graph, Node
-from migration_agent.pipeline import Inventory, InventoryItem
+from parity_migrate.analyze.coverage import CoverageIncomplete, assert_complete, check_coverage
+from parity_migrate.graph.models import Graph, Node
+from parity_migrate.pipeline import Inventory, InventoryItem
 
 
 def inv(*ids):

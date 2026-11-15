@@ -5,13 +5,13 @@ import httpx
 import litellm
 import pytest
 
-from migration_agent.analyze.runner import run_analyze
-from migration_agent.cli import main
-from migration_agent.llm.base import BudgetExceeded, LLMAuthError, QuotaExhausted
-from migration_agent.llm.litellm_client import LiteLLMClient, LLMConfig
-from migration_agent.llm.offline import OfflineLLM
-from migration_agent.pipeline import run_extract
-from migration_agent.project import Project
+from parity_migrate.analyze.runner import run_analyze
+from parity_migrate.cli import main
+from parity_migrate.llm.base import BudgetExceeded, LLMAuthError, QuotaExhausted
+from parity_migrate.llm.litellm_client import LiteLLMClient, LLMConfig
+from parity_migrate.llm.offline import OfflineLLM
+from parity_migrate.pipeline import run_extract
+from parity_migrate.project import Project
 
 REQ = httpx.Request("POST", "https://api.example.com/v1")
 
@@ -221,7 +221,7 @@ def test_failed_chunk_is_recorded_run_continues_and_rerun_retries_only_it(tmp_pa
     out2 = run_analyze(proj, llm2, context_tokens=CTX)
     assert len(llm2.calls) == 2 and out2["failed_chunks"] == 0 and out2["reused_chunks"] == 3
     assert json.loads((proj.root / "checkpoint" / "failures.json").read_text()) == {}
-    assert {n.name for n in __import__("migration_agent.graph", fromlist=["x"]).load_latest(proj.graph_dir).nodes} >= {"b/b.py"}
+    assert {n.name for n in __import__("parity_migrate.graph", fromlist=["x"]).load_latest(proj.graph_dir).nodes} >= {"b/b.py"}
 
 
 def test_business_rules_failure_keeps_the_extract_result(tmp_path):
@@ -239,7 +239,7 @@ def test_malformed_output_twice_is_a_recorded_failure_not_a_crash(tmp_path):
     class Garbage(OfflineLLM):
         def complete(self, **kw):
             if kw["task"] == "chunk_extract" and "CH-0003" in kw["prompt"]:
-                from migration_agent.llm.base import LLMResponse
+                from parity_migrate.llm.base import LLMResponse
                 return LLMResponse(text="[1,2,", model="x")
             return super().complete(**kw)
 
@@ -274,9 +274,9 @@ def test_failures_with_workers_do_not_lose_other_chunks(tmp_path):
 
 def test_cross_ref_failure_does_not_crash_the_run(tmp_path, monkeypatch):
     proj = make(tmp_path)
-    from migration_agent.analyze import runner
-    from migration_agent.analyze.patch import NodeRef, UnresolvedRef
-    from migration_agent.analyze.merger import MergeResult, merge_patches as real
+    from parity_migrate.analyze import runner
+    from parity_migrate.analyze.patch import NodeRef, UnresolvedRef
+    from parity_migrate.analyze.merger import MergeResult, merge_patches as real
 
     def fake_merge(patches, reg, base=None):
         r = real(patches, reg, base=base)
@@ -297,7 +297,7 @@ def test_cross_ref_failure_does_not_crash_the_run(tmp_path, monkeypatch):
 def test_cli_reports_failures(tmp_path, monkeypatch):
     from click.testing import CliRunner
     proj = make(tmp_path)
-    from migration_agent.analyze import runner
+    from parity_migrate.analyze import runner
     real = runner.run_analyze
     monkeypatch.setattr(runner, "run_analyze",
                         lambda p, llm, **kw: real(p, Flaky(bad=["CH-0001"], exc=lambda: timeout()), **{**kw, "context_tokens": CTX}))

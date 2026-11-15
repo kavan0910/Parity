@@ -1,5 +1,5 @@
 [project]
-name = "migration-agent"
+name = "parity-migrate"
 version = "0.2.0"
 description = "Migrate a legacy app to the newest version of its stack or to a different technology, and prove the new app behaves like the old one: evidence-backed understanding, human approval, sandboxed slice-by-slice migration and equivalence checks"
 readme = "README.md"
@@ -28,7 +28,8 @@ dev = ["pytest>=8"]
 llm = ["litellm>=1.40"]
 
 [project.scripts]
-migration-agent = "migration_agent.cli:main"
+parity = "parity_migrate.cli:main"
+migration-agent = "parity_migrate.cli:main"  # deprecated alias, kept for existing scripts
 
 [project.urls]
 Documentation = "https://github.com/kavan0910/migration-agent/tree/main/docs"
@@ -38,7 +39,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/migration_agent"]
+packages = ["src/parity_migrate"]
 # Non-Python package data (analyze/prompts/*.md, verify/prompts/*.md, templates/*.j2,
 # sandbox/README.md, migrate/prompts/*.md, migrate/knowledge/libmap/*.yaml) is included
 # automatically because it lives inside the package (and is not git-ignored);

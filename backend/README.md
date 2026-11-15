@@ -14,7 +14,7 @@ app/safety.py        SSRF guard, safe archive extraction, filename sanitising
 app/gitfetch.py      hardened shallow clone (worker/estimate side)
 app/worker.py        python -m app.worker
 app/jobs.py          queue (FOR UPDATE SKIP LOCKED on Postgres, atomic UPDATE..RETURNING on SQLite)
-app/engine.py        adapter to migration_agent.service (lazy import, injectable for tests)
+app/engine.py        adapter to parity_migrate.service (lazy import, injectable for tests)
 app/profiles.py      model_profile -> engine config (the only mapping), server-side API key injection
 app/billing.py       BillingProvider, NoBilling, plans/entitlements, can_start_run
 app/storage.py       ObjectStore, LocalStore, S3Store skeleton
@@ -27,7 +27,7 @@ tests/               pytest (no network, no LLM)
 ```bash
 cd backend
 python3 -m venv .venv && .venv/bin/pip install -e '.[test]'
-.venv/bin/pip install -e ..            # the engine (migration_agent.service); needed by the worker
+.venv/bin/pip install -e ..            # the engine (parity_migrate.service); needed by the worker
 export DATABASE_URL=sqlite:///./dev.db STORE_DIR=./data/store JWT_SECRET=$(openssl rand -hex 32)
 export MODEL_API_KEY=...               # server-side only; omit and set ENGINE_OFFLINE=1 for a model-free demo
 .venv/bin/alembic upgrade head

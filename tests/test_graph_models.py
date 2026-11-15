@@ -1,7 +1,7 @@
 import pytest
 from pydantic import ValidationError
 
-from migration_agent.graph.models import Edge, Evidence, Graph, Node
+from parity_migrate.graph.models import Edge, Evidence, Graph, Node
 
 STRONG = Evidence(file="a.py", line_start=1, line_end=3, symbol="f", quote="def f")
 
@@ -51,6 +51,6 @@ def test_graph_integrity():
 
 
 def test_all_node_types_have_prefix():
-    from migration_agent.graph.models import ID_PREFIX
+    from parity_migrate.graph.models import ID_PREFIX
     for t, p in ID_PREFIX.items():
         assert node(f"{p}-0001", t).type == t

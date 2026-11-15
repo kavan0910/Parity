@@ -2,7 +2,7 @@ import json
 import re
 
 from e2e_replay import UNVERIFIABLE_QUOTE
-from migration_agent.verify.models import FindingsFile
+from parity_migrate.verify.models import FindingsFile
 
 
 def findings(run) -> FindingsFile:
@@ -91,7 +91,7 @@ def test_verifier_without_user_docs_returns_empty(express, tmp_path):
     # separate copy so we do not disturb the shared run
     import shutil
     from click.testing import CliRunner
-    from migration_agent.cli import main
+    from parity_migrate.cli import main
     from e2e_support import register
     root = tmp_path / "p"
     shutil.copytree(express.root, root)

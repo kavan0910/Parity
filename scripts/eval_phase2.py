@@ -16,7 +16,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
-from migration_agent.evalharness import EVAL_TARGETS, MigrationReport, run_phase2_offline  # noqa: E402
+from parity_migrate.evalharness import EVAL_TARGETS, MigrationReport, run_phase2_offline  # noqa: E402
 
 
 def main(argv: list[str] | None = None) -> int:

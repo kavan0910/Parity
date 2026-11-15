@@ -236,7 +236,7 @@ main>h1{display:none}
 <p>Status: v1, owner decisions recorded in section 14 (all recommendations accepted).
 Grounding: <code>README.md</code>, <code>docs/architecture.md</code>, <code>docs/product-architecture.md</code>, <code>docs/phase0-results.md</code>,
 <code>docs/threat-model.md</code>, <code>eval/README.md</code>, <code>CHANGELOG.md</code>, <code>.lavish/migration-agent-grill.html</code> (Q1-Q18), and the code
-under <code>src/migration_agent/</code>. Code is cited as <code>path:line</code>. <strong>[Gap]</strong> marks something that does not exist yet or is
+under <code>src/parity_migrate/</code>. Code is cited as <code>path:line</code>. <strong>[Gap]</strong> marks something that does not exist yet or is
 unproven. <strong>[Rec]</strong> is my recommendation.</p>
 <h2 id="implementation-status">Implementation status</h2>
 <p>The plan below is the design as agreed before coding. The code now implements M0 to M7. Module map and public
@@ -472,7 +472,7 @@ explained by an explicit <code>fix</code> decision or approved by a human.</p>
 - Multi-service or monorepo-wide migrations, UI/front-end rewrites, performance tuning beyond "no regression worse than
   a declared threshold" (optional).
 - Re-doing Phase 1. Phase 2 can raise findings back to Phase 1 (section 4.5), never edit the graph itself.</p>
-<p><strong>Entry gate</strong> (<code>migration-agent contract check</code>, must pass before any Phase 2 command writes):
+<p><strong>Entry gate</strong> (<code>parity contract check</code>, must pass before any Phase 2 command writes):
 1. <code>docs/migration_contract.json</code> exists, parses against its schema, <code>schema_version</code> is supported.
 2. <code>graph_sha256</code> equals sha256 of the referenced graph snapshot file; <code>doc_sha256</code> equals the approved doc file. A
    mismatch means someone re-analysed after approval: <strong>stale</strong>, refuse.
@@ -495,7 +495,7 @@ explained by an explicit <code>fix</code> decision or approved by a human.</p>
 <hr />
 <h2 id="2-target-specification-and-target-fit-analysis-q15-follow-up">2. Target specification and target-fit analysis (Q15 follow-up)</h2>
 <p><strong>[Rec]</strong> A declarative <code>target/target.yaml</code>, validated by a strict pydantic model (<code>extra="forbid"</code>, same as
-<code>graph/models.py:22</code>). Written by <code>migration-agent target init</code> (interactive or flags), edited by the user, hashed into
+<code>graph/models.py:22</code>). Written by <code>parity target init</code> (interactive or flags), edited by the user, hashed into
 every later artifact.</p>
 <div class="pw"><pre><code language-yaml>schema_version: 1
 kind: version_upgrade            # version_upgrade | framework_move | language_move
@@ -528,7 +528,7 @@ equivalence:
 strategy: strangler              # strangler | big_bang (section 3)
 budget_usd: 50                   # project-level cap across all sessions
 </code></pre></div>
-<p><strong>Target-fit analysis</strong> (<code>migration-agent target fit</code>, new module <code>migrate/fit.py</code>, task <code>target_fit</code>): reads only
+<p><strong>Target-fit analysis</strong> (<code>parity target fit</code>, new module <code>migrate/fit.py</code>, task <code>target_fit</code>): reads only
 the approved doc, approved graph snapshot, <code>facts/manifests.json</code> and <code>target.yaml</code> (consistent with Q15: a separate
 step reading the approved doc). Two layers:</p>
 <ol>
@@ -601,7 +601,7 @@ state), <code>message</code> (publish to an in-sandbox broker, assert outputs). 
 executes cases against a base URL; one runner for every target. Optional target-native unit tests are generated later
 per slice as a convenience, never as the equivalence proof.</p>
 <h3 id="43-generating-cases-from-the-graph">4.3 Generating cases from the graph</h3>
-<p><code>migration-agent tests generate</code> (task <code>test_gen</code>), per slice:
+<p><code>parity tests generate</code> (task <code>test_gen</code>), per slice:
 - Inputs: the slice's endpoint/job nodes, attached <code>business_rule</code> nodes and their evidence regions (read via
   <code>ReadOnlyTools</code>), OpenAPI/proto facts (<code>extract/specs.py</code>), schema facts (<code>extract/schemas.py</code>), quirk/bug flags.
 - For each endpoint: happy path, each validation branch, each rule's boundary values, error paths, auth denied.
@@ -612,11 +612,11 @@ per slice as a convenience, never as the equivalence proof.</p>
   generated fixtures. Never from a real database.
 - <strong>Recorded traffic (optional):</strong> user drops request logs (HAR or JSONL) in <code>inputs/traffic/</code>; they go through the same
   ingest redaction (<code>ingest/secrets.py::redact_text</code>) and become <code>CT-</code> cases with <code>kind: replay</code>.</p>
-<p><code>migration-agent tests record</code> runs every case against the legacy service <strong>twice</strong> with different clocks/seeds;
+<p><code>parity tests record</code> runs every case against the legacy service <strong>twice</strong> with different clocks/seeds;
 fields that differ between the two legacy runs become automatic <code>normalize</code> masks (noise detection), then
 expected outputs are stored. Cases that fail to run on legacy are triaged: harness problem, or a real legacy bug (raise
 a finding, 4.5).</p>
-<p><code>migration-agent tests coverage</code> produces the coverage table (node -&gt; CT IDs). Gate: no in-scope endpoint/job/rule/quirk
+<p><code>parity tests coverage</code> produces the coverage table (node -&gt; CT IDs). Gate: no in-scope endpoint/job/rule/quirk
 without a test or an approved <code>untestable</code> reason. Low-confidence rules ([Gap]: nearly all of them today) get
 priority review here: the recorded behaviour either confirms them or contradicts them.</p>
 <h3 id="44-preservefix-decisions-and-deferred-findings-expectations">4.4 Preserve/fix decisions and deferred findings -&gt; expectations</h3>
@@ -708,7 +708,7 @@ Blocking findings feed the fix loop; others go to the human review page.</p>
 <li>Cache: existing <code>llm_cache/</code> key covers model/system/prompt/prompt_version, so re-running an unchanged slice is free.
   Prompt files under <code>migrate/prompts/*.md</code> with versions, like <code>analyze/prompts/</code>.</li>
 <li>Audit: every model call (existing), plus <code>exec</code> records (image digest, command, exit code, duration, log ref) and
-  slice state transitions. <code>migration-agent audit --agent codegen</code> works unchanged.</li>
+  slice state transitions. <code>parity audit --agent codegen</code> works unchanged.</li>
 </ul>
 <hr />
 <h2 id="6-execution-sandbox">6. Execution sandbox</h2>
@@ -733,7 +733,7 @@ attacker-controlled under threat actor A1, and generated code is model output un
   generated placeholders; if the legacy build genuinely needs a private registry credential, the user provides a mirror
   that serves those artifacts, never the credential.
 - Results returned as files (JUnit/JSON reports, logs capped and redacted) into <code>runs/RUN-NNNN/</code>.
-- Docker availability is a hard prerequisite; <code>migration-agent doctor</code> checks runtime, gVisor, mirror reachability.</p>
+- Docker availability is a hard prerequisite; <code>parity doctor</code> checks runtime, gVisor, mirror reachability.</p>
 <p><strong>Threat-model changes</strong> (new doc section "Phase 2 execution", T-numbers continue):</p>
 <div class="tw"><table>
 <thead>
@@ -781,7 +781,7 @@ attacker-controlled under threat actor A1, and generated code is model output un
 customer controls is the only strong answer.</p>
 <hr />
 <h2 id="7-equivalence-verification">7. Equivalence verification</h2>
-<p><code>migration-agent equivalence --slice SLICE-NNNN</code> (<code>migrate/equivalence.py</code>):
+<p><code>parity equivalence --slice SLICE-NNNN</code> (<code>migrate/equivalence.py</code>):
 1. Bring up legacy and new stacks in the sandbox, each with its own fresh DB from the same migrations and fixtures and
    the same stub server recordings (or, in strangler mode, the composite with routes flipped).
 2. Run every <code>CT-</code> case covering the slice plus all cases of earlier approved slices (regression), against both.
@@ -815,16 +815,16 @@ OpenAPI schemas, compare live), and a latency/perf comparison if <code>perf_regr
 - Comments: extend <code>CommentsFile</code> (<code>verify/models.py:67-79</code>) in a new <code>migration/comments.json</code> with <code>item_id</code> accepting
   <code>SLICE-</code>, <code>CT-</code>, <code>EQ-</code>, <code>RISK-</code> and graph IDs, plus optional <code>file</code>/<code>line</code> in <code>target_code/</code>. Redacted on write (existing
   rule).
-- <strong>Targeted regeneration</strong> (<code>migration-agent generate --slice S --from-comments</code>): only unprocessed comments for that
+- <strong>Targeted regeneration</strong> (<code>parity generate --slice S --from-comments</code>): only unprocessed comments for that
   slice go into a fix iteration, mirroring <code>review/reanalyze.py:129</code>; result shown as a diff against the previous
   iteration (Q12 pattern).
 - <strong>Human edits are first-class</strong>: the user may commit directly in <code>target_code/</code>. The slice runner detects
   non-agent commits, re-runs build/tests/equivalence and records them for the human-edit metric. The agent never
   overwrites human-authored lines without showing a diff and getting confirmation (lines tracked by commit author).
-- <strong>Approval per slice</strong>: <code>migration-agent approve-slice SLICE-NNNN</code> or a button; refused unless build green, suite
+- <strong>Approval per slice</strong>: <code>parity approve-slice SLICE-NNNN</code> or a button; refused unless build green, suite
   green (minus approved divergences), blockers resolved. Writes <code>slices/SLICE-NNNN/approval.json</code> (who, when, commit
   sha, report hashes).
-- <strong>Final cut-over approval</strong>: <code>migration-agent cutover --approve</code> after all slices approved and a full-suite run on the
+- <strong>Final cut-over approval</strong>: <code>parity cutover --approve</code> after all slices approved and a full-suite run on the
   final tree; writes <code>cutover/approval.json</code> and <code>cutover/plan.md</code> (route-flip order matching slice order, rollback per
   step, config/secret checklist, schema steps, monitoring to watch).</p>
 <hr />
@@ -839,7 +839,7 @@ strangling). Inputs: <code>data_entity</code> nodes and <code>extract/schemas.py
   touched. Data mapping specs (<code>data/mapping.yaml</code>: old column -&gt; new column, transform) get their own tests on fixtures.
 - [Gap] Stored procedures/triggers not in the repo are Phase 1 blind spots (Q13); they block any slice whose tables are
   affected until the user supplies a schema export.</p>
-<p><strong>Config.</strong> <code>migration-agent config map</code> (<code>migrate/configmap.py</code>): every <code>config</code> node (from <code>extract/config.py</code>,
+<p><strong>Config.</strong> <code>parity config map</code> (<code>migrate/configmap.py</code>): every <code>config</code> node (from <code>extract/config.py</code>,
 including <code>file</code>, <code>key</code>, <code>is_secret</code>) -&gt; target key in the target's convention (Spring <code>application.yml</code>, Django
 settings/env, Go env struct), with status <code>mapped | renamed | dropped (reason) | open</code>. Rendered as
 <code>config/config_map.md</code> and generated target config files. Spring Boot 2 -&gt; 3 renamed properties come from the
@@ -850,7 +850,7 @@ placeholder) and appear in a checklist the user fills at deploy time. Generated 
 <code>ingest/secrets.py</code> before each commit; a hit fails the slice.</p>
 <hr />
 <h2 id="10-observability-and-metrics">10. Observability and metrics</h2>
-<p>All derived from <code>audit/audit.jsonl</code> plus slice state files, so no new storage. <code>migration-agent metrics</code> (table/JSON)
+<p>All derived from <code>audit/audit.jsonl</code> plus slice state files, so no new storage. <code>parity metrics</code> (table/JSON)
 and a review-UI dashboard; also emitted as <code>usage</code>/<code>progress</code> events through <code>service.run_stage</code> for the hosted product.</p>
 <div class="tw"><table>
 <thead>
@@ -933,7 +933,7 @@ and a review-UI dashboard; also emitted as <code>usage</code>/<code>progress</co
    Fastify. These are the Phase 2 equivalent of Phase 0 and should be reported the same honest way.</p>
 <hr />
 <h2 id="12-milestones">12. Milestones</h2>
-<p>New package <code>src/migration_agent/migrate/</code> (keeps Phase 1 modules untouched), new CLI group <code>migration-agent migrate
+<p>New package <code>src/parity_migrate/migrate/</code> (keeps Phase 1 modules untouched), new CLI group <code>parity migrate
 ...</code> or top-level verbs (shown top-level for brevity). <code>ProjectMeta.schema_version</code> -&gt; 2.</p>
 <p>Project-folder additions:</p>
 <div class="pw"><pre><code>&lt;project&gt;/
@@ -969,7 +969,7 @@ and a review-UI dashboard; also emitted as <code>usage</code>/<code>progress</co
 <tr>
 <td>M0</td>
 <td>Contract gate + project v2</td>
-<td><code>migrate/contract.py</code> (reader + <code>check</code>, shared schema with Phase 1 writer), <code>project.py</code> v2 subdirs + migration of v1 folders, <code>migrate/ledger.py</code>, <code>migration-agent contract check</code>, <code>doctor</code></td>
+<td><code>migrate/contract.py</code> (reader + <code>check</code>, shared schema with Phase 1 writer), <code>project.py</code> v2 subdirs + migration of v1 folders, <code>migrate/ledger.py</code>, <code>parity contract check</code>, <code>doctor</code></td>
 <td>Stale graph/doc hash, wrong version, unmapped coverage each refused with a clear message; ledger matches audit sums; tests for all gate rules</td>
 <td>S</td>
 <td>Phase 1 approval step</td>
@@ -1035,23 +1035,23 @@ and a review-UI dashboard; also emitted as <code>usage</code>/<code>progress</co
 <p>Rough total: about 10-14 focused weeks for one engineer. M1 and M3 are the critical path and the most uncertain
 (build environments of real legacy repos are messy: missing private artifacts, old JDKs, native deps).</p>
 <p>CLI surface:</p>
-<div class="pw"><pre><code>migration-agent contract check   &lt;proj&gt; [--pin-contract]
-migration-agent doctor           &lt;proj&gt;
-migration-agent target init      &lt;proj&gt; [--kind ... --language ... --framework ...]
-migration-agent target fit       &lt;proj&gt; [--max-usd N] [--offline]
-migration-agent plan             &lt;proj&gt; [--dry-run]
-migration-agent harness build|up|down &lt;proj&gt; [--legacy|--new|--composite]
-migration-agent tests generate   &lt;proj&gt; [--slice S] [--max-usd N]
-migration-agent tests record     &lt;proj&gt; [--slice S]
-migration-agent tests coverage   &lt;proj&gt;
-migration-agent generate         &lt;proj&gt; [--slice S|--all] [--dry-run] [--from-comments] [--max-usd N] [--max-usd-per-slice N]
-migration-agent equivalence      &lt;proj&gt; [--slice S|--all]
-migration-agent config map       &lt;proj&gt;
-migration-agent review           &lt;proj&gt;          (existing command, new tabs)
-migration-agent approve-slice    &lt;proj&gt; SLICE-NNNN [--note ...]
-migration-agent cutover          &lt;proj&gt; [--approve]
-migration-agent metrics          &lt;proj&gt; [--format table|json]
-migration-agent audit            &lt;proj&gt;          (existing)
+<div class="pw"><pre><code>parity contract check   &lt;proj&gt; [--pin-contract]
+parity doctor           &lt;proj&gt;
+parity target init      &lt;proj&gt; [--kind ... --language ... --framework ...]
+parity target fit       &lt;proj&gt; [--max-usd N] [--offline]
+parity plan             &lt;proj&gt; [--dry-run]
+parity harness build|up|down &lt;proj&gt; [--legacy|--new|--composite]
+parity tests generate   &lt;proj&gt; [--slice S] [--max-usd N]
+parity tests record     &lt;proj&gt; [--slice S]
+parity tests coverage   &lt;proj&gt;
+parity generate         &lt;proj&gt; [--slice S|--all] [--dry-run] [--from-comments] [--max-usd N] [--max-usd-per-slice N]
+parity equivalence      &lt;proj&gt; [--slice S|--all]
+parity config map       &lt;proj&gt;
+parity review           &lt;proj&gt;          (existing command, new tabs)
+parity approve-slice    &lt;proj&gt; SLICE-NNNN [--note ...]
+parity cutover          &lt;proj&gt; [--approve]
+parity metrics          &lt;proj&gt; [--format table|json]
+parity audit            &lt;proj&gt;          (existing)
 </code></pre></div>
 <hr />
 <h2 id="13-risks-and-mitigations">13. Risks and mitigations</h2>
@@ -1097,7 +1097,7 @@ migration-agent audit            &lt;proj&gt;          (existing)
 </tr>
 <tr>
 <td>Contract drift (legacy keeps changing during a multi-week migration)</td>
-<td><code>source_hash</code> check; <code>migration-agent contract check</code> on every command; incremental Phase 1 re-analysis (<code>analyze/incremental.py</code>) + new contract version, then re-plan only affected slices</td>
+<td><code>source_hash</code> check; <code>parity contract check</code> on every command; incremental Phase 1 re-analysis (<code>analyze/incremental.py</code>) + new contract version, then re-plan only affected slices</td>
 </tr>
 <tr>
 <td>Strangler mode with shared DB hides schema coupling</td>

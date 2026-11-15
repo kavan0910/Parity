@@ -1,7 +1,7 @@
 import json
 from pathlib import Path
 
-from migration_agent.extract.manifests import ManifestFacts, parse_manifests, write_manifests
+from parity_migrate.extract.manifests import ManifestFacts, parse_manifests, write_manifests
 
 FIX = Path(__file__).parent / "fixtures" / "manifests"
 

@@ -14,8 +14,8 @@ from pathlib import Path
 import pytest
 from click.testing import CliRunner
 
-from migration_agent.cli import main
-from migration_agent.llm.litellm_client import LLMConfig, LiteLLMClient
+from parity_migrate.cli import main
+from parity_migrate.llm.litellm_client import LLMConfig, LiteLLMClient
 
 from rt_helpers import RecordingTransport
 
@@ -85,7 +85,7 @@ def spy(monkeypatch):
     monkeypatch.setattr(subprocess, "Popen", popen)
     monkeypatch.setattr(urllib.request, "urlopen", urlopen)
     # the offline path must never even construct the LLM transport
-    import migration_agent.llm.litellm_client as lc
+    import parity_migrate.llm.litellm_client as lc
     monkeypatch.setattr(lc, "_default_transport", lambda: (_ for _ in ()).throw(AssertionError("LiteLLM transport created offline")))
     for k in ("ANTHROPIC_API_KEY", "GEMINI_API_KEY", "GOOGLE_API_KEY", "OPENAI_API_KEY"):
         monkeypatch.delenv(k, raising=False)
@@ -121,15 +121,15 @@ def test_offline_pipeline_on_hostile_sources_still_no_network(spy, tmp_path, mk)
 def test_archive_ingest_opens_no_connections(spy, tmp_path, mk):
     z = mk.make_nested_zip(tmp_path / "n.zip")
     t = mk.make_tar(tmp_path / "t.tar.gz", [dict(name="a.py", data=b"x=1\n")])
-    from migration_agent.ingest import ingest
+    from parity_migrate.ingest import ingest
     ingest(str(z), tmp_path / "c1")
     ingest(str(t), tmp_path / "c2")
     assert spy.attempts == [] and spy.spawned == []
 
 
 def test_review_server_only_talks_to_loopback(spy, tmp_path):
-    from migration_agent.project import Project
-    from migration_agent.review_ui.server import serve
+    from parity_migrate.project import Project
+    from parity_migrate.review_ui.server import serve
     p = Project.init(tmp_path / "p", source="s")
     server, url = serve(p.root)
     try:
@@ -146,7 +146,7 @@ def test_review_server_only_talks_to_loopback(spy, tmp_path):
 
 def test_git_clone_is_the_only_ingest_network_path_and_is_gated(tmp_path, monkeypatch):
     """Only a git URL can make ingest touch the network; local sources never invoke git."""
-    from migration_agent import ingest as ing
+    from parity_migrate import ingest as ing
     called = []
     monkeypatch.setattr(ing.subprocess, "run", lambda *a, **k: called.append(a[0]) or (_ for _ in ()).throw(AssertionError))
     d = tmp_path / "src"
@@ -172,7 +172,7 @@ def test_llm_requests_go_only_through_the_injected_transport(tmp_path):
 
 def test_default_transport_is_litellm_completion_only():
     litellm = pytest.importorskip("litellm")
-    from migration_agent.llm.litellm_client import _default_transport
+    from parity_migrate.llm.litellm_client import _default_transport
     assert _default_transport() is litellm.completion
 
 
@@ -188,7 +188,7 @@ def test_cached_responses_make_no_second_request(tmp_path):
 def test_process_guard_blocks_non_allowlisted_destinations(tmp_path):
     code = textwrap.dedent("""
         import socket, sys
-        from migration_agent.sandbox.guard import enforce_readonly_process, SandboxPolicy
+        from parity_migrate.sandbox.guard import enforce_readonly_process, SandboxPolicy
         enforce_readonly_process(SandboxPolicy(allowed_hosts=["127.0.0.1"], write_dirs=[]))
         res = {}
         for name, host in (("blocked", "203.0.113.7"), ("allowed", "127.0.0.1")):

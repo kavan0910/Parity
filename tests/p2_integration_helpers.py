@@ -5,8 +5,8 @@ from __future__ import annotations
 import subprocess
 import sys
 
-from migration_agent.migrate import exec as p2exec
-from migration_agent.migrate import harness as H
+from parity_migrate.migrate import exec as p2exec
+from parity_migrate.migrate import harness as H
 
 from p2_exec_helpers import IMG_ID, FakeDocker
 

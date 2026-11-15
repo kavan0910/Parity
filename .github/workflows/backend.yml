@@ -22,7 +22,7 @@ jobs:
         with:
           python-version: "3.12"
           cache: pip
-      # Engine first (backend imports migration_agent.service), then backend with its dev extras.
+      # Engine first (backend imports parity_migrate.service), then backend with its dev extras.
       - run: pip install -e "..[llm]" -e ".[dev]"
       - name: Lint
         run: ruff check . && ruff format --check .

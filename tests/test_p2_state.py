@@ -3,14 +3,14 @@ import json
 
 import pytest
 
-from migration_agent.audit import read_audit
-from migration_agent.migrate.models import SliceState
-from migration_agent.migrate.paths import Phase2Layout
-from migration_agent.migrate.state import (
+from parity_migrate.audit import read_audit
+from parity_migrate.migrate.models import SliceState
+from parity_migrate.migrate.paths import Phase2Layout
+from parity_migrate.migrate.state import (
     IllegalTransition, allowed_next, apply_transition, atomic_write_json, atomic_write_text, load_state, read_json,
     sha256_file, transition,
 )
-from migration_agent.project import Project
+from parity_migrate.project import Project
 
 S = "SLICE-0001"
 HAPPY = ["tests_recorded", "generating", "built", "tests_passing", "reviewed", "awaiting_human", "approved"]

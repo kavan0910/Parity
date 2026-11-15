@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from migration_agent.migrate import cutover, exec as p2exec, harness as H, supplychain as sc
+from parity_migrate.migrate import cutover, exec as p2exec, harness as H, supplychain as sc
 
 from p2_exec_helpers import FakeDocker
 from phase2_helpers import approved_project

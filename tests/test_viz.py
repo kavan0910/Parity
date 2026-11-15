@@ -6,8 +6,8 @@ from pathlib import Path
 
 import pytest
 
-from migration_agent.graph.models import ID_PREFIX, Edge, Evidence, Graph, Node
-from migration_agent.viz.graph_html import render_graph_html, write_graph_html
+from parity_migrate.graph.models import ID_PREFIX, Edge, Evidence, Graph, Node
+from parity_migrate.viz.graph_html import render_graph_html, write_graph_html
 
 STRONG = [
     Evidence(file="src/routes/users.js", line_start=12, line_end=20, symbol="getUser", quote="router.get('/users/:id', ...)"),

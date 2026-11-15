@@ -8,11 +8,11 @@ from pathlib import Path
 
 import pytest
 
-from migration_agent.evalharness import (
+from parity_migrate.evalharness import (
     EVAL_TARGETS, MigrationReport, compare_migration, load_expected, load_pair, run_phase2_offline, scan_canaries,
     score_migration, validate_pair,
 )
-from migration_agent.migrate.models import CharacterizationCase, TargetSpec
+from parity_migrate.migrate.models import CharacterizationCase, TargetSpec
 
 PAIRS = ["spring-lite__java21-boot3", "django-lite__django5", "express-crud__fastify-ts"]
 ROOT = Path(__file__).resolve().parents[1]
@@ -208,9 +208,9 @@ def test_runner_script_exit_codes(tmp_path):
 
 def test_project_folder_run_is_scored(tmp_path, tmp_path_factory):
     """A Phase 2 project folder (express-crud fixture) is scored directly: cases, reports, ledger cost."""
-    from migration_agent.migrate.models import EquivalenceReport
-    from migration_agent.migrate.paths import Phase2Layout
-    from migration_agent.migrate.state import atomic_write_json
+    from parity_migrate.migrate.models import EquivalenceReport
+    from parity_migrate.migrate.paths import Phase2Layout
+    from parity_migrate.migrate.state import atomic_write_json
     from p2_m5_helpers import m5_project, make_case
     p, s1, _s2 = m5_project(tmp_path, tmp_path_factory)
     make_case(p, s1, "/api/x", key="x")

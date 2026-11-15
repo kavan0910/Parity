@@ -6,8 +6,8 @@ import os
 import stat
 from pathlib import Path
 
-from migration_agent.project import Project
-from migration_agent.review.approval import approve
+from parity_migrate.project import Project
+from parity_migrate.review.approval import approve
 
 from phase1_helpers import make_project
 

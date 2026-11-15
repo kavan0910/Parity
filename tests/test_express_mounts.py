@@ -1,4 +1,4 @@
-from migration_agent.extract.express_mounts import apply_prefix, mount_prefixes
+from parity_migrate.extract.express_mounts import apply_prefix, mount_prefixes
 
 
 def test_nested_mounts():

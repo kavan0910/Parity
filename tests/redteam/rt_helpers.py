@@ -5,12 +5,12 @@ import json
 from pathlib import Path
 
 # bound at import time: e2e fixtures monkeypatch the module attribute with a replay factory
-from migration_agent.llm.litellm_client import Budget, LiteLLMClient
+from parity_migrate.llm.litellm_client import Budget, LiteLLMClient
 
 
 def chunk_response(prompt: str) -> str:
     """Offline-style extractor: one component per `=== path ===` block, verbatim first-line quote."""
-    from migration_agent.llm.offline import OfflineLLM
+    from parity_migrate.llm.offline import OfflineLLM
     return OfflineLLM()._chunk_extract(prompt)
 
 
@@ -51,8 +51,8 @@ def tree_text(root: Path, skip: tuple[str, ...] = ()) -> dict[str, str]:
 
 def make_project(tmp_path: Path, repo: Path, name: str = "proj"):
     """init -> ingest -> extract on a local directory source (no network, no LLM)."""
-    from migration_agent.pipeline import run_extract, run_ingest
-    from migration_agent.project import Project
+    from parity_migrate.pipeline import run_extract, run_ingest
+    from parity_migrate.project import Project
     proj = Project.init(tmp_path / f"{name}.migration", str(repo))
     rep = run_ingest(proj, str(repo))
     (proj.root / "ingest_report.json").write_text(rep.model_dump_json(indent=2))
@@ -62,11 +62,11 @@ def make_project(tmp_path: Path, repo: Path, name: str = "proj"):
 
 def llm_client(proj, transport, *, cache=True):
     """Real LiteLLMClient (cache + audit + budget) over a recording transport."""
-    from migration_agent.audit import AuditLog
+    from parity_migrate.audit import AuditLog
     return LiteLLMClient(budget=Budget(max_usd=5), cache_dir=(proj.root / "llm_cache") if cache else None,
                          audit=AuditLog(proj.audit_dir / "audit.jsonl"), transport=transport, sleep=lambda s: None)
 
 
 def analyze(proj, transport):
-    from migration_agent.analyze.runner import run_analyze
+    from parity_migrate.analyze.runner import run_analyze
     return run_analyze(proj, llm_client(proj, transport))

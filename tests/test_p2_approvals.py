@@ -5,11 +5,11 @@ import json
 import pytest
 from click.testing import CliRunner
 
-from migration_agent.cli import main
-from migration_agent.migrate import approvals as ap
-from migration_agent.migrate import equivalence as eq
-from migration_agent.migrate.paths import Phase2Layout
-from migration_agent.migrate.state import load_state
+from parity_migrate.cli import main
+from parity_migrate.migrate import approvals as ap
+from parity_migrate.migrate import equivalence as eq
+from parity_migrate.migrate.paths import Phase2Layout
+from parity_migrate.migrate.state import load_state
 
 from p2_m5_helpers import (
     HUMAN, Svc, commit, init_target, m5_project, make_case, standard_cases, walk_to_awaiting, write_iteration,
@@ -60,7 +60,7 @@ def test_each_blocker_refuses(env, blocker):
               "unknown": "regression/unknown", "no_report": "no equivalence report", "fix_request": "pending fix",
               "decision": "open legacy_bug", "unapproved_spec": "unapproved specified", "plan_blocker": "RISK-0001"}
     if blocker == "state":
-        from migration_agent.migrate.state import transition
+        from parity_migrate.migrate.state import transition
         transition(p, s1, "generating", reason="again")
     elif blocker == "build":
         write_iteration(p, s1, 2, build={"exit_code": 1}, tests={"ok": True})
@@ -79,11 +79,11 @@ def test_each_blocker_refuses(env, blocker):
         ap.upsert_open_decision(p, s1, "legacy_bug", "EQ-0001", "legacy wrong?")
     elif blocker == "unapproved_spec":
         q = env["cases"]["quirk"]
-        from migration_agent.migrate.casestore import save_case
+        from parity_migrate.migrate.casestore import save_case
         save_case(p, q.model_copy(update={"expect": q.expect.model_copy(update={"approved_by": ""})}))
     elif blocker == "plan_blocker":
-        from migration_agent.migrate.casestore import load_plan
-        from migration_agent.migrate.state import atomic_write_json
+        from parity_migrate.migrate.casestore import load_plan
+        from parity_migrate.migrate.state import atomic_write_json
         plan = load_plan(p)
         plan.slices[0].blockers = ["RISK-0001"]
         atomic_write_json(Phase2Layout(p).plan_json, plan)
@@ -102,8 +102,8 @@ def test_failed_tests_only_on_intended_divergence_are_allowed(env):
 
 
 def test_deferred_finding_needs_accept_observed(env):
-    from migration_agent.migrate.casestore import load_plan
-    from migration_agent.migrate.state import atomic_write_json
+    from parity_migrate.migrate.casestore import load_plan
+    from parity_migrate.migrate.state import atomic_write_json
     p, s1 = env["p"], env["s1"]
     plan = load_plan(p)
     plan.slices[0].blockers = ["F-0003"]

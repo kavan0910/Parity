@@ -1,7 +1,7 @@
 # Phase 2 eval target pairs
 
 One folder per `<repo>__<target>` (docs/phase2-plan.md section 11). Scored by
-`migration_agent.evalharness.score_migration` and gated in CI by `scripts/eval_phase2.py` (offline: recorded
+`parity_migrate.evalharness.score_migration` and gated in CI by `scripts/eval_phase2.py` (offline: recorded
 artifacts only, no model, no network, no Docker).
 
 | pair | kind | quirks (preserve) | suspected bug (fix) |

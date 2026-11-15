@@ -25,7 +25,7 @@ class Settings(BaseSettings):
     signup_enabled: bool | None = None
     jwt_secret: SecretStr | None = None
     jwt_ttl_minutes: int = 60
-    jwt_issuer: str = "migration-agent-dev"
+    jwt_issuer: str = "parity-dev"
     oidc_issuer: str | None = None
     oidc_audience: str | None = None
     oidc_jwks_url: str | None = None

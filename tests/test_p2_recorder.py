@@ -4,14 +4,14 @@ import json
 import pytest
 from click.testing import CliRunner
 
-from migration_agent.cli import main
-from migration_agent.migrate import recorder, testgen
-from migration_agent.migrate.casestore import find_case, load_cases, mark_untestable, save_case
-from migration_agent.migrate.harness_runner import MASK
-from migration_agent.migrate.ids import allocate
-from migration_agent.migrate.models import CharacterizationCase
-from migration_agent.migrate.paths import Phase2Layout
-from migration_agent.migrate.state import atomic_write_json
+from parity_migrate.cli import main
+from parity_migrate.migrate import recorder, testgen
+from parity_migrate.migrate.casestore import find_case, load_cases, mark_untestable, save_case
+from parity_migrate.migrate.harness_runner import MASK
+from parity_migrate.migrate.ids import allocate
+from parity_migrate.migrate.models import CharacterizationCase
+from parity_migrate.migrate.paths import Phase2Layout
+from parity_migrate.migrate.state import atomic_write_json
 
 from p2_m3_helpers import RULE_ID, LegacyService, m3_project
 

@@ -3,11 +3,11 @@ from pathlib import Path
 
 from click.testing import CliRunner
 
-from migration_agent.analyze.coverage import check_coverage
-from migration_agent.cli import main
-from migration_agent.extract.schemas import extract_schemas
-from migration_agent.graph import load_latest
-from migration_agent.pipeline import Inventory
+from parity_migrate.analyze.coverage import check_coverage
+from parity_migrate.cli import main
+from parity_migrate.extract.schemas import extract_schemas
+from parity_migrate.graph import load_latest
+from parity_migrate.pipeline import Inventory
 
 FX = Path(__file__).parent / "fixtures" / "frameworks"
 
@@ -64,7 +64,7 @@ def test_pipeline_makes_data_entity_nodes_and_coverage(tmp_path):
         res = r.invoke(main, args)
         assert res.exit_code == 0, (args, res.output)
     inv = Inventory.model_validate_json((proj / "inventory.json").read_text()) if (proj / "inventory.json").exists() else None
-    from migration_agent.project import Project
+    from parity_migrate.project import Project
     p = Project(proj) if inv is None else None
     inv = inv or Inventory.model_validate_json(p.inventory_path.read_text())
     assert inv.counts["schema_entity"] == 5

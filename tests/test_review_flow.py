@@ -4,18 +4,18 @@ from pathlib import Path
 import pytest
 from click.testing import CliRunner
 
-from migration_agent.analyze.runner import run_analyze
-from migration_agent.cli import main
-from migration_agent.graph import load_latest, load_snapshot
-from migration_agent.llm.base import BudgetExceeded, FakeLLM
-from migration_agent.llm.offline import OfflineLLM
-from migration_agent.project import Project
-from migration_agent.review.changelog import generate_changelog
-from migration_agent.review.comments import add_comment, load_comments, unprocessed
-from migration_agent.review.reanalyze import reanalyze
-from migration_agent.review.resolutions import add_resolution, load_resolutions, pending_reanalysis
-from migration_agent.review._io import ReviewError
-from migration_agent.verify.models import Finding, FindingsFile
+from parity_migrate.analyze.runner import run_analyze
+from parity_migrate.cli import main
+from parity_migrate.graph import load_latest, load_snapshot
+from parity_migrate.llm.base import BudgetExceeded, FakeLLM
+from parity_migrate.llm.offline import OfflineLLM
+from parity_migrate.project import Project
+from parity_migrate.review.changelog import generate_changelog
+from parity_migrate.review.comments import add_comment, load_comments, unprocessed
+from parity_migrate.review.reanalyze import reanalyze
+from parity_migrate.review.resolutions import add_resolution, load_resolutions, pending_reanalysis
+from parity_migrate.review._io import ReviewError
+from parity_migrate.verify.models import Finding, FindingsFile
 
 REPO = Path(__file__).parent.parent / "eval" / "repos" / "express-crud"
 
@@ -144,8 +144,8 @@ def test_later_analyze_keeps_review_refinements(proj):
 
 
 def test_reanalysis_doc_matches_offline_render_and_invalidates_approval(proj):
-    from migration_agent.review.approval import approval_status, approve, readiness
-    from migration_agent.review.docrender import render_latest
+    from parity_migrate.review.approval import approval_status, approve, readiness
+    from parity_migrate.review.docrender import render_latest
     add_resolution(proj, "F-0001", "accepted_code")
     add_resolution(proj, "F-0002", "dismissed")
     assert readiness(proj).ready

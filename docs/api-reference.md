@@ -89,7 +89,7 @@ finding to the migration phase (no re-analysis; listed in the contract's `deferr
 bug, `{"schema_version": 1, "decisions": [{"item_id", "decision": "preserve"|"fix", "note", "created"}]}`; items without an
 entry default to preserve. `feedback/approvals.json`: approval history, the last entry is current.
 `docs/migration_contract.json`: `MigrationContract`, fields listed in [user-guide.md](user-guide.md) (`approve`);
-schema 2 adds `source_hash`. `migration-agent contract schema` prints its JSON Schema.
+schema 2 adds `source_hash`. `parity contract schema` prints its JSON Schema.
 
 ## 4. Other files
 
@@ -132,32 +132,32 @@ Phase 2 problems are reported in `p2.errors` and never break the Phase 1 view.
 
 POST requires `Content-Type: application/json` (415 otherwise), `Content-Length` (411), body at most 64 KB (413).
 Validation failures return 400 with a short message. The server records feedback and approvals only; re-analysis
-is triggered by `migration-agent resolve PROJECT`, generation and equivalence by the CLI.
+is triggered by `parity resolve PROJECT`, generation and equivalence by the CLI.
 
 ## 6. Python entry points
 
-* `migration_agent.__version__`: installed package version.
-* `migration_agent.llm.litellm_client.LLMConfig`, `LiteLLMClient`, `Budget`; `migration_agent.llm.base.LLMClient` (protocol:
+* `parity_migrate.__version__`: installed package version.
+* `parity_migrate.llm.litellm_client.LLMConfig`, `LiteLLMClient`, `Budget`; `parity_migrate.llm.base.LLMClient` (protocol:
   `complete(*, task, system, prompt, json_mode=True, prompt_version="v1") -> LLMResponse`), `BudgetExceeded`, `FakeLLM`.
-* `migration_agent.graph`: `Graph`, `Node`, `Edge`, `Evidence`, `Registry`, `save_snapshot`, `load_latest`, `load_snapshot`, `diff_graphs`.
-* `migration_agent.config_env`:
+* `parity_migrate.graph`: `Graph`, `Node`, `Edge`, `Evidence`, `Registry`, `save_snapshot`, `load_latest`, `load_snapshot`, `diff_graphs`.
+* `parity_migrate.config_env`:
   * `load_llm_config_from_env(env=None) -> LLMConfig`: defaults, then the `MA_LLM_CONFIG` file, then `MA_LLM_*` overrides. Raises `EnvConfigError` (a `ValueError`) naming the bad variable.
   * `load_settings_from_env(env=None) -> EnvSettings(api_base, max_usd, log_level, config_path)`.
   * `configure_logging(env=None)`: applies `MA_LOG_LEVEL`.
   Variables are listed in [deployment.md](deployment.md#environment-variables).
 
 ```python
-from migration_agent.config_env import load_llm_config_from_env, load_settings_from_env
+from parity_migrate.config_env import load_llm_config_from_env, load_settings_from_env
 cfg, st = load_llm_config_from_env(), load_settings_from_env()
 ```
 
-* `migration_agent.service`: `run_stage` (Phase 1 and Phase 2 stages), `metrics`, `estimate`, `review_state` and the
+* `parity_migrate.service`: `run_stage` (Phase 1 and Phase 2 stages), `metrics`, `estimate`, `review_state` and the
   other functions in [platform-contract.md](platform-contract.md) section 2.
-* Phase 2 library functions (`migration_agent.migrate.*`): see [phase2-architecture.md](phase2-architecture.md).
+* Phase 2 library functions (`parity_migrate.migrate.*`): see [phase2-architecture.md](phase2-architecture.md).
 
 ## 7. Phase 2 files
 
-Formats are pydantic models in `migration_agent.migrate.models` (shared) or in the module that writes the file.
+Formats are pydantic models in `parity_migrate.migrate.models` (shared) or in the module that writes the file.
 All are strict (`extra="forbid"`) and carry `schema_version` where they are top-level files.
 
 | File | Model | Module |

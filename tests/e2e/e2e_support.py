@@ -2,7 +2,7 @@
 
 Fixtures: drive the real CLI (click CliRunner) over the three reference repos with a replay LLM.
 
-The replay LLM is injected at the transport level: ``migration_agent.llm.litellm_client.LiteLLMClient`` is
+The replay LLM is injected at the transport level: ``parity_migrate.llm.litellm_client.LiteLLMClient`` is
 swapped for a factory that builds the *real* client with ``transport=ReplayBackend.transport``, so cost
 accounting, the disk cache, the budget guard and the audit log all run for real.
 """
@@ -19,10 +19,10 @@ import pytest
 from click.testing import CliRunner
 
 from e2e_replay import ReplayBackend, user_doc_text, write_config
-from migration_agent.cli import main
-from migration_agent.evalharness import EVAL_REPOS
-from migration_agent.graph import load_latest
-from migration_agent.project import Project
+from parity_migrate.cli import main
+from parity_migrate.evalharness import EVAL_REPOS
+from parity_migrate.graph import load_latest
+from parity_migrate.project import Project
 
 REPOS = ["express-crud", "spring-lite", "django-lite"]
 GOLDEN = Path(__file__).parent / "golden"
@@ -71,14 +71,14 @@ def register(root: Path, backend: ReplayBackend) -> None:
 
 def _factory(config=None, *, budget=None, cache_dir=None, audit=None, **kw):
     """Stand-in for LiteLLMClient: the real client wired to the replay backend of the project owning cache_dir."""
-    from migration_agent.llm.litellm_client import _RealClient
+    from parity_migrate.llm.litellm_client import _RealClient
     backend = BACKENDS[Path(cache_dir).resolve().parent]
     return _RealClient(config, budget=budget, cache_dir=cache_dir, audit=audit,
                        transport=backend.transport, sleep=lambda s: None, **kw)
 
 
 def install_replay(mp: pytest.MonkeyPatch) -> None:
-    from migration_agent.llm import litellm_client as lc
+    from parity_migrate.llm import litellm_client as lc
     if not hasattr(lc, "_RealClient"):
         mp.setattr(lc, "_RealClient", lc.LiteLLMClient, raising=False)
     mp.setattr(lc, "LiteLLMClient", _factory)
@@ -156,7 +156,7 @@ def full_flow(run: Run) -> None:
     invoke(run, "resolve1", ["resolve", root, contra["id"], "--status", "needs_reanalysis",
                              "--note", "please re-check this rule", "--config", cfg])
     run.versions["resolve1"] = run.graph().version
-    from migration_agent.evalharness import load_expected
+    from parity_migrate.evalharness import load_expected
     with_code = {c["module"] for c in load_expected(run.repo)["components"]}      # skip empty files (__init__.py)
     comp = next(n for n in run.graph().nodes if n.type == "component" and n.module in with_code)
     run.comment_item = comp.id

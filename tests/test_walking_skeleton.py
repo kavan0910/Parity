@@ -3,7 +3,7 @@ from pathlib import Path
 
 from click.testing import CliRunner
 
-from migration_agent.cli import main
+from parity_migrate.cli import main
 
 REPO = Path(__file__).parent.parent / "eval" / "repos" / "express-crud"
 

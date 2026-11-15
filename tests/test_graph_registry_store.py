@@ -4,7 +4,7 @@ import random
 
 import pytest
 
-from migration_agent.graph import (Edge, Evidence, Graph, GraphStoreError, Node, Registry, diff_graphs,
+from parity_migrate.graph import (Edge, Evidence, Graph, GraphStoreError, Node, Registry, diff_graphs,
                                    generate_json_schema, load_latest, load_snapshot, save_snapshot)
 
 KEYS = [("component", "m", "A"), ("component", "m", "B"), ("endpoint", "api", "GET /x"),

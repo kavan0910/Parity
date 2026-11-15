@@ -2,7 +2,7 @@
 
 Phase 2 eval target pair (docs/phase2-plan.md section 11, `evalharness.score_migration`).
 
-- `target.yaml`: the target spec handed to `migration-agent target init/fit`.
+- `target.yaml`: the target spec handed to `parity target init/fit`.
 - `expected_cases/`: the HIDDEN reference characterization suite (CharacterizationCase JSON). Never copy it into a
   project the agent works on. Every labelled rule of `eval/repos/django-lite/expected.json` is covered (`covers`).
   Cases assume a freshly seeded legacy database per case (harness seed + `setup.db_fixture`).

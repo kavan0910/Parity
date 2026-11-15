@@ -1,4 +1,4 @@
-"""A stand-in for migration_agent.service with the contract-section-2 signatures. No LLM, no network."""
+"""A stand-in for parity_migrate.service with the contract-section-2 signatures. No LLM, no network."""
 from __future__ import annotations
 
 import io

@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Parity Developer Handbook</title>
-<meta name="description" content="Everything a new developer needs to understand migration-agent (engine, backend, web, deploy, security, tests) and be productive on day one.">
+<meta name="description" content="Everything a new developer needs to understand parity (engine, backend, web, deploy, security, tests) and be productive on day one.">
 <style>
 :root{
   color-scheme:light dark;
@@ -337,7 +337,7 @@ nav#toc a.hide{display:none}
 <h3>One paragraph</h3>
 <div class="note"><p><strong>The MVP:</strong> Parity takes an existing legacy application and migrates it to the newest version of its stack, or to a different technology, and proves the new app behaves like the old one. Legacy app in; migrated app, an equivalence report and a cut-over plan out. Targets covered today: Java 8 to 21, Spring Boot 2 to 3, Django 3 to 5, Express to Fastify, JavaScript to Go. Everything in this handbook serves that.</p></div>
 <p>The migration has five steps: <strong>understand, approve, migrate, prove, cut over</strong>. <strong>Step 1</strong> reads the legacy service's source code (a directory, zip, tarball or public git URL) and produces an <strong>evidence-backed understanding document</strong> (<code>docs/understanding.latest.md</code>, 15 sections) plus a <strong>knowledge graph</strong>. Every claim carries a file, a line range and a verbatim quote that is re-checked against the real source, and a <strong>blind Verifier</strong> compares the document with the team's own docs. In <strong>step 2</strong> a person approves the result (<code>decide</code>, <code>status</code>, <code>approve</code>), which writes a <strong>migration contract</strong>. <strong>Steps 3 to 5</strong> (chapter 14) start from that contract: plan slices, generate the new app in a sandbox, prove case by case against the running legacy app that it behaves the same, and gate the cut-over. Phase 1 is steps 1 and 2; Phase 2 is steps 3 to 5. Understanding never executes or modifies the analysed code.</p>
-<p>It exists in two shapes that share one engine: a <strong>CLI</strong> (<code>migration-agent</code>, pip-installable, state in one folder), which runs all five steps, and a <strong>hosted platform in development</strong> (FastAPI backend and worker, Next.js web app, docker-compose stack), which runs step 1 today. The positioning is settled: the product is the migration; the understanding is its foundation, not an alternative product (<code>product-architecture.md</code> section 1).</p>
+<p>It exists in two shapes that share one engine: a <strong>CLI</strong> (<code>parity</code>, pip-installable, state in one folder), which runs all five steps, and a <strong>hosted platform in development</strong> (FastAPI backend and worker, Next.js web app, docker-compose stack), which runs step 1 today. The positioning is settled: the product is the migration; the understanding is its foundation, not an alternative product (<code>product-architecture.md</code> section 1).</p>
 </div>
 
 <div class="sub" id="who">
@@ -346,7 +346,7 @@ nav#toc a.hide{display:none}
 <div class="cards">
  <div class="card"><b>CLI users</b><p>Analysts and engineers running <code>init / ingest / extract / analyze / verify / review</code> on their machine with their own API key.</p></div>
  <div class="card"><b>Hosted users (future)</b><p>Teams signing in to the web app, uploading a repo or giving a git URL, watching a run live, then reviewing findings.</p></div>
- <div class="card"><b>You (contributor)</b><p>Three sub-projects with different toolchains: Python engine, Python backend, TypeScript web. They meet at two contracts: <code>migration_agent.service</code> and the <code>/v1</code> HTTP API.</p></div>
+ <div class="card"><b>You (contributor)</b><p>Three sub-projects with different toolchains: Python engine, Python backend, TypeScript web. They meet at two contracts: <code>parity_migrate.service</code> and the <code>/v1</code> HTTP API.</p></div>
 </div>
 </div>
 
@@ -354,7 +354,7 @@ nav#toc a.hide{display:none}
 <h3>Honest status and maturity</h3>
 <div class="tw"><table>
 <tr><th>Part</th><th>State</th><th>Evidence and caveats</th></tr>
-<tr><td>Engine (<code>src/migration_agent</code>)</td><td><span class="b ok">real, tested</span></td><td>Version <code>0.2.0</code> in <code>pyproject.toml</code>. 1197 tests collected at the root (1195 pass, 2 skip: the opt-in live end-to-end test and a release test that needs the <code>build</code> package). Hand-built eval repos with regression gates. The hard, differentiated part (evidence checks, derived confidence, blind Verifier, budget and cache).</td></tr>
+<tr><td>Engine (<code>src/parity_migrate</code>)</td><td><span class="b ok">real, tested</span></td><td>Version <code>0.2.0</code> in <code>pyproject.toml</code>. 1197 tests collected at the root (1195 pass, 2 skip: the opt-in live end-to-end test and a release test that needs the <code>build</code> package). Hand-built eval repos with regression gates. The hard, differentiated part (evidence checks, derived confidence, blind Verifier, budget and cache).</td></tr>
 <tr><td>Quality at real scale</td><td><span class="b warn">unproven</span></td><td>Eval repos are tiny stand-ins (8, 11, 18 files). Phase 0 ran 3 small OSS repos, once each, one chunk each, nothing hand-scored; <strong>no node reached <code>high</code> confidence</strong>; runs were on different models so are not comparable. Chunking, cross-references and rate limits at scale are untested on real code.</td></tr>
 <tr><td>Backend (<code>backend/</code>)</td><td><span class="b ok">built</span> <span class="b warn">SQLite-tested only</span></td><td>All contract endpoints, worker, queue, billing seam. About 258 tests collected, all on SQLite with a fake engine (one test uses the real engine offline). Postgres paths (<code>SKIP LOCKED</code>, RLS, JSONB, migrations 0002/0004) were written but <strong>never executed</strong>.</td></tr>
 <tr><td>Web (<code>web/</code>)</td><td><span class="b ok">built</span></td><td>All pages, mock mode, 5 Vitest files. Verified manually in a headless browser against the real backend. No Playwright e2e, no OIDC login flow, no token refresh.</td></tr>
@@ -396,7 +396,7 @@ nav#toc a.hide{display:none}
 <rect class="bx" x="480" y="40" width="150" height="66" rx="12"/><text x="555" y="68" text-anchor="middle" class="tb">Postgres / SQLite</text><text x="555" y="88" text-anchor="middle" class="t2">rows, job queue, events</text>
 <rect class="bx" x="480" y="150" width="150" height="66" rx="12"/><text x="555" y="178" text-anchor="middle" class="tb">Object store</text><text x="555" y="198" text-anchor="middle" class="t2">state tar.gz, results</text>
 <rect class="bx g" x="230" y="250" width="250" height="100" rx="12"/><text x="355" y="274" text-anchor="middle" class="tb">Worker  (python -m app.worker)</text>
-<rect class="bx a" x="260" y="288" width="190" height="48" rx="10"/><text x="355" y="308" text-anchor="middle" class="tb">Engine library</text><text x="355" y="326" text-anchor="middle" class="t2">migration_agent.service</text>
+<rect class="bx a" x="260" y="288" width="190" height="48" rx="10"/><text x="355" y="308" text-anchor="middle" class="tb">Engine library</text><text x="355" y="326" text-anchor="middle" class="t2">parity_migrate.service</text>
 <rect class="bx w" x="230" y="388" width="170" height="52" rx="12"/><text x="315" y="410" text-anchor="middle" class="tb">Egress proxy (Squid)</text><text x="315" y="428" text-anchor="middle" class="t2">allowlist, CONNECT :443</text>
 <rect class="bx" x="470" y="388" width="130" height="52" rx="12"/><text x="535" y="410" text-anchor="middle" class="tb">Model provider</text><text x="535" y="428" text-anchor="middle" class="t2">via LiteLLM</text>
 <rect class="bx" x="620" y="388" width="120" height="52" rx="12"/><text x="680" y="410" text-anchor="middle" class="tb">Git hosts</text><text x="680" y="428" text-anchor="middle" class="t2">GIT_ALLOWED_HOSTS</text>
@@ -415,16 +415,16 @@ nav#toc a.hide{display:none}
 </svg>
 <figcaption>Control plane (API, database) never needs customer code except in <code>/estimate</code>, a known deviation. The worker is the only component that runs the engine on customer code. Source: <code>deploy/docker-compose.yml</code>, <code>backend/NOTES.md</code>.</figcaption>
 </figure>
-<p>Reading order for the code: <code>docs/platform-contract.md</code> (the contract between the three streams), then <code>src/migration_agent/service.py</code>, then <code>backend/app/main.py</code>, <code>backend/app/worker.py</code>, then <code>web/lib/api.ts</code>.</p>
+<p>Reading order for the code: <code>docs/platform-contract.md</code> (the contract between the three streams), then <code>src/parity_migrate/service.py</code>, then <code>backend/app/main.py</code>, <code>backend/app/worker.py</code>, then <code>web/lib/api.ts</code>.</p>
 </div>
 
 <div class="sub" id="versions">
 <h3>Versions and where they live</h3>
 <div class="tw"><table>
 <tr><th>Thing</th><th>Version</th><th>Where</th></tr>
-<tr><td>Engine package</td><td><code>0.2.0</code></td><td><code>pyproject.toml</code> only (<code>migration_agent.__version__</code> reads package metadata). Release with <code>python scripts/release.py vX.Y.Z</code>.</td></tr>
+<tr><td>Engine package</td><td><code>0.2.0</code></td><td><code>pyproject.toml</code> only (<code>parity_migrate.__version__</code> reads package metadata). Release with <code>python scripts/release.py vX.Y.Z</code>.</td></tr>
 <tr><td>Platform (CHANGELOG)</td><td><code>[Unreleased] 0.3.0</code></td><td><code>CHANGELOG.md</code></td></tr>
-<tr><td>Backend package</td><td><code>0.1.0</code></td><td><code>backend/pyproject.toml</code> (name <code>migration-agent-backend</code>)</td></tr>
+<tr><td>Backend package</td><td><code>0.1.0</code></td><td><code>backend/pyproject.toml</code> (name <code>parity-backend</code>)</td></tr>
 <tr><td>Web package</td><td><code>0.1.0</code></td><td><code>web/package.json</code>; Next 16.4.6, React 19.3.1, TypeScript 5.9.3, Tailwind 4.3.5, Vitest 5.1.0 (exact pins)</td></tr>
 <tr><td>Graph / feedback schema</td><td><code>schema_version: 1</code></td><td>additive changes keep the version (<code>docs/api-reference.md</code>)</td></tr>
 </table></div>
@@ -439,9 +439,9 @@ nav#toc a.hide{display:none}
 <h3>Top level</h3>
 <div class="tw"><table>
 <tr><th>Path</th><th>What it is</th><th>Notes</th></tr>
-<tr><td><code>src/migration_agent/</code></td><td>The engine and CLI. Pip-installable (hatchling).</td><td>~74 tracked files. Sub-packages: <code>analyze/ extract/ graph/ ingest/ llm/ migrate/ review/ review_ui/ sandbox/ verify/ viz/ templates/</code> plus <code>cli.py service.py storage.py pipeline.py project.py render.py audit.py config_env.py dotenv.py evalharness.py</code>.</td></tr>
+<tr><td><code>src/parity_migrate/</code></td><td>The engine and CLI. Pip-installable (hatchling).</td><td>~74 tracked files. Sub-packages: <code>analyze/ extract/ graph/ ingest/ llm/ migrate/ review/ review_ui/ sandbox/ verify/ viz/ templates/</code> plus <code>cli.py service.py storage.py pipeline.py project.py render.py audit.py config_env.py dotenv.py evalharness.py</code>.</td></tr>
 <tr><td><code>tests/</code></td><td>Engine tests (about 84 files at root, incl. the <code>test_p2_*</code> Phase 2 modules), <code>e2e/</code> (CLI journey on replayed LLM), <code>redteam/</code> (hostile inputs), <code>fixtures/</code>, <code>synth_repo.py</code> (large synthetic repo generator).</td><td>1197 tests collected. <code>pyproject.toml</code> sets <code>testpaths=["tests"]</code>, <code>pythonpath=["src"]</code>.</td></tr>
-<tr><td><code>eval/</code></td><td>Hand-labelled reference repos (<code>repos/express-crud</code>, <code>spring-lite</code>, <code>django-lite</code>, each with <code>expected.json</code>) and <code>redteam/payloads.json</code>.</td><td>Scored by <code>migration_agent.evalharness</code>.</td></tr>
+<tr><td><code>eval/</code></td><td>Hand-labelled reference repos (<code>repos/express-crud</code>, <code>spring-lite</code>, <code>django-lite</code>, each with <code>expected.json</code>) and <code>redteam/payloads.json</code>.</td><td>Scored by <code>parity_migrate.evalharness</code>.</td></tr>
 <tr><td><code>backend/</code></td><td>Hosted API and worker. Own <code>pyproject.toml</code> and venv (<code>backend/.venv</code>).</td><td><code>app/</code> (35 files), <code>migrations/</code> (Alembic 0001-0004), <code>tests/</code>, <code>NOTES.md</code>, <code>README.md</code>.</td></tr>
 <tr><td><code>web/</code></td><td>Next.js app (App Router, TypeScript strict, Tailwind 4).</td><td><code>app/</code> routes, <code>components/</code>, <code>lib/</code> (API client, SSE, mock), <code>tests/</code>, <code>NOTES.md</code>.</td></tr>
 <tr><td><code>deploy/</code></td><td>The platform compose stack: <code>docker-compose.yml</code>, <code>Dockerfile.backend</code>, <code>Dockerfile.web</code>, <code>.env.example</code>, <code>smoke.sh</code>, <code>squid.conf</code>, <code>postgres-init/10-roles.sh</code>, <code>NOTES.md</code>.</td><td>Never run end to end.</td></tr>
@@ -459,7 +459,7 @@ nav#toc a.hide{display:none}
 
 <div class="sub" id="notes-files">
 <h3>The three NOTES.md files: read them</h3>
-<p><code>backend/NOTES.md</code>, <code>web/NOTES.md</code>, <code>deploy/NOTES.md</code> and <code>src/migration_agent/NOTES-service.md</code> are the authors' own lists of what was built, deliberately not built, deviations from the contract and open problems. They are the most honest documents in the repo. Several gotchas in <a href="#s11">section 11</a> come from them.</p>
+<p><code>backend/NOTES.md</code>, <code>web/NOTES.md</code>, <code>deploy/NOTES.md</code> and <code>src/parity_migrate/NOTES-service.md</code> are the authors' own lists of what was built, deliberately not built, deviations from the contract and open problems. They are the most honest documents in the repo. Several gotchas in <a href="#s11">section 11</a> come from them.</p>
 </div>
 </section>
 <section class="chap" id="s3">
@@ -483,17 +483,17 @@ nav#toc a.hide{display:none}
 <pre><code>python3 -m venv .venv &amp;&amp; . .venv/bin/activate
 pip install -e ".[dev,llm]"          # dev = pytest; llm = LiteLLM (only needed for real model calls)
 cp .env.example .env                 # add ANTHROPIC_API_KEY or GEMINI_API_KEY (optional)
-migration-agent --version
+parity --version
 
 # run the whole engine test suite (pyproject sets pythonpath=src, so this also works without PYTHONPATH)
 PYTHONPATH=src python -m pytest -q
 
 # try the pipeline with no key and no network, on a bundled reference repo
-migration-agent init eval/repos/django-lite --project /tmp/dl.migration
-migration-agent ingest  /tmp/dl.migration
-migration-agent extract /tmp/dl.migration
-migration-agent analyze /tmp/dl.migration --dry-run     # plan + cost estimate, no key needed
-migration-agent analyze /tmp/dl.migration --offline     # stand-in model: facts-level graph, not real analysis
+parity init eval/repos/django-lite --project /tmp/dl.migration
+parity ingest  /tmp/dl.migration
+parity extract /tmp/dl.migration
+parity analyze /tmp/dl.migration --dry-run     # plan + cost estimate, no key needed
+parity analyze /tmp/dl.migration --offline     # stand-in model: facts-level graph, not real analysis
 ls /tmp/dl.migration/docs                                # understanding.latest.md, graph.html</code></pre>
 <ul>
 <li><strong><code>.env</code> loading</strong> (<code>dotenv.py</code>): the CLI loads <code>&lt;repo root&gt;/.env</code> (the directory holding <code>pyproject.toml</code>, found from the installed file; falls back to cwd). <code>KEY=VALUE</code>, optional <code>export</code>, quotes stripped, <code>#</code> comments. <strong>Variables already in the environment are never overridden.</strong></li>
@@ -509,7 +509,7 @@ ls /tmp/dl.migration/docs                                # understanding.latest.
 <pre><code>cd backend
 python3 -m venv .venv
 .venv/bin/pip install -e '.[test]'    # fastapi, sqlalchemy, alembic, psycopg, argon2, pyjwt, pytest, httpx ...
-.venv/bin/pip install -e ..           # the engine, because the worker imports migration_agent.service
+.venv/bin/pip install -e ..           # the engine, because the worker imports parity_migrate.service
 # for real model calls add the llm extra:  .venv/bin/pip install -e '..[llm]'
 
 export DATABASE_URL=sqlite:///./dev.db STORE_DIR=./data/store
@@ -545,7 +545,7 @@ E2E_API_URL=http://127.0.0.1:8000 scripts/e2e_local.sh    # point it at an alrea
 <tr><td><code>CORS_ORIGINS</code></td><td>empty</td><td>Comma-separated web origins; no credentials; methods GET/POST/PATCH/DELETE.</td></tr>
 <tr><td><code>AUTH_MODE</code></td><td><code>dev</code></td><td><code>dev</code> password + local HS256 JWT, or <code>oidc</code> (external JWT via JWKS).</td></tr>
 <tr><td><code>SIGNUP_ENABLED</code></td><td>unset (= true unless production)</td><td>Open in dev/test, closed in production unless set.</td></tr>
-<tr><td><code>JWT_SECRET</code>, <code>JWT_TTL_MINUTES</code>, <code>JWT_ISSUER</code></td><td>none, 60, <code>migration-agent-dev</code></td><td>Outside dev the secret must be &gt;= 32 bytes and free of placeholder markers; in production also &gt;= 8 distinct characters.</td></tr>
+<tr><td><code>JWT_SECRET</code>, <code>JWT_TTL_MINUTES</code>, <code>JWT_ISSUER</code></td><td>none, 60, <code>parity-dev</code></td><td>Outside dev the secret must be &gt;= 32 bytes and free of placeholder markers; in production also &gt;= 8 distinct characters.</td></tr>
 <tr><td><code>OIDC_ISSUER</code>, <code>OIDC_AUDIENCE</code>, <code>OIDC_JWKS_URL</code>, <code>OIDC_ALGORITHMS</code></td><td>unset, <code>RS256,ES256</code></td><td>All three of the first set are required for <code>AUTH_MODE=oidc</code>; HS* and <code>none</code> are filtered out.</td></tr>
 <tr><td><code>STORE_BACKEND</code>, <code>STORE_DIR</code>, <code>S3_BUCKET</code>, <code>S3_ENDPOINT_URL</code>, <code>S3_REGION</code></td><td><code>local</code>, <code>./data/store</code></td><td>Object store. <code>S3Store</code> is a skeleton (needs <code>pip install '.[s3]'</code>).</td></tr>
 <tr><td><code>MAX_UPLOAD_MB</code>, <code>MAX_EXTRACTED_MB</code>, <code>MAX_FILE_MB</code></td><td>100, 500, 50</td><td>Upload / extracted / per-file ceilings.</td></tr>
@@ -615,7 +615,7 @@ deploy/smoke.sh                       # SMOKE_NO_UP=1 to test a running stack, S
 # web: http://localhost:3000   api: http://localhost:8000   (both bound to 127.0.0.1)
 
 # engine image
-docker build -f docker/Dockerfile -t migration-agent:local .
+docker build -f docker/Dockerfile -t parity:local .
 PROJECT_DIR=./svc.migration docker/run.sh ./svc analyze /project --offline</code></pre>
 <div class="gotcha"><p><code>deploy/postgres-init/10-roles.sh</code> runs <strong>only on the first initialisation of the data volume</strong>. If the <code>pgdata</code> volume already exists you must create the <code>ma_owner</code> and <code>ma_app</code> roles by hand. Likewise, changing the Postgres passwords later does not change the volume's existing roles (runbook failure table).</p></div>
 </div>
@@ -632,7 +632,7 @@ PROJECT_DIR=./svc.migration docker/run.sh ./svc analyze /project --offline</code
 </section>
 <section class="chap" id="s4">
 <h2><span class="n">4</span>The engine in depth</h2>
-<p class="lead"><code>src/migration_agent/</code>: roughly 9-10k lines of Python. A library first, a CLI second (<code>cli.py</code>, Click), and the hosted worker's job body third (<code>service.py</code>). Sources: <code>docs/architecture.md</code>, code docstrings, <code>NOTES-service.md</code>.</p>
+<p class="lead"><code>src/parity_migrate/</code>: roughly 9-10k lines of Python. A library first, a CLI second (<code>cli.py</code>, Click), and the hosted worker's job body third (<code>service.py</code>). Sources: <code>docs/architecture.md</code>, code docstrings, <code>NOTES-service.md</code>.</p>
 
 <div class="sub" id="eng-pipeline">
 <h3>4.1 Pipeline stages</h3>
@@ -898,7 +898,7 @@ PROJECT_DIR=./svc.migration docker/run.sh ./svc analyze /project --offline</code
 <ul>
 <li><strong><code>render.py</code> + <code>templates/understanding.md.j2</code></strong>: pure, deterministic graph &rarr; markdown, Jinja2 with <code>StrictUndefined</code> (a missing variable is an error, not a blank). 15 sections in fixed order (<code>SECTIONS</code>): Purpose &amp; Capabilities, Boundary &amp; External Dependencies, Component Responsibilities, Endpoints &amp; API Surface, Data Model &amp; Storage, Business Rules, Integrations &amp; Contracts, Background Jobs &amp; Consumers, Configuration &amp; Environment, Auth/Error/Cross-Cutting, Existing Tests, Quirks &amp; Suspicious Code, Blind Spots / low confidence, Open Questions &amp; Assumptions, Coverage Matrix. Each item has an anchor by node ID, which the web app links to. The heading skeleton is a golden file (<code>tests/e2e/golden/doc.headings.json</code>).</li>
 <li><strong><code>viz/graph_html.py</code></strong>: one offline HTML file (<code>docs/graph.html</code>) with the graph JSON embedded and a vanilla-JS force layout on canvas. No CDN, no external requests; supports diff highlighting between versions.</li>
-<li><strong><code>audit.py</code></strong>: append-only JSONL at <code>audit/audit.jsonl</code>. One record per <code>os.write</code> on an <code>O_APPEND</code> descriptor; an advisory <code>flock</code> makes <code>seq</code> monotonic across processes (hence <strong>POSIX only</strong>: it imports <code>fcntl</code>). Fields: seq, ts, agent, action, command, duration_ms, tool_calls, model, tokens_in/out, cost_usd, prompt_version, input_hash, trace_ref, status, error. Records pass through <code>redact_obj</code>. <code>AuditLog.span(agent, action)</code> times a block. <code>migration-agent audit</code> prints totals.</li>
+<li><strong><code>audit.py</code></strong>: append-only JSONL at <code>audit/audit.jsonl</code>. One record per <code>os.write</code> on an <code>O_APPEND</code> descriptor; an advisory <code>flock</code> makes <code>seq</code> monotonic across processes (hence <strong>POSIX only</strong>: it imports <code>fcntl</code>). Fields: seq, ts, agent, action, command, duration_ms, tool_calls, model, tokens_in/out, cost_usd, prompt_version, input_hash, trace_ref, status, error. Records pass through <code>redact_obj</code>. <code>AuditLog.span(agent, action)</code> times a block. <code>parity audit</code> prints totals.</li>
 </ul>
 </div>
 
@@ -974,7 +974,7 @@ PROJECT_DIR=./svc.migration docker/run.sh ./svc analyze /project --offline</code
 <tr><td><code>billing.py</code>, <code>limits.py</code>, <code>ratelimit.py</code></td><td>Plans, entitlements, <code>can_start_run</code>; SSE and estimate concurrency caps; token bucket and login throttle.</td></tr>
 <tr><td><code>errors.py</code>, <code>logging_setup.py</code>, <code>audit.py</code>, <code>serializers.py</code></td><td>Error envelope and handlers; JSON logs and ASGI middleware; audit helper; response shapers and <code>Page</code> (limit 1..200, default 50; offset).</td></tr>
 </table></div>
-<div class="note"><p>Only <code>app/engine.py</code> imports <code>migration_agent</code> (lazily). Tests inject <code>tests/fake_engine.FakeEngine</code> with <code>engine.set_engine()</code>, which is why the backend suite needs no model and no engine install (except <code>test_real_engine.py</code>).</p></div>
+<div class="note"><p>Only <code>app/engine.py</code> imports <code>parity_migrate</code> (lazily). Tests inject <code>tests/fake_engine.FakeEngine</code> with <code>engine.set_engine()</code>, which is why the backend suite needs no model and no engine install (except <code>test_real_engine.py</code>).</p></div>
 </div>
 
 <div class="sub" id="be-request">
@@ -1499,7 +1499,7 @@ npx vitest run tests/graph.test.ts -t "filter"</code></pre>
 <div class="sub" id="test-fixtures">
 <h3>9.2 Fixtures and how the pieces are faked</h3>
 <h4>Engine e2e replay</h4>
-<p><code>tests/e2e/conftest.py</code> calls <code>install_replay(mp)</code> (session-scoped monkeypatch). It replaces <code>migration_agent.llm.litellm_client.LiteLLMClient</code> with a factory that builds the <strong>real</strong> client around <code>ReplayBackend.transport</code> (<code>e2e_replay.py</code>), so cost accounting, the disk cache, the budget guard and the audit log run for real. Answers derive from <code>eval/repos/&lt;repo&gt;/expected.json</code> (nodes, edges, rules with evidence lines read from the actual repo files) plus canned Verifier findings (one contradiction, one doc-only, three code-only, one fabricated quote, one invalid kind). Each task tier uses model name <code>fake/&lt;task&gt;</code> so the transport can tell tasks apart; prices 3 / 15 USD per M.</p>
+<p><code>tests/e2e/conftest.py</code> calls <code>install_replay(mp)</code> (session-scoped monkeypatch). It replaces <code>parity_migrate.llm.litellm_client.LiteLLMClient</code> with a factory that builds the <strong>real</strong> client around <code>ReplayBackend.transport</code> (<code>e2e_replay.py</code>), so cost accounting, the disk cache, the budget guard and the audit log run for real. Answers derive from <code>eval/repos/&lt;repo&gt;/expected.json</code> (nodes, edges, rules with evidence lines read from the actual repo files) plus canned Verifier findings (one contradiction, one doc-only, three code-only, one fabricated quote, one invalid kind). Each task tier uses model name <code>fake/&lt;task&gt;</code> so the transport can tell tasks apart; prices 3 / 15 USD per M.</p>
 <div class="gotcha"><p><strong>Replay patching leaks.</strong> The replay stand-in stays patched for the rest of the session. Tests in <code>tests/test_service.py</code> that need the real <code>LiteLLMClient</code> restore it through the helper <code>_real_client(monkeypatch)</code> (see <code>NOTES-service.md</code>). If you write an engine test that constructs <code>LiteLLMClient</code> directly, do the same, or run it before e2e / in isolation.</p></div>
 <h4>Backend (<code>backend/tests/conftest.py</code>)</h4>
 <ul>
@@ -1554,7 +1554,7 @@ def stats(ctx: ProjectCtx = Depends(project_ctx)):
     n = ctx.db.scalar(select(func.count()).select_from(Comment).where(Comment.project_id == ctx.project.id))
     return {"comments": n}</code></pre></li>
 <li>Writes: validate with a pydantic model (<code>Field</code> limits), call <code>audit.record(db, action="...", workspace_id=..., actor=ctx.user.id, target=...)</code>, <code>ctx.db.commit()</code> (uncommitted work is rolled back by <code>get_db</code>). Errors via <code>ApiError(status, code, message)</code>. Shape responses with a function in <code>serializers.py</code> and lists with <code>Page</code> + <code>{"items","total"}</code>.</li>
-<li>If it needs the engine, add the call to the <code>Engine</code> protocol in <code>app/engine.py</code>, implement it in <code>migration_agent/service.py</code> and in <code>backend/tests/fake_engine.py</code>.</li>
+<li>If it needs the engine, add the call to the <code>Engine</code> protocol in <code>app/engine.py</code>, implement it in <code>parity_migrate/service.py</code> and in <code>backend/tests/fake_engine.py</code>.</li>
 <li>If it is a new router module, register it in the loop <code>for r in (auth, workspaces, projects, runs, results)</code> in <code>main.py</code>. Large uploads: extend the path check in <code>BodyLimitMiddleware</code> (it keys on path suffix <code>/source</code>, <code>/user-docs</code>).</li>
 <li><strong>Tests</strong> in <code>backend/tests/</code>: happy path, 401, foreign tenant 404, role 403, validation 422. Run <code>.venv/bin/python -m pytest tests/test_x.py</code>.</li>
 <li><strong>Docs</strong>: add the row to <code>docs/platform-contract.md</code> section 3 (and "Response shapes") and to table 5.15 of this handbook.</li>
@@ -1570,7 +1570,7 @@ def stats(ctx: ProjectCtx = Depends(project_ctx)):
 <div class="sub" id="rcp-extractor">
 <h3>10.2 Add a framework route extractor</h3>
 <ol>
-<li>Write <code>extract_&lt;framework&gt;(text, rel) -&gt; list[Found]</code> in <code>src/migration_agent/extract/frameworks.py</code>. Use the helpers: <code>_Lines(text).of(pos)</code> for line numbers, <code>balanced()</code> / <code>split_top()</code> for argument parsing, <code>_first_str_arg</code>, <code>join_path</code>, <code>_route(rel, line, METHOD, path)</code>. It must never raise on malformed input. Blank comments and docstrings first if they can contain examples (the Django extractor does).</li>
+<li>Write <code>extract_&lt;framework&gt;(text, rel) -&gt; list[Found]</code> in <code>src/parity_migrate/extract/frameworks.py</code>. Use the helpers: <code>_Lines(text).of(pos)</code> for line numbers, <code>balanced()</code> / <code>split_top()</code> for argument parsing, <code>_first_str_arg</code>, <code>join_path</code>, <code>_route(rel, line, METHOD, path)</code>. It must never raise on malformed input. Blank comments and docstrings first if they can contain examples (the Django extractor does).</li>
 <li>Dispatch it in <code>extract_routes</code> by extension/path. That function wraps everything in try/except returning <code>[]</code>.</li>
 <li>If routes can be mounted across files (like Express/Django), add a cross-file pass modelled on <code>express_mounts.py</code> / <code>django_mounts.py</code>, wire it in <code>pipeline._routes</code>, and be conservative: apply a prefix only when exactly one chain reaches the file.</li>
 <li>Avoid double counting: <code>pipeline._routes</code> runs the legacy line regexes (<code>_legacy_routes</code>) for lines not already found (<code>skip = {f.line for f in found}</code>). Python files only keep the Django <code>path(</code> regex; Java none.</li>
@@ -1623,7 +1623,7 @@ def stats(ctx: ProjectCtx = Depends(project_ctx)):
 <div class="sub" id="rcp-prompt">
 <h3>10.6 Change a prompt and re-run evals</h3>
 <ol>
-<li>Edit the template in <code>src/migration_agent/analyze/prompts/*.md</code> (or <code>verify/prompts/*.md</code>). Keep the delimiters and the SECURITY RULES block intact; keep the JSON contract matching <code>ChunkPatch</code>.</li>
+<li>Edit the template in <code>src/parity_migrate/analyze/prompts/*.md</code> (or <code>verify/prompts/*.md</code>). Keep the delimiters and the SECURITY RULES block intact; keep the JSON contract matching <code>ChunkPatch</code>.</li>
 <li>Bump the version constant: <code>PROMPT_VERSION</code> (<code>module_analyzer.py</code>), <code>RULES_PROMPT_VERSION</code> (<code>rules.py</code>), <code>verify/verifier.py PROMPT_VERSION</code>, <code>review/reanalyze.py PROMPT_VERSION</code>. It is part of the cache key and, for the first two, of the checkpoint manifest.</li>
 <li>Unit/e2e tests: <code>PYTHONPATH=src python -m pytest -q</code>. These do <em>not</em> measure the change (replay answers are fixed), but they catch template and parsing breakage. Prompt-injection tests: <code>tests/redteam/test_prompt_injection.py</code>.</li>
 <li>Live evaluation (costs money): <code>PYTHONPATH=src python scripts/e2e_live.py gemini-lite.config.json --max-usd 2</code> before and after (use <code>--keep DIR</code> to retain projects), compare the printed P/R/F1; for a precise gate, save both reports and call <code>evalharness.compare(old, new)</code>.</li>
@@ -1867,7 +1867,7 @@ def stats(ctx: ProjectCtx = Depends(project_ctx)):
 
 <div class="sub" id="p2code">
 <h3>14.4 Code map and project folders</h3>
-<p>All Phase 2 code is in <code>src/migration_agent/migrate/</code>; <code>migrate/cli.py</code> registers every command group on the top-level CLI with one line in <code>cli.py</code>. Each module docstring is the detailed reference.</p>
+<p>All Phase 2 code is in <code>src/parity_migrate/migrate/</code>; <code>migrate/cli.py</code> registers every command group on the top-level CLI with one line in <code>cli.py</code>. Each module docstring is the detailed reference.</p>
 <div class="tw"><table>
 <tr><th>Milestone</th><th>Modules</th><th>Commands</th></tr>
 <tr><td>M0 foundation</td><td><code>models.py</code>, <code>ids.py</code>, <code>paths.py</code>, <code>state.py</code>, <code>contract.py</code>, <code>ledger.py</code>, <code>exec/base.py</code>, <code>exec/fake.py</code></td><td><code>contract check|schema</code>, <code>doctor</code></td></tr>

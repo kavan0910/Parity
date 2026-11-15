@@ -121,7 +121,7 @@ class FakeDocker:
         raise KeyError(target)
 
     def backend(self, project, **kw):
-        from migration_agent.migrate.exec.docker import DockerBackend
+        from parity_migrate.migrate.exec.docker import DockerBackend
         kw.setdefault("environ", {"PATH": "/usr/bin", "HOME": "/home/u"})
         return DockerBackend(project, run=self.run, popen=self.popen, which=self.which, **kw)
 

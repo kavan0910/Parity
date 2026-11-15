@@ -6,22 +6,22 @@ import types
 import pytest
 from click.testing import CliRunner
 
-import migration_agent.migrate as migrate_pkg
-from migration_agent.cli import main
-from migration_agent.extract.treesitter import AstFacts, FileFacts, FunctionFact
-from migration_agent.graph import load_latest, save_snapshot
-from migration_agent.graph.models import Edge, Evidence, Graph, Node
-from migration_agent.llm.base import FakeLLM
-from migration_agent.migrate.contract import ContractError
-from migration_agent.migrate.models import MigrationPlan, SliceState
-from migration_agent.migrate.paths import Phase2Layout
-from migration_agent.migrate.planner import (
+import parity_migrate.migrate as migrate_pkg
+from parity_migrate.cli import main
+from parity_migrate.extract.treesitter import AstFacts, FileFacts, FunctionFact
+from parity_migrate.graph import load_latest, save_snapshot
+from parity_migrate.graph.models import Edge, Evidence, Graph, Node
+from parity_migrate.llm.base import FakeLLM
+from parity_migrate.migrate.contract import ContractError
+from parity_migrate.migrate.models import MigrationPlan, SliceState
+from parity_migrate.migrate.paths import Phase2Layout
+from parity_migrate.migrate.planner import (
     PlanInvariantError, PlannerReport, Sizer, build_plan, check_invariant, plan_project, resource_key,
     strongly_connected, topo_order, validate_naming,
 )
-from migration_agent.review.approval import approve
-from migration_agent.review.docrender import write_latest
-from migration_agent.review.resolutions import add_resolution
+from parity_migrate.review.approval import approve
+from parity_migrate.review.docrender import write_latest
+from parity_migrate.review.resolutions import add_resolution
 
 from phase1_helpers import make_project, write_findings
 from phase2_helpers import approved_project, contract_file
@@ -318,9 +318,9 @@ def test_fit_risks_and_blockers(proj, monkeypatch):
     lay.fit_report_json.write_text(json.dumps({"risks": [
         {"id": "RISK-0001", "kind": "unknown", "severity": "high", "title": "t", "item_ids": [ep]},
         {"id": "RISK-0002", "kind": "unknown", "severity": "low", "title": "u", "item_ids": [ep]}]}))
-    fake = types.ModuleType("migration_agent.migrate.fit")
+    fake = types.ModuleType("parity_migrate.migrate.fit")
     fake.fit_blockers = lambda project: [{"id": "RISK-0001", "item_ids": [ep]}]
-    monkeypatch.setitem(sys.modules, "migration_agent.migrate.fit", fake)
+    monkeypatch.setitem(sys.modules, "parity_migrate.migrate.fit", fake)
     monkeypatch.setattr(migrate_pkg, "fit", fake, raising=False)
     plan = plan_project(proj).plan
     s = next(s for s in plan.slices if ep in s.node_ids)
@@ -329,7 +329,7 @@ def test_fit_risks_and_blockers(proj, monkeypatch):
 
 
 def test_fit_module_missing_is_tolerated(proj, monkeypatch):
-    monkeypatch.setitem(sys.modules, "migration_agent.migrate.fit", None)   # import raises ImportError
+    monkeypatch.setitem(sys.modules, "parity_migrate.migrate.fit", None)   # import raises ImportError
     monkeypatch.delattr(migrate_pkg, "fit", raising=False)
     res = plan_project(proj, dry_run=True)
     assert any("target-fit module not available" in w for w in res.report.warnings)

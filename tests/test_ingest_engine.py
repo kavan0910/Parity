@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from migration_agent.ingest import IngestError, ingest
+from parity_migrate.ingest import IngestError, ingest
 
 AWS = "AKIA" + "IOSFODNN7EXAMPLE"
 PW = "hunter2hunter2"

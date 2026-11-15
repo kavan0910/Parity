@@ -3,12 +3,12 @@ from pathlib import Path
 
 from click.testing import CliRunner
 
-from migration_agent.analyze.runner import run_analyze
-from migration_agent.cli import main
-from migration_agent.graph import load_latest
-from migration_agent.llm.base import BudgetExceeded, FakeLLM
-from migration_agent.llm.offline import OfflineLLM
-from migration_agent.project import Project
+from parity_migrate.analyze.runner import run_analyze
+from parity_migrate.cli import main
+from parity_migrate.graph import load_latest
+from parity_migrate.llm.base import BudgetExceeded, FakeLLM
+from parity_migrate.llm.offline import OfflineLLM
+from parity_migrate.project import Project
 
 REPO = Path(__file__).parent.parent / "eval" / "repos" / "express-crud"
 

@@ -3,6 +3,15 @@
 Format: [Keep a Changelog](https://keepachangelog.com/); versions follow [SemVer](https://semver.org/).
 The version lives in `pyproject.toml` only.
 
+
+## Unreleased: product rename in code
+
+- The CLI is now `parity`, the Python package `parity_migrate` and the distribution `parity-migrate`. `migration-agent`
+  stays as a deprecated command alias. Docker tags are `parity`, `parity-backend` and `parity-web`. Environment variables
+  (`MA_*`) and the GitHub repository name are unchanged.
+- Static `landing/` page: nav now matches the web landing page (Why Parity, How it works, Migration paths, Results, Proof,
+  FAQ), plus motion-safe 3D pointer tilt on the hero visual and card grids and a slow parallax on the floating shapes.
+
 ## [Unreleased] - 0.3.0
 
 ### Added: hosted platform scaffolding

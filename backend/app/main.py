@@ -39,7 +39,7 @@ def create_app(settings: Settings | None = None, *, db: Database | None = None, 
                 pass
         yield
 
-    app = FastAPI(title="migration-agent backend", version=__version__, lifespan=lifespan,
+    app = FastAPI(title="parity backend", version=__version__, lifespan=lifespan,
                   dependencies=[Depends(throttle)], docs_url="/docs" if st.environment != "production" else None,
                   redoc_url=None, openapi_url="/openapi.json" if st.environment != "production" else None)
     app.state.settings = st

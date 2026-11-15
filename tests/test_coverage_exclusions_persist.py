@@ -3,15 +3,15 @@ import json
 
 import pytest
 
-from migration_agent.analyze.coverage import exclusions_path, load_exclusions, save_exclusions
-from migration_agent.analyze.runner import run_analyze
-from migration_agent.graph import load_latest
-from migration_agent.llm.base import LLMResponse
-from migration_agent.llm.offline import OfflineLLM
-from migration_agent.pipeline import Inventory, InventoryItem
-from migration_agent.review.approval import approve, readiness
-from migration_agent.review.docrender import render_latest, write_latest
-from migration_agent.verify.models import MigrationContract
+from parity_migrate.analyze.coverage import exclusions_path, load_exclusions, save_exclusions
+from parity_migrate.analyze.runner import run_analyze
+from parity_migrate.graph import load_latest
+from parity_migrate.llm.base import LLMResponse
+from parity_migrate.llm.offline import OfflineLLM
+from parity_migrate.pipeline import Inventory, InventoryItem
+from parity_migrate.review.approval import approve, readiness
+from parity_migrate.review.docrender import render_latest, write_latest
+from parity_migrate.verify.models import MigrationContract
 
 from phase1_helpers import make_project
 

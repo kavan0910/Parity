@@ -31,21 +31,21 @@ dc exec -T postgres sh -c 'pg_dump -U "$POSTGRES_USER" -Fc "$POSTGRES_DB"' > bac
 ```
 Object store (`objects` volume, LocalStore):
 ```bash
-docker run --rm -v migration-agent-deploy_objects:/data:ro -v "$PWD":/out busybox tar -czf /out/objects-$(date -u +%F).tgz -C /data .
+docker run --rm -v parity-deploy_objects:/data:ro -v "$PWD":/out busybox tar -czf /out/objects-$(date -u +%F).tgz -C /data .
 ```
 (The volume name is prefixed by the compose project name; check with `docker volume ls`.) Encrypt backups before they
 leave the host and store them off-host. Retention: see `docs/security/data-handling-and-retention.md`.
 
 **Restore test (do this monthly and before trusting backups; never yet performed):**
 1. Start a scratch stack with a different project name: `COMPOSE_PROJECT_NAME=ma-restore dc up -d postgres`.
-2. `dc exec -T postgres pg_restore -U ma_app -d migration_agent --clean --if-exists < backup.dump`.
+2. `dc exec -T postgres pg_restore -U ma_app -d parity_migrate --clean --if-exists < backup.dump`.
 3. Restore objects into the scratch `objects` volume, start `api`, run `SMOKE_NO_UP=1 deploy/smoke.sh`.
 4. Record date, backup age, duration, result. Tear down with `dc down -v`.
 Deleted customer data remains in backups until they expire: this is why retention is stated in the policy.
 
 Deletion verification (staging, after deleting a project; table list **[assumed]**, replace with the real schema):
 ```bash
-dc exec -T postgres psql -U ma_app migration_agent -c "select count(*) from runs where project_id='<pid>'"
+dc exec -T postgres psql -U ma_app parity_migrate -c "select count(*) from runs where project_id='<pid>'"
 dc exec -T api sh -c 'find "$STORE_DIR" -path "*<pid>*" | head'
 ```
 Both must return zero rows / nothing.

@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1
-# Production image for migration-agent (D-03), built on the A-09 sandbox baseline:
+# Production image for parity (D-03), built on the A-09 sandbox baseline:
 #   multi-stage (wheel build -> slim runtime), non-root uid 10001, read-only rootfs compatible,
 #   no credentials baked in (keys are injected at run time via env / secrets).
 #
@@ -7,7 +7,7 @@
 #   docker build -f docker/Dockerfile \
 #     --build-arg VERSION=$(python -c "import tomllib;print(tomllib.load(open('pyproject.toml','rb'))['project']['version'])") \
 #     --build-arg VCS_REF=$(git rev-parse HEAD) --build-arg BUILD_DATE=$(date -u +%FT%TZ) \
-#     -t migration-agent:0.2.0 .
+#     -t parity:0.2.0 .
 #
 # PINNING THE BASE IMAGE BY DIGEST (do this for every release build):
 #   docker buildx imagetools inspect python:3.12-slim      # copy the top-level "Digest: sha256:..."
@@ -27,7 +27,7 @@ COPY src ./src
 # stage installs offline from /wheels and never needs compilers or network.
 RUN pip install --no-cache-dir build \
  && python -m build --wheel --outdir /wheels . \
- && pip wheel --no-cache-dir --wheel-dir /wheels "$(ls /wheels/migration_agent-*.whl)[llm]"
+ && pip wheel --no-cache-dir --wheel-dir /wheels "$(ls /wheels/parity_migrate-*.whl)[llm]"
 
 # ---------------------------------------------------------------- runtime
 FROM ${PYTHON_IMAGE} AS runtime
@@ -35,7 +35,7 @@ ARG PYTHON_IMAGE
 ARG VERSION=0.0.0-dev
 ARG VCS_REF=unknown
 ARG BUILD_DATE=unknown
-LABEL org.opencontainers.image.title="migration-agent" \
+LABEL org.opencontainers.image.title="parity" \
       org.opencontainers.image.description="Read-only legacy service analysis: evidence-backed understanding docs and knowledge graph" \
       org.opencontainers.image.version="${VERSION}" \
       org.opencontainers.image.revision="${VCS_REF}" \
@@ -60,7 +60,7 @@ RUN groupadd --gid 10001 agent \
 
 # Code is installed root-owned from the wheels: not writable by the agent user.
 RUN --mount=type=bind,from=builder,source=/wheels,target=/wheels \
-    pip install --no-cache-dir --no-index --find-links /wheels "$(ls /wheels/migration_agent-*.whl)[llm]" \
+    pip install --no-cache-dir --no-index --find-links /wheels "$(ls /wheels/parity_migrate-*.whl)[llm]" \
  && rm -rf /root/.cache
 
 # /workspace : the source repository under analysis, mount READ-ONLY.
@@ -74,6 +74,6 @@ USER 10001:10001
 #
 # No HEALTHCHECK: the CLI is run-to-completion, and `review` binds 127.0.0.1 inside the container
 # (with a Host-header check), so it cannot be health-probed or reached through a published port.
-# Run `migration-agent review` on the host against the project folder instead (docs/deployment.md).
-ENTRYPOINT ["migration-agent"]
+# Run `parity review` on the host against the project folder instead (docs/deployment.md).
+ENTRYPOINT ["parity"]
 CMD ["--help"]

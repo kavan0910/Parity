@@ -4,14 +4,14 @@ import json
 
 import pytest
 
-from migration_agent.migrate import equivalence as eq
-from migration_agent.migrate.ids import allocate
-from migration_agent.migrate.models import FitReport, Risk
-from migration_agent.migrate.paths import Phase2Layout
-from migration_agent.migrate.state import atomic_write_json, load_state
-from migration_agent.project import Project
-from migration_agent.review_ui.page import render_page
-from migration_agent.review_ui.server import MAX_BODY, serve
+from parity_migrate.migrate import equivalence as eq
+from parity_migrate.migrate.ids import allocate
+from parity_migrate.migrate.models import FitReport, Risk
+from parity_migrate.migrate.paths import Phase2Layout
+from parity_migrate.migrate.state import atomic_write_json, load_state
+from parity_migrate.project import Project
+from parity_migrate.review_ui.page import render_page
+from parity_migrate.review_ui.server import MAX_BODY, serve
 
 from p2_m5_helpers import Svc, commit, init_target, m5_project, standard_cases, walk_to_awaiting, write_iteration
 from test_review_ui import base, req
@@ -142,7 +142,7 @@ def test_reject_slice(ui):
 
 
 def test_review_finding_marks_via_ui_and_metrics(ui):
-    from migration_agent.migrate.metrics import compute_metrics
+    from parity_migrate.migrate.metrics import compute_metrics
     s1 = ui["s1"]
     d = Phase2Layout(ui["p"]).slice_iterations(s1) / "1"
     atomic_write_json(d / "review.json", {"findings": [{"kind": "a", "detail": "x"}, {"kind": "b", "detail": "y"}]})

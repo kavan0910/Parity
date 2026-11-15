@@ -2,7 +2,7 @@ import os
 
 from click.testing import CliRunner
 
-from migration_agent.dotenv import load_dotenv, parse_env_line
+from parity_migrate.dotenv import load_dotenv, parse_env_line
 
 
 def test_parse():
@@ -28,16 +28,16 @@ def test_missing_file(tmp_path):
 
 
 def test_analyze_requires_key(tmp_path, monkeypatch):
-    from migration_agent.cli import main
+    from parity_migrate.cli import main
     for k in ("ANTHROPIC_API_KEY", "GEMINI_API_KEY", "GOOGLE_API_KEY", "OPENAI_API_KEY"):
         monkeypatch.delenv(k, raising=False)
-    monkeypatch.setattr("migration_agent.dotenv.load_dotenv", lambda p: [])
+    monkeypatch.setattr("parity_migrate.dotenv.load_dotenv", lambda p: [])
     r = CliRunner().invoke(main, ["analyze", str(tmp_path)])
     assert r.exit_code != 0 and ".env" in r.output
 
 
 def test_ingest_refresh_replaces_code(tmp_path):
-    from migration_agent.cli import main
+    from parity_migrate.cli import main
     src = tmp_path / "src"
     src.mkdir()
     (src / "a.py").write_text("x = 1\n")

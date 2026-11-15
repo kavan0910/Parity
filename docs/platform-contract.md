@@ -11,22 +11,22 @@ Workstreams and owned directories (do not edit another stream's directory):
 
 | Stream | Owns | Depends on |
 |---|---|---|
-| A. Engine seams | `src/migration_agent/` (new `service.py`, `storage.py`; minimal edits elsewhere), `tests/` for those | nothing |
-| B. Backend | `backend/` | `migration_agent.service` (section 2) |
+| A. Engine seams | `src/parity_migrate/` (new `service.py`, `storage.py`; minimal edits elsewhere), `tests/` for those | nothing |
+| B. Backend | `backend/` | `parity_migrate.service` (section 2) |
 | C. Web | `web/` | HTTP API (section 3) |
 | D. Ops, security, docs | `deploy/`, `docs/security/`, `.github/workflows/`, root `*.md` additions | paths of A, B, C |
 
 ## 1. Repository layout
 
 ```
-src/migration_agent/        engine (library + CLI), stays pip-installable and CLI-compatible
+src/parity_migrate/        engine (library + CLI), stays pip-installable and CLI-compatible
 backend/                    FastAPI service + worker (own pyproject.toml, own venv at backend/.venv)
 web/                        Next.js (App Router, TypeScript, Tailwind)
 deploy/                     docker-compose for the full stack, Dockerfiles, env templates
 docs/security/              data-handling, retention, subprocessor list, SOC 2 readiness checklist
 ```
 
-## 2. Engine service API (`migration_agent.service`, stream A)
+## 2. Engine service API (`parity_migrate.service`, stream A)
 
 Pure functions over a local **project directory** (the existing folder layout). No HTTP, no database, no network
 other than the configured model endpoint. All must be importable without the `llm` extra unless an LLM is used.
@@ -48,7 +48,7 @@ def run_stage(project_dir: Path, stage: str, *, source: str | None = None, confi
               on_event: Callable[[Event], None] | None = None, llm: object | None = None,
               finding_id: str | None = None, status: str | None = None, note: str | None = None,
               reanalyze: bool = False, options: dict | None = None) -> StageResult
-def metrics(project_dir: Path) -> dict             # Phase 2 metrics, same dict as `migration-agent metrics --format json`
+def metrics(project_dir: Path) -> dict             # Phase 2 metrics, same dict as `parity metrics --format json`
 def estimate(project_dir: Path, config: dict | None = None, incremental: bool = False) -> dict   # {"chunks":int,"usd":float}
 def review_state(project_dir: Path) -> dict        # same shape the review UI serves at /api/state
 def graph_snapshot(project_dir: Path, version: int | None = None) -> dict   # {"version","nodes":[...],"edges":[...]}
@@ -178,7 +178,7 @@ route builds its own filter. Postgres deployments additionally enable row-level 
 ## 5. Worker (stream B)
 
 `python -m app.worker`: claims jobs (`FOR UPDATE SKIP LOCKED` on Postgres, equivalent on SQLite), materialises the
-project from storage into a scratch dir, calls `migration_agent.service.run_stage` per stage, streams events into
+project from storage into a scratch dir, calls `parity_migrate.service.run_stage` per stage, streams events into
 `run_events` and `usage_events`, uploads artifacts, enforces the per-run budget and entitlements, retries with
 backoff, is idempotent per run, and always cleans the scratch dir. The model API key is injected per job from
 server configuration, never stored in a project.

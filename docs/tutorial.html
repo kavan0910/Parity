@@ -277,7 +277,7 @@ main>h1{display:none}
 <p>You need Python 3.11 or newer and one model API key. Everything except the analysis and verify steps works without a key.</p>
 <div class="pw"><pre><code>python -m venv .venv &amp;&amp; . .venv/bin/activate
 pip install ".[llm]"        # the [llm] extra adds LiteLLM for real model calls
-migration-agent --version   # migration-agent, version 0.2.0</code></pre></div>
+parity --version   # parity, version 0.2.0</code></pre></div>
 <p>For development: <code>pip install -e ".[dev,llm]"</code> then <code>PYTHONPATH=src python -m pytest -q</code> (1195 tests pass, 2 skipped; the Docker tests run when a daemon is present).</p>
 <h3>API keys</h3>
 <p>Copy <code>.env.example</code> to <code>.env</code> and fill in a key. The CLI loads it at start-up and never overrides variables already set in your shell. <code>.env</code> is git-ignored; never commit it.</p>
@@ -307,25 +307,25 @@ migration-agent --version   # migration-agent, version 0.2.0</code></pre></div>
 
 <section id="walkthrough">
 <h2><span class="n">3</span>Walkthrough</h2>
-<p>Every command takes the project folder as its first argument and appends to <code>audit/audit.jsonl</code>. Run <code>migration-agent COMMAND --help</code> for the authoritative option list.</p>
+<p>Every command takes the project folder as its first argument and appends to <code>audit/audit.jsonl</code>. Run <code>parity COMMAND --help</code> for the authoritative option list.</p>
 
 <h3>Step 1. Create the project</h3>
-<div class="pw"><pre><code>migration-agent init ./legacy-orders
+<div class="pw"><pre><code>parity init ./legacy-orders
 # or a zip, tarball or git URL, with a custom location and name:
-migration-agent init https://example.com/team/orders.git --project ./orders.migration --name "Orders service"</code></pre></div>
+parity init https://example.com/team/orders.git --project ./orders.migration --name "Orders service"</code></pre></div>
 <p>Nothing is copied yet. The repo includes three sample projects to practise on: <code>django-lite.migration</code>, <code>express-crud.migration</code> and <code>spring-lite.migration</code>.</p>
 
 <h3>Step 2. Ingest the code</h3>
-<div class="pw"><pre><code>migration-agent ingest legacy-orders.migration</code></pre></div>
+<div class="pw"><pre><code>parity ingest legacy-orders.migration</code></pre></div>
 <p>Copies the source into <code>code/</code> with limits: 500 MB, 200,000 files, a compression-ratio cap of 100, git clones with hooks disabled. It skips symlinks, binaries, files over 1 MB and vendor or build folders (<code>.git</code>, <code>node_modules</code>, <code>vendor</code>, <code>build</code>, <code>dist</code>, <code>target</code>, virtualenvs). Credential files such as <code>.env</code>, <code>*.pem</code>, <code>id_rsa</code> and <code>.npmrc</code> are withheld entirely; secrets in other files become <code>[REDACTED:&lt;kind&gt;]</code>. Read <code>ingest_report.json</code> to see what was kept. If the source changes later, run <code>ingest --refresh</code>.</p>
 
 <h3>Step 3. Extract static facts</h3>
-<div class="pw"><pre><code>migration-agent extract legacy-orders.migration</code></pre></div>
+<div class="pw"><pre><code>parity extract legacy-orders.migration</code></pre></div>
 <p>No model involved. tree-sitter pulls out AST facts, dependency manifests, configuration keys, routes and import edges into <code>facts/</code>, and writes <code>inventory.json</code>: the checklist of everything the analysis must account for.</p>
 
 <h3>Step 4. Plan, then analyze</h3>
-<div class="pw"><pre><code>migration-agent analyze legacy-orders.migration --dry-run          # plan + cost estimate, no key needed
-migration-agent analyze legacy-orders.migration --config gemini.config.json --max-usd 3</code></pre></div>
+<div class="pw"><pre><code>parity analyze legacy-orders.migration --dry-run          # plan + cost estimate, no key needed
+parity analyze legacy-orders.migration --config gemini.config.json --max-usd 3</code></pre></div>
 <p>Always dry-run first. The real run chunks the code, extracts per chunk with the model, merges, resolves cross-references, verifies each piece of evidence against <code>code/</code>, runs a business-rules pass and fills gaps for unmapped inventory items. It writes <code>docs/understanding.latest.md</code>, <code>docs/graph.html</code> and a new graph snapshot.</p>
 <div class="tw"><table>
 <tr><th>Option</th><th>Use it to</th></tr>
@@ -340,7 +340,7 @@ migration-agent analyze legacy-orders.migration --config gemini.config.json --ma
 
 <h3>Step 5. Verify against your own docs</h3>
 <p>Put your existing docs (.md, .txt, .html, .docx, .pdf) in <code>user_docs/</code>, then:</p>
-<div class="pw"><pre><code>migration-agent verify legacy-orders.migration --config gemini.config.json --max-usd 1</code></pre></div>
+<div class="pw"><pre><code>parity verify legacy-orders.migration --config gemini.config.json --max-usd 1</code></pre></div>
 <p>The Verifier sees only the generated document and your docs, never the code, and the analysis never saw your docs. That separation is why a disagreement means something. Each finding quotes both sides verbatim; findings whose quotes cannot be string-matched are dropped. Results go to <code>feedback/findings.json</code>.</p>
 <div class="tw"><table>
 <tr><th>Finding kind</th><th>Meaning</th></tr>
@@ -351,7 +351,7 @@ migration-agent analyze legacy-orders.migration --config gemini.config.json --ma
 </table></div>
 
 <h3>Step 6. Review</h3>
-<div class="pw"><pre><code>migration-agent review legacy-orders.migration</code></pre></div>
+<div class="pw"><pre><code>parity review legacy-orders.migration</code></pre></div>
 <p>Starts the local review UI and prints a URL with a one-time token. See the next section.</p>
 </section>
 
@@ -359,7 +359,7 @@ migration-agent analyze legacy-orders.migration --config gemini.config.json --ma
 <h2><span class="n">4</span>The review loop</h2>
 <p>Each disagreement becomes a recorded decision and, where needed, a targeted re-analysis, producing a new graph version and a changelog entry.</p>
 <h3>The review UI</h3>
-<div class="pw"><pre><code>migration-agent review legacy-orders.migration --port 8765 --no-browser</code></pre></div>
+<div class="pw"><pre><code>parity review legacy-orders.migration --port 8765 --no-browser</code></pre></div>
 <p>It prints a URL like <code>http://127.0.0.1:8765/&lt;token&gt;/</code>. The UI shows the understanding document with coverage and confidence, the findings, graph versions and diffs. You can comment on any graph item and resolve findings.</p>
 <ul>
 <li>Binds to 127.0.0.1 only; do not forward the port.</li>
@@ -368,9 +368,9 @@ migration-agent analyze legacy-orders.migration --config gemini.config.json --ma
 <li>It can only write comments, resolutions, migration decisions and approvals (token-protected), and cannot run inside a container.</li>
 </ul>
 <h3>Resolving from the command line</h3>
-<div class="pw"><pre><code>migration-agent resolve orders.migration F-0001 --status accepted_doc --note "Discount is 25% from 10 items"
-migration-agent resolve orders.migration --comment RULE-0003 --note "Check the VIP exception in pricing.py"
-migration-agent resolve orders.migration F-0004 --status dismissed --no-reanalyze</code></pre></div>
+<div class="pw"><pre><code>parity resolve orders.migration F-0001 --status accepted_doc --note "Discount is 25% from 10 items"
+parity resolve orders.migration --comment RULE-0003 --note "Check the VIP exception in pricing.py"
+parity resolve orders.migration F-0004 --status dismissed --no-reanalyze</code></pre></div>
 <div class="tw"><table>
 <tr><th>Status</th><th>Meaning</th><th>Re-analysis</th></tr>
 <tr><td><code>accepted_doc</code></td><td>Your documentation is right; the code-derived claim is wrong</td><td>Yes, affected nodes</td></tr>
@@ -382,23 +382,23 @@ migration-agent resolve orders.migration F-0004 --status dismissed --no-reanalyz
 <p>Your note goes to the model as untrusted data, and every resulting claim still needs verbatim code evidence. If a budget limit interrupts a re-analysis, nothing is written.</p>
 <h3>Stable IDs, versions and the changelog</h3>
 <p>Items get stable IDs such as <code>COMP-0001</code> and <code>RULE-0003</code> in <code>graph/registry.json</code>, so references survive re-analysis, and review patches persist across later <code>analyze</code> runs. Each analysis or resolution saves a snapshot in <code>graph/snapshots/</code>.</p>
-<div class="pw"><pre><code>migration-agent changelog legacy-orders.migration   # writes docs/changelog.md
-migration-agent audit legacy-orders.migration --format json</code></pre></div>
+<div class="pw"><pre><code>parity changelog legacy-orders.migration   # writes docs/changelog.md
+parity audit legacy-orders.migration --format json</code></pre></div>
 <h3>When the code changes</h3>
-<div class="pw"><pre><code>migration-agent ingest legacy-orders.migration --refresh
-migration-agent analyze legacy-orders.migration --incremental --workers 4</code></pre></div>
+<div class="pw"><pre><code>parity ingest legacy-orders.migration --refresh
+parity analyze legacy-orders.migration --incremental --workers 4</code></pre></div>
 </section>
 
 <section id="approve">
 <h2><span class="n">5</span>Approve: the Phase 1 exit gate</h2>
 <p>Before anything is migrated, a person signs off on the understanding. Three commands do it.</p>
 <h3>Decide what to do with quirks and suspected bugs</h3>
-<div class="pw"><pre><code>migration-agent decide orders.migration RULE-0007 --fix --note "Refund window is off by one day"
-migration-agent decide orders.migration COMP-0012 --preserve --note "Clients depend on the trailing slash"</code></pre></div>
+<div class="pw"><pre><code>parity decide orders.migration RULE-0007 --fix --note "Refund window is off by one day"
+parity decide orders.migration COMP-0012 --preserve --note "Clients depend on the trailing slash"</code></pre></div>
 <p>Each quirk or suspected bug (section 12 of the document) gets a migration decision, stored in <code>feedback/decisions.json</code>. Items without one default to <strong>preserve</strong>, because silently changing behaviour is the main migration risk. The document is re-rendered offline, with no model call, and shows <code>Migration decision: ...</code>.</p>
 <h3>Check readiness, then approve</h3>
-<div class="pw"><pre><code>migration-agent status  orders.migration                    # blockers, warnings, approval state
-migration-agent approve orders.migration --by "Jane Doe"    # refused while any blocker remains</code></pre></div>
+<div class="pw"><pre><code>parity status  orders.migration                    # blockers, warnings, approval state
+parity approve orders.migration --by "Jane Doe"    # refused while any blocker remains</code></pre></div>
 <div class="tw"><table>
 <tr><th>Blockers (approval refused)</th><th>Warnings (shown, recorded, not blocking)</th></tr>
 <tr><td>No graph or document; unmapped inventory items; a Verifier finding that is unresolved or <code>open</code>; a resolution waiting for re-analysis; an unused comment; a document that does not match a fresh offline render</td><td>Deferred findings; Verifier never run; open questions; quirks still on the default decision; low-confidence nodes</td></tr>
@@ -421,7 +421,7 @@ migration-agent approve orders.migration --by "Jane Doe"    # refused while any 
 <h3>Prerequisites</h3>
 <ul>
 <li>An approved Phase 1 project: <code>status</code> shows <code>approved</code> and <code>contract check</code> prints <code>contract: OK</code>.</li>
-<li>Docker, git, and the images your harness and target need, already pulled (Phase 2 never pulls). <code>migration-agent doctor PROJECT</code> checks the contract, sandbox, git and budget.</li>
+<li>Docker, git, and the images your harness and target need, already pulled (Phase 2 never pulls). <code>parity doctor PROJECT</code> checks the contract, sandbox, git and budget.</li>
 <li>A project budget: <code>target init --budget-usd N</code>. Every model call is capped by what remains, across sessions.</li>
 </ul>
 <h3>If your service needs a token or starts empty</h3>
@@ -433,19 +433,19 @@ migration-agent approve orders.migration --by "Jane Doe"    # refused while any 
 seed_requests: harness/seed/requests.json  # replayed after every `harness up`; a failing seed stops it</code></pre></div>
 <p>Without this a token-protected service answers <code>401</code> to every case and you compare two error pages.</p>
 <h3>The commands in order</h3>
-<div class="pw"><pre><code>migration-agent contract check orders.migration
-migration-agent target init orders.migration --runtime 21 --framework spring-boot@3.3 --build maven --budget-usd 25
-migration-agent target fit  orders.migration --max-usd 2        # risks; resolve with: target resolve ... RISK-0003 --status mitigate
-migration-agent plan        orders.migration                    # ordered slices
-migration-agent harness import-source orders.migration --from-original
-migration-agent harness build orders.migration &amp;&amp; migration-agent harness up orders.migration
-migration-agent tests generate orders.migration --max-usd 3
-migration-agent tests record   orders.migration --harness       # every case twice against legacy
-migration-agent generate orders.migration --slice SLICE-0001 --max-usd 5
-migration-agent harness build orders.migration --new &amp;&amp; migration-agent harness up orders.migration --new
-migration-agent equivalence orders.migration --slice SLICE-0001
-migration-agent approve-slice orders.migration SLICE-0001 --by alice
-migration-agent cutover orders.migration --approve --by alice   # when every slice is approved</code></pre></div>
+<div class="pw"><pre><code>parity contract check orders.migration
+parity target init orders.migration --runtime 21 --framework spring-boot@3.3 --build maven --budget-usd 25
+parity target fit  orders.migration --max-usd 2        # risks; resolve with: target resolve ... RISK-0003 --status mitigate
+parity plan        orders.migration                    # ordered slices
+parity harness import-source orders.migration --from-original
+parity harness build orders.migration &amp;&amp; parity harness up orders.migration
+parity tests generate orders.migration --max-usd 3
+parity tests record   orders.migration --harness       # every case twice against legacy
+parity generate orders.migration --slice SLICE-0001 --max-usd 5
+parity harness build orders.migration --new &amp;&amp; parity harness up orders.migration --new
+parity equivalence orders.migration --slice SLICE-0001
+parity approve-slice orders.migration SLICE-0001 --by alice
+parity cutover orders.migration --approve --by alice   # when every slice is approved</code></pre></div>
 <div class="tw"><table>
 <tr><th>Step</th><th>What it does</th></tr>
 <tr><td><code>target init|show|fit|resolve</code></td><td>Describes the target and finds migration risks (Java 8 to 21, Spring Boot 2 to 3, Django 3 to 5, Express to Fastify, JS to Go); model risks are kept only with verified evidence</td></tr>
@@ -466,8 +466,8 @@ migration-agent cutover orders.migration --approve --by alice   # when every sli
 <h2><span class="n">7</span>Docker, safety, help</h2>
 <h3>Running in Docker</h3>
 <p>The image is a run-to-completion batch job: source mounted read-only, project folder read-write, non-root user 10001, read-only root filesystem, no baked-in secrets. Run the review UI on your host, not in the container.</p>
-<div class="pw"><pre><code>docker build -f docker/Dockerfile --build-arg VERSION=0.2.0 -t migration-agent:0.2.0 .
-docker run --rm --read-only --tmpfs /tmp --network none migration-agent:0.2.0 --version</code></pre></div>
+<div class="pw"><pre><code>docker build -f docker/Dockerfile --build-arg VERSION=0.2.0 -t parity:0.2.0 .
+docker run --rm --read-only --tmpfs /tmp --network none parity:0.2.0 --version</code></pre></div>
 <div class="tw"><table>
 <tr><th>Compose profile</th><th>Network</th><th>Use it for</th></tr>
 <tr><td><code>offline</code></td><td>None</td><td><code>init</code>, <code>ingest</code>, <code>extract</code>, <code>render</code>, <code>audit</code>, <code>changelog</code>, <code>analyze --offline</code></td></tr>

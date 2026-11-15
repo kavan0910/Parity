@@ -7,14 +7,14 @@ import click
 import pytest
 from click.testing import CliRunner
 
-from migration_agent.audit import AuditLog, read_audit
-from migration_agent.cli import main
-from migration_agent.migrate import cli as p2cli
-from migration_agent.migrate import exec as p2exec
-from migration_agent.migrate.exec.base import ExecBackend, UnavailableBackend, load_run
-from migration_agent.migrate.exec.fake import FakeExecBackend, FakeOutcome
-from migration_agent.migrate.models import ExecJob
-from migration_agent.migrate.paths import Phase2Layout
+from parity_migrate.audit import AuditLog, read_audit
+from parity_migrate.cli import main
+from parity_migrate.migrate import cli as p2cli
+from parity_migrate.migrate import exec as p2exec
+from parity_migrate.migrate.exec.base import ExecBackend, UnavailableBackend, load_run
+from parity_migrate.migrate.exec.fake import FakeExecBackend, FakeOutcome
+from parity_migrate.migrate.models import ExecJob
+from parity_migrate.migrate.paths import Phase2Layout
 
 from phase2_helpers import approved_project, edit_contract
 
@@ -45,7 +45,7 @@ def test_contract_check_ok_and_failing(proj):
 
 
 def test_contract_check_pin(proj):
-    from migration_agent.graph import load_latest, save_snapshot
+    from parity_migrate.graph import load_latest, save_snapshot
     save_snapshot(proj.graph_dir, load_latest(proj.graph_dir))
     assert _run("contract", "check", proj.root).exit_code == 1
     r = _run("contract", "check", proj.root, "--pin-contract")
@@ -77,7 +77,7 @@ def test_doctor_all_ok_with_fake_backend(proj, monkeypatch):
 
 
 def test_doctor_reports_failures(tmp_path, monkeypatch):
-    from migration_agent.project import Project
+    from parity_migrate.project import Project
     p = Project.init(tmp_path / "p", source="s")
     monkeypatch.setattr(p2cli, "_git_version", lambda: (False, "git not found on PATH"))
     monkeypatch.setattr(p2exec, "get_backend", lambda *a, **k: UnavailableBackend(None, "docker daemon not reachable"))
@@ -88,8 +88,8 @@ def test_doctor_reports_failures(tmp_path, monkeypatch):
 
 
 def test_default_backend_reports_docker_reason_when_daemon_is_down(tmp_path, monkeypatch):
-    from migration_agent.migrate.exec import docker as p2docker
-    from migration_agent.project import Project
+    from parity_migrate.migrate.exec import docker as p2docker
+    from parity_migrate.project import Project
     p = Project.init(tmp_path / "p", source="s")
     b = p2exec.get_backend(p)
     assert isinstance(b, (p2docker.DockerBackend, UnavailableBackend))
@@ -100,7 +100,7 @@ def test_default_backend_reports_docker_reason_when_daemon_is_down(tmp_path, mon
 
 def test_submodule_registry(monkeypatch):
     calls = []
-    mod = types.ModuleType("migration_agent.migrate.zz_demo")
+    mod = types.ModuleType("parity_migrate.migrate.zz_demo")
 
     def register(groups):
         calls.append(groups)
@@ -114,7 +114,7 @@ def test_submodule_registry(monkeypatch):
             click.echo("verb ran")
 
     mod.register = register
-    monkeypatch.setitem(sys.modules, "migration_agent.migrate.zz_demo", mod)
+    monkeypatch.setitem(sys.modules, "parity_migrate.migrate.zz_demo", mod)
 
     @click.group()
     def fresh():
@@ -152,7 +152,7 @@ def _job(run_id="RUN-0001", **kw):
 
 
 def test_fake_backend_writes_run_files(tmp_path):
-    from migration_agent.project import Project
+    from parity_migrate.project import Project
     p = Project.init(tmp_path / "p", source="s")
     secret = "ghp_" + "b" * 36
     fake = FakeExecBackend(p, script=[FakeOutcome(exit_code=0, stdout="BUILD OK token=" + secret),

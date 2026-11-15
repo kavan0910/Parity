@@ -10,18 +10,18 @@ import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
-from migration_agent.migrate.casestore import save_case
-from migration_agent.migrate.harness_runner import RunnerConfig, apply_masks, observe
-from migration_agent.migrate.ids import allocate
-from migration_agent.migrate.models import (
+from parity_migrate.migrate.casestore import save_case
+from parity_migrate.migrate.harness_runner import RunnerConfig, apply_masks, observe
+from parity_migrate.migrate.ids import allocate
+from parity_migrate.migrate.models import (
     CharacterizationCase, Expectation, HttpRequest, MigrationPlan, Slice,
 )
-from migration_agent.migrate.paths import Phase2Layout
-from migration_agent.migrate.state import atomic_write_json, transition
+from parity_migrate.migrate.paths import Phase2Layout
+from parity_migrate.migrate.state import atomic_write_json, transition
 
 from phase2_helpers import approved_project
 
-AGENT = ("migration-agent", "agent@localhost")
+AGENT = ("parity", "agent@localhost")
 HUMAN = ("Bob Human", "bob@example.com")
 WALK = ("tests_recorded", "generating", "built", "tests_passing", "reviewed", "awaiting_human")
 

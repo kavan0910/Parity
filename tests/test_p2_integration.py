@@ -11,17 +11,17 @@ from pathlib import Path
 import pytest
 from click.testing import CliRunner
 
-from migration_agent.cli import main
-from migration_agent.migrate import equivalence as eq
-from migration_agent.migrate import harness as H
-from migration_agent.migrate import slice_runner as sr
-from migration_agent.migrate.approvals import approval_blockers, iterations, load_approval
-from migration_agent.migrate.exec.fake import FakeExecBackend
-from migration_agent.migrate.exec.policy import scan_job
-from migration_agent.migrate.harness_runner import netrunner, wire
-from migration_agent.migrate.models import CharacterizationCase, Expectation, HttpRequest
-from migration_agent.migrate.paths import Phase2Layout
-from migration_agent.migrate.state import load_state, transition
+from parity_migrate.cli import main
+from parity_migrate.migrate import equivalence as eq
+from parity_migrate.migrate import harness as H
+from parity_migrate.migrate import slice_runner as sr
+from parity_migrate.migrate.approvals import approval_blockers, iterations, load_approval
+from parity_migrate.migrate.exec.fake import FakeExecBackend
+from parity_migrate.migrate.exec.policy import scan_job
+from parity_migrate.migrate.harness_runner import netrunner, wire
+from parity_migrate.migrate.models import CharacterizationCase, Expectation, HttpRequest
+from parity_migrate.migrate.paths import Phase2Layout
+from parity_migrate.migrate.state import load_state, transition
 
 from p2_exec_helpers import IMG_ID, FakeDocker, flag_values
 from p2_integration_helpers import fake_up, runner_fake
@@ -84,7 +84,7 @@ def test_run_cases_in_network_argv_mounts_network_and_results(m5, monkeypatch):
     assert [set(c) for c in staged] == [{"id", "kind", "request"}] * 3      # expectations stay on the host
     # job recorded like any exec run, passes the static policy, results copied to runs/RUN-NNNN/reports/
     meta = json.loads((run_dir / "meta.json").read_text())
-    from migration_agent.migrate.models import ExecJob
+    from parity_migrate.migrate.models import ExecJob
     job = ExecJob.model_validate(meta["job"])
     assert job.phase == "test" and job.network == "none" and job.image == H.RUNNER_IMAGE
     assert scan_job(job, p.root) == []
@@ -160,7 +160,7 @@ def test_tests_record_harness_cli_records_twice_and_moves_slice_state(m5, monkey
         assert "recorded 2/2" in res.output and f"slices now tests_recorded: {s1}" in res.output
         assert len(fd.runner_runs) == 2 and all(flag_values(a, "--network")[0].startswith("ma-int-")
                                                for a in fd.runner_runs)
-        from migration_agent.migrate.casestore import load_cases
+        from parity_migrate.migrate.casestore import load_cases
         rec = {c.id: c for c in load_cases(p)}
         assert "$.ts" in rec[items.id].normalize and rec[items.id].expect.source == "recorded"
         assert load_state(p, s1).status == "tests_recorded" and load_state(p, s2).status == "planned"
@@ -182,7 +182,7 @@ def test_record_marks_slice_only_when_all_cases_recorded(m5, monkeypatch):
     make_case(p, s1, "/api/price", key="price")
     make_case(p, s1, "/api/nope", key="nope")                       # 404 is recorded too
     with Svc("legacy") as legacy:
-        from migration_agent.migrate.recorder import record_cases
+        from parity_migrate.migrate.recorder import record_cases
         rep = record_cases(p, legacy.base_url, case_ids=[make_case(p, s1, "/api/items", key="items").id])
         assert rep.slices_recorded == [] and load_state(p, s1).status == "planned"
         rep = record_cases(p, legacy.base_url)
@@ -241,7 +241,7 @@ def test_equivalence_composite_after_flip(m5, monkeypatch):
     with Svc("legacy") as legacy, Svc("new") as new, Svc("regressed") as bad:
         cases = standard_cases(p, s1, legacy.base_url)
         q = cases["quirk"]                                              # like `tests record`: with headers
-        from migration_agent.migrate.casestore import save_case
+        from parity_migrate.migrate.casestore import save_case
         save_case(p, q.model_copy(update={"expect": q.expect.model_copy(update={"legacy_observed": {
             **q.expect.legacy_observed, "headers": {"content-type": "application/json"}}})}))
         make_case(p, s2, "/api/price", key="price2")                    # s2 is not approved: not run
@@ -303,7 +303,7 @@ def test_harness_suite_builds_starts_and_runs_cases_in_network(m5, monkeypatch):
     monkeypatch.setattr(H, "build", lambda project, role, backend=None: calls.append(("build", role)) or {"ok": True})
     monkeypatch.setattr(H, "up", lambda project, role, backend=None: calls.append(("up", role)) or {})
     monkeypatch.setattr(H, "down", lambda project, role, backend=None: calls.append(("down", role)) or {})
-    from migration_agent.migrate.harness_runner import CaseResult
+    from parity_migrate.migrate.harness_runner import CaseResult
 
     def fake_run(project, role, cases, *, backend=None, compare=True, **kw):
         calls.append(("run", role, compare))
@@ -325,9 +325,9 @@ def test_harness_suite_builds_starts_and_runs_cases_in_network(m5, monkeypatch):
 
 # ------------------------------------------------------------------ iteration-file contract
 def test_iteration_files_written_by_slice_runner_are_what_approvals_reads(tmp_path, tmp_path_factory):
-    from migration_agent.migrate.approvals import _green, latest_iteration
-    from migration_agent.migrate.codegen import OfflineCodegenLLM
-    from migration_agent.migrate.exec.fake import FakeOutcome
+    from parity_migrate.migrate.approvals import _green, latest_iteration
+    from parity_migrate.migrate.codegen import OfflineCodegenLLM
+    from parity_migrate.migrate.exec.fake import FakeOutcome
     p = m4_project(tmp_path, tmp_path_factory)
     sid = ready_slice(p).id
 
@@ -372,7 +372,7 @@ def _e2e_project(tmp_path, tmp_path_factory, monkeypatch):
     lay.ensure(lay.target_dir)
     lay.target_yaml.write_text(TARGET_YAML)
     monkeypatch.setattr(sr, "harness_suite", passing_suite)          # injected passing characterization suite
-    import migration_agent.migrate.exec as ex
+    import parity_migrate.migrate.exec as ex
     monkeypatch.setattr(ex, "get_backend", lambda project=None: FakeExecBackend(project))
     sid = ready_slice(p).id
     case = make_case(p, sid, "/api/price", key="e2e-price")
@@ -463,8 +463,8 @@ def _daemon_ok() -> bool:
 
 @pytest.mark.skipif(not _daemon_ok(), reason="docker daemon not available (docker info failed)")
 def test_live_runner_job_reaches_a_service_on_the_internal_network_only(m5):
-    from migration_agent.migrate.exec.docker import DockerBackend
-    from migration_agent.migrate.models import ExecJob, Limits
+    from parity_migrate.migrate.exec.docker import DockerBackend
+    from parity_migrate.migrate.models import ExecJob, Limits
     p, *_ = m5
     b = DockerBackend(p)
     if b.docker(["image", "inspect", H.RUNNER_IMAGE]).returncode != 0:

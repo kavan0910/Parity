@@ -1,6 +1,6 @@
-from migration_agent.analyze.merger import collapse_entity_components
-from migration_agent.extract.deps import extract_deps
-from migration_agent.graph.models import Edge, Graph, Node
+from parity_migrate.analyze.merger import collapse_entity_components
+from parity_migrate.extract.deps import extract_deps
+from parity_migrate.graph.models import Edge, Graph, Node
 
 
 def w(root, rel, text):
@@ -47,7 +47,7 @@ def test_collapse_entity_components():
 
 
 def test_stub_component_merged_into_analysed_one():
-    from migration_agent.analyze.merger import collapse_entity_components
+    from parity_migrate.analyze.merger import collapse_entity_components
     stub = Node(id="COMP-0001", type="component", name="a.js", module="a.js", qualified_symbol="a.js",
                 responsibility="(facts only: not yet analysed)", inventory_refs=["INV-1"])
     real = Node(id="COMP-0002", type="component", name="App", module="a.js", qualified_symbol="app",

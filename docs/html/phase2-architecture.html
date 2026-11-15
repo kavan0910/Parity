@@ -242,7 +242,7 @@ CLI and fake model clients). They have also run on a real Docker daemon on the e
 the "Implementation status" section at the top of the plan and <a href="remaining-work.html">remaining-work.md</a> for what has and
 has not run live.</p>
 <h2 id="module-map">Module map</h2>
-<p>All Phase 2 code lives in <code>src/migration_agent/migrate/</code>. Each module's docstring is the detailed reference.</p>
+<p>All Phase 2 code lives in <code>src/parity_migrate/migrate/</code>. Each module's docstring is the detailed reference.</p>
 <div class="tw"><table>
 <thead>
 <tr>
@@ -509,21 +509,21 @@ readiness, approval, <code>review/docrender.py</code> and <code>review/reanalyze
 <p>Every command that writes Phase 2 state calls <code>require_contract</code> first. The model sees only the redacted <code>code/</code>,
 graph facts and generated text; <code>legacy_src/</code> is mounted only into exec containers.</p>
 <h2 id="public-entry-points">Public entry points</h2>
-<div class="pw"><pre><code language-python>from migration_agent.migrate.contract import check_contract, require_contract   # ContractCheck / MigrationContract
-from migration_agent.migrate.ledger import budget_for                            # Budget capped by project budget
-from migration_agent.migrate.target import detect_source, load_target            # Detection / TargetSpec
-from migration_agent.migrate.fit import run_fit, resolve_risk, fit_blockers      # FitRun / FitResolution / [Risk]
-from migration_agent.migrate.planner import plan_project, build_plan             # PlanResult / PlanDraft
-from migration_agent.migrate.testgen import generate_cases, approve_spec         # TestgenReport
-from migration_agent.migrate.recorder import record_cases, run_suite, coverage_gaps
-from migration_agent.migrate.harness import import_source, build, up, down, status, flip, unflip, run_cases_in_network
-from migration_agent.migrate.slice_runner import generate, dry_run, GenerateOptions   # GenerateReport
-from migration_agent.migrate.equivalence import run_equivalence, run_composite, approve_mask
-from migration_agent.migrate.approvals import approve_slice, reject_slice, approval_blockers, add_comment
-from migration_agent.migrate.configmap import build_config_map, config_gaps, set_decision
-from migration_agent.migrate.schemacompat import check, schema_blockers
-from migration_agent.migrate.cutover import readiness, write_plan, approve, verify_approval
-from migration_agent.migrate.metrics import compute_metrics
+<div class="pw"><pre><code language-python>from parity_migrate.migrate.contract import check_contract, require_contract   # ContractCheck / MigrationContract
+from parity_migrate.migrate.ledger import budget_for                            # Budget capped by project budget
+from parity_migrate.migrate.target import detect_source, load_target            # Detection / TargetSpec
+from parity_migrate.migrate.fit import run_fit, resolve_risk, fit_blockers      # FitRun / FitResolution / [Risk]
+from parity_migrate.migrate.planner import plan_project, build_plan             # PlanResult / PlanDraft
+from parity_migrate.migrate.testgen import generate_cases, approve_spec         # TestgenReport
+from parity_migrate.migrate.recorder import record_cases, run_suite, coverage_gaps
+from parity_migrate.migrate.harness import import_source, build, up, down, status, flip, unflip, run_cases_in_network
+from parity_migrate.migrate.slice_runner import generate, dry_run, GenerateOptions   # GenerateReport
+from parity_migrate.migrate.equivalence import run_equivalence, run_composite, approve_mask
+from parity_migrate.migrate.approvals import approve_slice, reject_slice, approval_blockers, add_comment
+from parity_migrate.migrate.configmap import build_config_map, config_gaps, set_decision
+from parity_migrate.migrate.schemacompat import check, schema_blockers
+from parity_migrate.migrate.cutover import readiness, write_plan, approve, verify_approval
+from parity_migrate.migrate.metrics import compute_metrics
 </code></pre></div>
 <p>Signatures (keyword-only arguments shown after <code>*</code>):</p>
 <div class="tw"><table>
@@ -596,7 +596,7 @@ from migration_agent.migrate.metrics import compute_metrics
 </tr>
 </tbody>
 </table></div>
-<p>For hosts that embed the engine, <code>migration_agent.service.run_stage</code> wraps the main steps (see
+<p>For hosts that embed the engine, <code>parity_migrate.service.run_stage</code> wraps the main steps (see
 <a href="platform-contract.html">platform-contract.md</a> section 2).</p>
 <h2 id="shared-contracts-migratemodelspy">Shared contracts (<code>migrate/models.py</code>)</h2>
 <p>All models use <code>extra="forbid"</code> and round-trip through <code>model_dump_json</code> / <code>model_validate_json</code>. Sha256 fields accept
@@ -855,7 +855,7 @@ skipped; an import error inside an existing module propagates. Keep heavy import
 <li>Results are files under <code>runs/RUN-NNNN/</code> written by <code>record_run</code> (1 MB log cap, redaction, audit record
   <code>exec</code>/<code>exec_run</code>).</li>
 <li><code>get_backend(project)</code> returns <code>DockerBackend(project)</code>. Tests inject <code>FakeExecBackend</code> by monkeypatching
-  <code>migration_agent.migrate.exec.get_backend</code>.</li>
+  <code>parity_migrate.migrate.exec.get_backend</code>.</li>
 </ul>
 <p>Configuration: <code>harness/mirror.json</code> <code>{"hosts": [...], "ports": [443], "runtime": "auto", "proxy_image": ...,
 "user": "auto"}</code>; <code>MA_MIRROR_HOSTS</code> (comma separated) overrides <code>hosts</code>; <code>MA_EXEC_RUNTIME</code> (<code>auto|runsc|runc</code>)

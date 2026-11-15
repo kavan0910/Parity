@@ -10,14 +10,14 @@ import pytest
 import yaml
 from click.testing import CliRunner
 
-from migration_agent.cli import main
-from migration_agent.graph.models import Edge, Evidence, Graph, Node
-from migration_agent.migrate import exec as p2exec
-from migration_agent.migrate import schemacompat as S
-from migration_agent.migrate.exec.fake import FakeExecBackend, FakeOutcome
-from migration_agent.migrate.models import MigrationPlan, Slice, SourceStack, TargetSpec, TargetStack
-from migration_agent.migrate.router import schema_probe
-from migration_agent.migrate.target import write_target
+from parity_migrate.cli import main
+from parity_migrate.graph.models import Edge, Evidence, Graph, Node
+from parity_migrate.migrate import exec as p2exec
+from parity_migrate.migrate import schemacompat as S
+from parity_migrate.migrate.exec.fake import FakeExecBackend, FakeOutcome
+from parity_migrate.migrate.models import MigrationPlan, Slice, SourceStack, TargetSpec, TargetStack
+from parity_migrate.migrate.router import schema_probe
+from parity_migrate.migrate.target import write_target
 
 from phase2_helpers import approved_project
 
@@ -265,7 +265,7 @@ def test_static_mode_and_unavailable_sandbox(proj, monkeypatch):
         S.check(proj)
     _harness(proj)
     monkeypatch.setattr(p2exec, "get_backend", lambda project=None: FakeExecBackend(proj, available=(False, "no daemon")))
-    from migration_agent.migrate.harness import HarnessError
+    from parity_migrate.migrate.harness import HarnessError
     with pytest.raises(HarnessError, match="no daemon"):
         S.check(proj)
     _target_models(proj)

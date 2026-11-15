@@ -255,18 +255,18 @@ Pin base images by digest for any release (<code>PYTHON_IMAGE</code>, <code>NODE
 <div class="pw"><pre><code language-bash>dc exec -T postgres sh -c 'pg_dump -U &quot;$POSTGRES_USER&quot; -Fc &quot;$POSTGRES_DB&quot;' &gt; backup-$(date -u +%F).dump
 </code></pre></div>
 <p>Object store (<code>objects</code> volume, LocalStore):</p>
-<div class="pw"><pre><code language-bash>docker run --rm -v migration-agent-deploy_objects:/data:ro -v &quot;$PWD&quot;:/out busybox tar -czf /out/objects-$(date -u +%F).tgz -C /data .
+<div class="pw"><pre><code language-bash>docker run --rm -v parity-deploy_objects:/data:ro -v &quot;$PWD&quot;:/out busybox tar -czf /out/objects-$(date -u +%F).tgz -C /data .
 </code></pre></div>
 <p>(The volume name is prefixed by the compose project name; check with <code>docker volume ls</code>.) Encrypt backups before they
 leave the host and store them off-host. Retention: see <code>docs/security/data-handling-and-retention.md</code>.</p>
 <p><strong>Restore test (do this monthly and before trusting backups; never yet performed):</strong>
 1. Start a scratch stack with a different project name: <code>COMPOSE_PROJECT_NAME=ma-restore dc up -d postgres</code>.
-2. <code>dc exec -T postgres pg_restore -U ma_app -d migration_agent --clean --if-exists &lt; backup.dump</code>.
+2. <code>dc exec -T postgres pg_restore -U ma_app -d parity_migrate --clean --if-exists &lt; backup.dump</code>.
 3. Restore objects into the scratch <code>objects</code> volume, start <code>api</code>, run <code>SMOKE_NO_UP=1 deploy/smoke.sh</code>.
 4. Record date, backup age, duration, result. Tear down with <code>dc down -v</code>.
 Deleted customer data remains in backups until they expire: this is why retention is stated in the policy.</p>
 <p>Deletion verification (staging, after deleting a project; table list <strong>[assumed]</strong>, replace with the real schema):</p>
-<div class="pw"><pre><code language-bash>dc exec -T postgres psql -U ma_app migration_agent -c &quot;select count(*) from runs where project_id='&lt;pid&gt;'&quot;
+<div class="pw"><pre><code language-bash>dc exec -T postgres psql -U ma_app parity_migrate -c &quot;select count(*) from runs where project_id='&lt;pid&gt;'&quot;
 dc exec -T api sh -c 'find &quot;$STORE_DIR&quot; -path &quot;*&lt;pid&gt;*&quot; | head'
 </code></pre></div>
 <p>Both must return zero rows / nothing.</p>

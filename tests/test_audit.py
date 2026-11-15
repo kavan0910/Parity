@@ -3,7 +3,7 @@ import multiprocessing as mp
 
 import pytest
 
-from migration_agent.audit import AuditLog, read_audit, render_audit
+from parity_migrate.audit import AuditLog, read_audit, render_audit
 
 
 def test_record_and_seq(tmp_path):

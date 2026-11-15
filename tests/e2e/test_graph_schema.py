@@ -3,12 +3,12 @@ import re
 
 import pytest
 
-from migration_agent.analyze.coverage import check_coverage
-from migration_agent.analyze.evidence import assert_all_evidence_valid
-from migration_agent.evalharness import EVAL_REPOS, load_actual, load_expected, score, compare, Report
-from migration_agent.graph import diff_graphs, load_snapshot
-from migration_agent.graph.models import EDGE_PREFIX, ID_PREFIX, Graph
-from migration_agent.pipeline import Inventory
+from parity_migrate.analyze.coverage import check_coverage
+from parity_migrate.analyze.evidence import assert_all_evidence_valid
+from parity_migrate.evalharness import EVAL_REPOS, load_actual, load_expected, score, compare, Report
+from parity_migrate.graph import diff_graphs, load_snapshot
+from parity_migrate.graph.models import EDGE_PREFIX, ID_PREFIX, Graph
+from parity_migrate.pipeline import Inventory
 
 import e2e_golden as golden
 

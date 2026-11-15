@@ -1,11 +1,11 @@
 """M0 cumulative cost ledger (migrate/ledger.py)."""
 import pytest
 
-from migration_agent.audit import AuditLog, read_audit, summarize_audit
-from migration_agent.llm.base import BudgetExceeded
-from migration_agent.migrate.ledger import budget_for, project_budget_usd, remaining, spent
-from migration_agent.migrate.paths import Phase2Layout
-from migration_agent.project import Project
+from parity_migrate.audit import AuditLog, read_audit, summarize_audit
+from parity_migrate.llm.base import BudgetExceeded
+from parity_migrate.migrate.ledger import budget_for, project_budget_usd, remaining, spent
+from parity_migrate.migrate.paths import Phase2Layout
+from parity_migrate.project import Project
 
 
 @pytest.fixture()

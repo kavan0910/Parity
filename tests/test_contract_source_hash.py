@@ -1,7 +1,7 @@
 """Pre-M0 fix 2: the migration contract records ingest_report.json source_hash."""
-from migration_agent.ingest import IngestReport
-from migration_agent.review.approval import approve, readiness
-from migration_agent.verify.models import MigrationContract
+from parity_migrate.ingest import IngestReport
+from parity_migrate.review.approval import approve, readiness
+from parity_migrate.verify.models import MigrationContract
 
 from phase1_helpers import make_project
 

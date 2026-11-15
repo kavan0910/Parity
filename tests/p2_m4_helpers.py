@@ -5,9 +5,9 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from migration_agent.llm.base import LLMResponse
-from migration_agent.migrate.paths import Phase2Layout
-from migration_agent.migrate.planner import plan_project
+from parity_migrate.llm.base import LLMResponse
+from parity_migrate.migrate.paths import Phase2Layout
+from parity_migrate.migrate.planner import plan_project
 
 from phase2_helpers import approved_project
 
@@ -26,7 +26,7 @@ def m4_project(tmp_path: Path, tmp_path_factory, target_yaml: str = TARGET_YAML)
 
 
 def plan(p):
-    from migration_agent.migrate.casestore import load_plan
+    from parity_migrate.migrate.casestore import load_plan
     return load_plan(p)
 
 
@@ -37,7 +37,7 @@ def ready_slice(p):
 
 
 def passing_suite(project, slice_, cases, *, backend):
-    from migration_agent.migrate.slice_runner import SuiteResult
+    from parity_migrate.migrate.slice_runner import SuiteResult
     return SuiteResult(status="passed", totals={"pass": len(cases)})
 
 

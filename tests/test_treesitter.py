@@ -2,7 +2,7 @@ import json
 import shutil
 from pathlib import Path
 
-from migration_agent.extract.treesitter import extract_ast, write_ast_facts
+from parity_migrate.extract.treesitter import extract_ast, write_ast_facts
 
 FIX = Path(__file__).parent / "fixtures" / "treesitter"
 

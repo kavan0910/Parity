@@ -15,12 +15,12 @@ import pytest
 import yaml
 from click.testing import CliRunner
 
-from migration_agent.cli import main
-from migration_agent.migrate import exec as p2exec
-from migration_agent.migrate import harness as H
-from migration_agent.migrate.models import MigrationPlan, Slice, SliceApproval
-from migration_agent.migrate.router import proxy as P
-from migration_agent.migrate.target import build_spec, detect_source, write_target
+from parity_migrate.cli import main
+from parity_migrate.migrate import exec as p2exec
+from parity_migrate.migrate import harness as H
+from parity_migrate.migrate.models import MigrationPlan, Slice, SliceApproval
+from parity_migrate.migrate.router import proxy as P
+from parity_migrate.migrate.target import build_spec, detect_source, write_target
 
 from p2_exec_helpers import FakeDocker, flag_values
 from phase2_helpers import approved_project
@@ -271,7 +271,7 @@ def _spec(**extra) -> H.HarnessSpec:
 
 
 def test_default_new_service_from_target_build_tool(proj):
-    from migration_agent.migrate.target import load_target
+    from parity_migrate.migrate.target import load_target
     spec = _spec()
     t = load_target(proj)
     svc = H.default_new_service(spec, t)
@@ -396,7 +396,7 @@ def _docker_ok() -> bool:
 
 @pytest.mark.skipif(not _docker_ok(), reason="docker daemon not reachable")
 def test_live_router_image_builds_offline(proj):
-    from migration_agent.migrate.exec.docker import DockerBackend
+    from parity_migrate.migrate.exec.docker import DockerBackend
     base = "python:3.12.7-alpine3.20"
     if subprocess.run(["docker", "image", "inspect", base], capture_output=True).returncode != 0:
         pytest.skip(f"base image {base} not present locally (builds never pull)")

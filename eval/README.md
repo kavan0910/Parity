@@ -1,7 +1,7 @@
 # Evaluation harness fixtures
 
 `eval/repos/` holds hand-built reference repositories, each with a hand-labelled
-`expected.json`. They are scored by `migration_agent.evalharness.score`.
+`expected.json`. They are scored by `parity_migrate.evalharness.score`.
 
 | repo | files | stand-in for |
 |------|-------|--------------|
@@ -56,7 +56,7 @@ Each pair has `target.yaml`, a hidden reference suite (`expected_cases/`, the ag
 labelled rule, deliberate quirks and one suspected bug with the expected preserve/fix behaviour (`quirks.json`),
 codegen canaries (`canaries.json`) and a recorded run (`recorded/`).
 
-## Scoring (`migration_agent.evalharness.score_migration`)
+## Scoring (`parity_migrate.evalharness.score_migration`)
 
 Build success, hidden-suite pass rate on the generated service, agent-suite coverage of labelled rules,
 equivalence %, preserve/fix decision correctness, canary hits in generated code, outbound connections in the test

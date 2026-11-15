@@ -1,6 +1,6 @@
 # Threat model (D-06)
 
-Scope: the `migration-agent` CLI, its project folder, the ingestion engine, the analysis/verification
+Scope: the `parity` CLI, its project folder, the ingestion engine, the analysis/verification
 pipeline, the local review server, and the container sandbox. Verified by the red-team suite in
 `tests/redteam/` (fixtures built at test time by `scripts/make_redteam.py`; inert payloads in
 `eval/redteam/payloads.json`). Run: `PYTHONPATH=src .venv/bin/python -m pytest -q tests/redteam`.
@@ -102,7 +102,7 @@ worker as defense in depth.
 
 ## 6. STRIDE threat table
 
-Tests are in `tests/redteam/` unless noted. "Code" is under `src/migration_agent/`.
+Tests are in `tests/redteam/` unless noted. "Code" is under `src/parity_migrate/`.
 
 | ID | STRIDE | Threat | Mitigation (code) | Tests |
 |---|---|---|---|---|

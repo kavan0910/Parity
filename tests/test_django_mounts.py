@@ -1,4 +1,4 @@
-from migration_agent.extract.django_mounts import apply_django_prefix, django_mount_prefixes
+from parity_migrate.extract.django_mounts import apply_django_prefix, django_mount_prefixes
 
 
 def test_nested_includes_and_regex_prefix():

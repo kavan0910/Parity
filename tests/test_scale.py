@@ -6,16 +6,16 @@ from pathlib import Path
 
 import pytest
 
-from migration_agent.analyze.chunker import _tokens, plan_chunks, render_chunk_text
-from migration_agent.analyze.incremental import compute_deps
-from migration_agent.analyze.merger import merge_patches
-from migration_agent.analyze.patch import ChunkPatch, EdgePatch, NodePatch, NodeRef
-from migration_agent.analyze.runner import estimate, run_analyze
-from migration_agent.extract.treesitter import extract_ast
-from migration_agent.graph import Registry, load_latest, save_snapshot
-from migration_agent.graph.models import Evidence
-from migration_agent.llm.base import BudgetExceeded
-from migration_agent.llm.offline import OfflineLLM
+from parity_migrate.analyze.chunker import _tokens, plan_chunks, render_chunk_text
+from parity_migrate.analyze.incremental import compute_deps
+from parity_migrate.analyze.merger import merge_patches
+from parity_migrate.analyze.patch import ChunkPatch, EdgePatch, NodePatch, NodeRef
+from parity_migrate.analyze.runner import estimate, run_analyze
+from parity_migrate.extract.treesitter import extract_ast
+from parity_migrate.graph import Registry, load_latest, save_snapshot
+from parity_migrate.graph.models import Evidence
+from parity_migrate.llm.base import BudgetExceeded
+from parity_migrate.llm.offline import OfflineLLM
 
 from synth_repo import generate_repo, make_project
 
@@ -141,7 +141,7 @@ def test_estimate_precedes_run_and_bounds_cost(tmp_path):
     n, usd = estimate(proj)
     assert n >= 1 and usd > 0
     # runner-level budget: stops gracefully, keeps partial results, renders
-    from migration_agent.llm.base import LLMResponse
+    from parity_migrate.llm.base import LLMResponse
 
     class Paid(OfflineLLM):
         def complete(self, **kw):
@@ -182,8 +182,8 @@ def test_workers_give_identical_graph_to_serial(tmp_path):
 
 
 def test_deep_chain_prompts_stay_bounded(tmp_path):
-    from migration_agent.pipeline import run_extract, run_ingest
-    from migration_agent.project import Project
+    from parity_migrate.pipeline import run_extract, run_ingest
+    from parity_migrate.project import Project
     src = tmp_path / "chain-src"
     src.mkdir()
     for i in range(300):

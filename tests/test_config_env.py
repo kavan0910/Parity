@@ -2,8 +2,8 @@ import json
 
 import pytest
 
-from migration_agent.config_env import EnvConfigError, load_llm_config_from_env, load_settings_from_env
-from migration_agent.llm.litellm_client import LLMConfig
+from parity_migrate.config_env import EnvConfigError, load_llm_config_from_env, load_settings_from_env
+from parity_migrate.llm.litellm_client import LLMConfig
 
 
 def test_defaults_equal_builtin():

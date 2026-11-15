@@ -123,7 +123,7 @@ def e2e():
         proj = tmp / (label.replace(": ", "_").replace(".", "") + ".migration")
         outs, ok = [], True
         for cmd in (["init", src, "--project", str(proj)], ["ingest", str(proj)], ["extract", str(proj)], ["render", str(proj)], ["analyze", str(proj), "--offline"]):
-            rc, o = sh(PY, "-m", "migration_agent.cli", *cmd)
+            rc, o = sh(PY, "-m", "parity_migrate.cli", *cmd)
             ok &= rc == 0
             if cmd[0] in ("ingest", "extract", "analyze"):
                 outs.append(next((l for l in reversed(o.splitlines()) if l.startswith(("ingested","inventory","done"))), ""))
@@ -206,7 +206,7 @@ def main():
 <h2>End-to-end CLI runs</h2>
 <div class="card"><table><tr><th>Source</th><th>Result</th><th>ingest / extract output</th></tr>{e2e_html}</table></div>
 <h2>Graph visualizer: what it looks like</h2>
-<div class="card"><p>Screenshots taken with headless Chrome from <code>render_graph_html</code>. Open <code>docs/graph.html</code> in any project folder after <code>migration-agent analyze</code> to use it live.</p><div class="shots">{shots()}</div></div>
+<div class="card"><p>Screenshots taken with headless Chrome from <code>render_graph_html</code>. Open <code>docs/graph.html</code> in any project folder after <code>parity analyze</code> to use it live.</p><div class="shots">{shots()}</div></div>
 <h2>Not tested yet</h2>
 <div class="card"><table><tr><th>Area</th><th>Why / status</th></tr>{nt}</table></div>
 </main></body></html>'''

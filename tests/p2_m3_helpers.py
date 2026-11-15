@@ -9,13 +9,13 @@ import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
-from migration_agent.graph import load_latest, save_snapshot
-from migration_agent.graph.models import Edge, Evidence, Node
-from migration_agent.project import Project
-from migration_agent.review.approval import approve
-from migration_agent.review.decisions import add_decision
-from migration_agent.review.docrender import write_latest
-from migration_agent.review.resolutions import add_resolution
+from parity_migrate.graph import load_latest, save_snapshot
+from parity_migrate.graph.models import Edge, Evidence, Node
+from parity_migrate.project import Project
+from parity_migrate.review.approval import approve
+from parity_migrate.review.decisions import add_decision
+from parity_migrate.review.docrender import write_latest
+from parity_migrate.review.resolutions import add_resolution
 
 from phase1_helpers import make_project, write_findings
 

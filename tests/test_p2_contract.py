@@ -3,16 +3,16 @@ import json
 
 import pytest
 
-from migration_agent.audit import read_audit
-from migration_agent.graph import load_latest, save_snapshot
-from migration_agent.migrate.contract import (
+from parity_migrate.audit import read_audit
+from parity_migrate.graph import load_latest, save_snapshot
+from parity_migrate.migrate.contract import (
     ContractError, approved_doc_body, check_contract, contract_json_schema, load_contract, require_contract,
 )
-from migration_agent.review.approval import approve
-from migration_agent.review.decisions import add_decision
-from migration_agent.review.docrender import write_latest
-from migration_agent.review.resolutions import add_resolution
-from migration_agent.verify.models import MigrationContract
+from parity_migrate.review.approval import approve
+from parity_migrate.review.decisions import add_decision
+from parity_migrate.review.docrender import write_latest
+from parity_migrate.review.resolutions import add_resolution
+from parity_migrate.verify.models import MigrationContract
 
 from phase1_helpers import make_project, write_findings
 from phase2_helpers import approved_project, contract_file, edit_contract, make_writable

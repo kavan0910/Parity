@@ -3,11 +3,11 @@ import json
 
 import pytest
 
-from migration_agent.migrate.harness_runner import (
+from parity_migrate.migrate.harness_runner import (
     MASK, CaseResult, HostNotAllowed, MaskError, Observed, RunnerConfig, StubDef, StubServer, apply_masks, build_url,
     compare, diff_paths, generalize, json_equal, load_stubs, observe, run_case, stub_path, validate_mask)
-from migration_agent.migrate.harness_runner.__main__ import main as runner_main
-from migration_agent.migrate.models import CharacterizationCase, Expectation
+from parity_migrate.migrate.harness_runner.__main__ import main as runner_main
+from parity_migrate.migrate.models import CharacterizationCase, Expectation
 
 from p2_m3_helpers import LegacyService
 
@@ -214,7 +214,7 @@ def test_stub_server(tmp_path):
 
 
 def test_injected_headers_are_overridden_or_removed_by_a_case():
-    from migration_agent.migrate.harness_runner.wire import merge_headers
+    from parity_migrate.migrate.harness_runner.wire import merge_headers
     inj = {"X-API-Token": "secret", "X-Static": "1"}
     assert merge_headers(inj, None) == inj
     assert merge_headers(inj, {"x-api-token": "wrong"}) == {"X-Static": "1", "x-api-token": "wrong"}   # case wins, any case

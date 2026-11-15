@@ -1,7 +1,7 @@
 import json
 from pathlib import Path
 
-from migration_agent.extract.config import REDACTED, ConfigFacts, extract_config, write_config
+from parity_migrate.extract.config import REDACTED, ConfigFacts, extract_config, write_config
 
 FIX = Path(__file__).parent / "fixtures" / "config"
 

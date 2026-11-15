@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Run the migration-agent worker in a locked-down container.
+# Run the parity worker in a locked-down container.
 #   PROJECT_DIR=./svc.migration docker/run.sh <repo-dir> [agent args...]
 # <repo-dir> is mounted read-only at /workspace; PROJECT_DIR (the project folder, the only
 # durable state) is mounted read-write at /project. Example:
@@ -7,11 +7,11 @@
 # Configuration: any MA_* variable set in the caller's environment is passed through by name.
 # Offline by default (--network none). To permit model access set
 # MODEL_PROXY_NETWORK to an --internal network that only a allowlisting proxy
-# joins (see docker/docker-compose.yml and src/migration_agent/sandbox/README.md).
+# joins (see docker/docker-compose.yml and src/parity_migrate/sandbox/README.md).
 set -euo pipefail
 
 REPO="${1:?usage: run.sh <repo-dir> [args...]}"; shift || true
-IMAGE="${IMAGE:-migration-agent:local}"
+IMAGE="${IMAGE:-parity:local}"
 NETWORK="${MODEL_PROXY_NETWORK:-none}"
 
 ARGS=(--rm --init

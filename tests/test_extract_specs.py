@@ -1,7 +1,7 @@
 from pathlib import Path
 
-import migration_agent.extract.specs as specs
-from migration_agent.extract.specs import extract_specs, route_identity
+import parity_migrate.extract.specs as specs
+from parity_migrate.extract.specs import extract_specs, route_identity
 
 FX = Path(__file__).parent / "fixtures" / "frameworks"
 

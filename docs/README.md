@@ -1,6 +1,6 @@
 # Parity documentation
 
-*Parity is the product name; the command-line tool and Python package are still called `migration-agent`.*
+*Parity is the product name; the command-line tool and Python package are still called `parity`.*
 
 **Parity migrates a legacy app to the newest version of its stack, or to a different technology, and proves the
 new app behaves like the old one.** That is the MVP: a legacy app goes in; a migrated app, an equivalence report and a

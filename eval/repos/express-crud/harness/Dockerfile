@@ -1,4 +1,4 @@
-# Harness image for the express-crud fixture (legacy service), used by `migration-agent harness build`.
+# Harness image for the express-crud fixture (legacy service), used by `parity harness build`.
 # Built with `docker build --network none --pull=false`: no RUN step needs the network. Dependencies are
 # installed later by the harness build job (phase "build": package-mirror-only network, or none).
 # TODO(M1): pin the base image by digest for CI, e.g.

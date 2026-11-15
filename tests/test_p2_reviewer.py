@@ -1,8 +1,8 @@
 """M4 reviewer (migrate/reviewer.py): verified quotes, static deny checks, fresh-session prompt."""
 import json
 
-from migration_agent.llm.base import BudgetExceeded, FakeLLM
-from migration_agent.migrate.reviewer import (
+from parity_migrate.llm.base import BudgetExceeded, FakeLLM
+from parity_migrate.migrate.reviewer import (
     parse_diff, quote_in_diff, review, static_checks, validate_findings,
 )
 

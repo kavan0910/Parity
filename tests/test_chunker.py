@@ -2,8 +2,8 @@ import random
 import shutil
 from pathlib import Path
 
-from migration_agent.analyze.chunker import plan_chunks, render_chunk_text
-from migration_agent.extract.treesitter import extract_ast
+from parity_migrate.analyze.chunker import plan_chunks, render_chunk_text
+from parity_migrate.extract.treesitter import extract_ast
 
 REPO = Path(__file__).resolve().parent.parent / "eval" / "repos" / "express-crud"
 

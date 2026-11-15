@@ -9,12 +9,12 @@ import subprocess
 
 import pytest
 
-from migration_agent.migrate import exec as p2exec
-from migration_agent.migrate.exec.base import load_run
-from migration_agent.migrate.exec.docker import (DockerBackend, ExecConfig, load_exec_config,
+from parity_migrate.migrate import exec as p2exec
+from parity_migrate.migrate.exec.base import load_run
+from parity_migrate.migrate.exec.docker import (DockerBackend, ExecConfig, load_exec_config,
                                                  render_squid_conf)
-from migration_agent.migrate.models import ExecJob, Limits, Mount
-from migration_agent.project import Project
+from parity_migrate.migrate.models import ExecJob, Limits, Mount
+from parity_migrate.project import Project
 
 from p2_exec_helpers import IMG_ID, PROXY_ID, REPO_DIGEST, FakeDocker, flag_values
 
@@ -229,7 +229,7 @@ def test_workdir_tmpfs_may_not_mask_a_path_the_command_uses(proj):
 
 def test_router_and_schema_probe_jobs_do_not_use_app_as_workdir():
     import inspect
-    from migration_agent.migrate import harness, schemacompat
+    from parity_migrate.migrate import harness, schemacompat
     assert 'workdir="/app"' not in inspect.getsource(harness._Stack.router)
     assert 'workdir="/app"' not in inspect.getsource(schemacompat)
 

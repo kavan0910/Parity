@@ -6,12 +6,12 @@ import re
 import pytest
 from click.testing import CliRunner
 
-from migration_agent.cli import main
-from migration_agent.llm.base import FakeLLM
-from migration_agent.migrate import equivalence as eq
-from migration_agent.migrate.approvals import load_decisions
-from migration_agent.migrate.paths import Phase2Layout
-from migration_agent.migrate.state import load_state, transition
+from parity_migrate.cli import main
+from parity_migrate.llm.base import FakeLLM
+from parity_migrate.migrate import equivalence as eq
+from parity_migrate.migrate.approvals import load_decisions
+from parity_migrate.migrate.paths import Phase2Layout
+from parity_migrate.migrate.state import load_state, transition
 
 from p2_m5_helpers import Svc, m5_project, make_case, record, standard_cases, walk_to_awaiting
 
@@ -163,7 +163,7 @@ def test_harness_issue_mask_needs_human_approval(setup):
 
 
 def test_spec_ambiguity_blocks_slice_and_legacy_bug_opens_decision(setup):
-    from migration_agent.migrate.approvals import resolve_decision
+    from parity_migrate.migrate.approvals import resolve_decision
     p, s1, _s2, legacy, _cases = setup
     make_case(p, s1, "/api/unrec", key="unrec")
     walk_to_awaiting(p, s1)
@@ -202,7 +202,7 @@ def test_cli_equivalence_exit_codes_and_options(setup):
 
 def test_urls_from_harness_status(monkeypatch, setup):
     p, *_ = setup
-    from migration_agent.migrate import harness
+    from parity_migrate.migrate import harness
     monkeypatch.setattr(harness, "status", lambda project, role: {"up": {"url": f"http://127.0.0.1:1/{role}"}})
     assert eq.resolve_urls(p, None, None) == ("http://127.0.0.1:1/legacy", "http://127.0.0.1:1/new")
     assert eq.resolve_urls(p, "http://127.0.0.1:2", None)[0] == "http://127.0.0.1:2"
@@ -215,8 +215,8 @@ def test_urls_from_harness_status(monkeypatch, setup):
 
 
 def test_classify_extra_channels_when_observed():
-    from migration_agent.migrate.harness_runner import CaseResult, Observed
-    from migration_agent.migrate.models import CharacterizationCase, Expectation, HttpRequest
+    from parity_migrate.migrate.harness_runner import CaseResult, Observed
+    from parity_migrate.migrate.models import CharacterizationCase, Expectation, HttpRequest
 
     class Obs(Observed):
         model_config = {"extra": "allow"}
@@ -232,7 +232,7 @@ def test_classify_extra_channels_when_observed():
 
 
 def test_timestamps_between_separately_seeded_instances_are_noise_but_real_bugs_are_not():
-    from migration_agent.migrate.harness_runner.jsonpath import json_equal, timestamps_close as f
+    from parity_migrate.migrate.harness_runner.jsonpath import json_equal, timestamps_close as f
     assert json_equal({"createdAt": "2026-11-15T05:43:41Z"}, {"createdAt": "2026-11-15T05:44:41Z"})
     assert not json_equal({"createdAt": "2026-11-15T05:43:41Z"}, {"createdAt": "2026-11-15T09:44:41Z"})
     assert not json_equal({"name": "pen"}, {"name": "pencil"})

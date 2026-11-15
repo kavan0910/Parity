@@ -1,6 +1,6 @@
 import json
 
-from migration_agent.audit import read_audit
+from parity_migrate.audit import read_audit
 
 
 def test_every_stage_exits_zero(run):

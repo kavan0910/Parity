@@ -67,9 +67,9 @@ def test_sections_list_the_right_node_types(run):
 
 
 def test_doc_is_deterministic_for_same_graph(run):
-    from migration_agent.render import render_understanding  # pure function of the graph
-    from migration_agent.analyze.coverage import check_coverage
-    from migration_agent.pipeline import Inventory
+    from parity_migrate.render import render_understanding  # pure function of the graph
+    from parity_migrate.analyze.coverage import check_coverage
+    from parity_migrate.pipeline import Inventory
     inv = Inventory.model_validate_json(run.proj.inventory_path.read_text())
     cov = check_coverage(inv, run.graph())
     meta = {"name": run.proj.meta().name, "source": run.proj.meta().source}
@@ -86,7 +86,7 @@ def test_facts_only_render_skeleton(run, tmp_path):
     """`render` (no LLM) writes the facts-only skeleton: a different, smaller contract than the analyze doc."""
     import shutil
     from click.testing import CliRunner
-    from migration_agent.cli import main
+    from parity_migrate.cli import main
     root = tmp_path / "p"
     shutil.copytree(run.root, root)
     res = CliRunner().invoke(main, ["render", str(root)])

@@ -4,20 +4,20 @@ import stat
 import pytest
 from click.testing import CliRunner
 
-from migration_agent.audit import read_audit
-from migration_agent.cli import main
-from migration_agent.graph import load_latest, save_snapshot
-from migration_agent.pipeline import Inventory, InventoryItem
-from migration_agent.project import Project
-from migration_agent.review._io import ReviewError
-from migration_agent.review.approval import (
+from parity_migrate.audit import read_audit
+from parity_migrate.cli import main
+from parity_migrate.graph import load_latest, save_snapshot
+from parity_migrate.pipeline import Inventory, InventoryItem
+from parity_migrate.project import Project
+from parity_migrate.review._io import ReviewError
+from parity_migrate.review.approval import (
     approval_status, approve, graph_sha256, load_approvals, readiness, sha256_text,
 )
-from migration_agent.review.comments import add_comment, mark_processed
-from migration_agent.review.decisions import add_decision
-from migration_agent.review.docrender import write_latest
-from migration_agent.review.resolutions import add_resolution
-from migration_agent.verify.models import MigrationContract, Resolution, ResolutionsFile
+from parity_migrate.review.comments import add_comment, mark_processed
+from parity_migrate.review.decisions import add_decision
+from parity_migrate.review.docrender import write_latest
+from parity_migrate.review.resolutions import add_resolution
+from parity_migrate.verify.models import MigrationContract, Resolution, ResolutionsFile
 
 from phase1_helpers import make_project, write_findings
 
@@ -52,7 +52,7 @@ def test_blocker_no_graph_and_no_doc(tmp_path):
 
 def test_blocker_missing_doc_only(proj):
     (proj.docs / "understanding.latest.md").unlink()
-    assert readiness(proj).blockers == ["no docs/understanding.latest.md: run `migration-agent analyze` first"]
+    assert readiness(proj).blockers == ["no docs/understanding.latest.md: run `parity analyze` first"]
 
 
 def test_blocker_coverage_incomplete(proj):

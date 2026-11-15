@@ -3,17 +3,17 @@ import json
 import pytest
 from click.testing import CliRunner
 
-from migration_agent.cli import main
-from migration_agent.graph import load_latest
-from migration_agent.graph.models import Evidence, Graph, Node
-from migration_agent.render import render_understanding
-from migration_agent.review._io import ReviewError
-from migration_agent.review.decisions import (
+from parity_migrate.cli import main
+from parity_migrate.graph import load_latest
+from parity_migrate.graph.models import Evidence, Graph, Node
+from parity_migrate.render import render_understanding
+from parity_migrate.review._io import ReviewError
+from parity_migrate.review.decisions import (
     UnknownItem, add_decision, effective_decisions, effective_list, load_decisions,
 )
-from migration_agent.review.docrender import render_latest
-from migration_agent.review.resolutions import PENDING_STATUSES, add_resolution, pending_reanalysis
-from migration_agent.verify.models import DecisionsFile, Resolution
+from parity_migrate.review.docrender import render_latest
+from parity_migrate.review.resolutions import PENDING_STATUSES, add_resolution, pending_reanalysis
+from parity_migrate.verify.models import DecisionsFile, Resolution
 
 from phase1_helpers import make_project, write_findings
 
@@ -68,7 +68,7 @@ def test_decide_validation_errors(proj, tmp_path):
     with pytest.raises(ReviewError):
         add_decision(proj, proj.bug_id, "maybe")
     assert not (proj.root / "feedback" / "decisions.json").exists()
-    from migration_agent.project import Project
+    from parity_migrate.project import Project
     empty = Project.init(tmp_path / "empty", source="s")
     with pytest.raises(ReviewError, match="no graph"):
         add_decision(empty, "COMP-0001", "fix")
@@ -103,8 +103,8 @@ def test_cli_decide_rerenders_offline(proj):
 
 def test_offline_render_matches_runner_output(proj):
     # the template doc was written by write_latest after the snapshot; also check a fresh analyze matches
-    from migration_agent.analyze.runner import run_analyze
-    from migration_agent.llm.offline import OfflineLLM
+    from parity_migrate.analyze.runner import run_analyze
+    from parity_migrate.llm.offline import OfflineLLM
     add_decision(proj, proj.bug_id, "fix", "x")
     run_analyze(proj, OfflineLLM())
     assert _doc(proj) == render_latest(proj)

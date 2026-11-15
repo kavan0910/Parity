@@ -1,10 +1,10 @@
 import json
 
-from migration_agent.analyze.crossref import resolve_cross_refs
-from migration_agent.analyze.patch import NodeRef, UnresolvedRef
-from migration_agent.graph.models import Evidence, Graph, Node
-from migration_agent.llm.base import FakeLLM
-from migration_agent.sandbox.tools import ReadOnlyTools
+from parity_migrate.analyze.crossref import resolve_cross_refs
+from parity_migrate.analyze.patch import NodeRef, UnresolvedRef
+from parity_migrate.graph.models import Evidence, Graph, Node
+from parity_migrate.llm.base import FakeLLM
+from parity_migrate.sandbox.tools import ReadOnlyTools
 
 
 def n(i, sym, name=None, mod="m"):

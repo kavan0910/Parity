@@ -2,13 +2,13 @@
 events, budget stop, failures returned (never raised), Phase 1 stages unchanged."""
 import pytest
 
-from migration_agent import service
-from migration_agent.llm.base import BudgetExceeded
-from migration_agent.migrate import cutover as co
-from migration_agent.migrate.codegen import OfflineCodegenLLM
-from migration_agent.migrate.exec.fake import FakeExecBackend
-from migration_agent.migrate.paths import Phase2Layout
-from migration_agent.migrate.state import load_state
+from parity_migrate import service
+from parity_migrate.llm.base import BudgetExceeded
+from parity_migrate.migrate import cutover as co
+from parity_migrate.migrate.codegen import OfflineCodegenLLM
+from parity_migrate.migrate.exec.fake import FakeExecBackend
+from parity_migrate.migrate.paths import Phase2Layout
+from parity_migrate.migrate.state import load_state
 
 from p2_m4_helpers import m4_project, plan, ready_slice
 from p2_m5_helpers import Svc, m5_project, standard_cases, walk_to_awaiting
@@ -76,7 +76,7 @@ def test_tests_stage_offline(proj):
 
 
 def test_generate_stage_emits_usage_and_cost(proj, monkeypatch):
-    import migration_agent.migrate.exec as ex
+    import parity_migrate.migrate.exec as ex
     monkeypatch.setattr(ex, "get_backend", lambda project: FakeExecBackend(project))
     sid = ready_slice(proj).id
     res, ev = _run(proj, "generate", llm=PricedCodegen(), options={"slice_id": sid})
@@ -89,14 +89,14 @@ def test_generate_stage_emits_usage_and_cost(proj, monkeypatch):
 
 
 def test_generate_stage_offline_client(proj, monkeypatch):
-    import migration_agent.migrate.exec as ex
+    import parity_migrate.migrate.exec as ex
     monkeypatch.setattr(ex, "get_backend", lambda project: FakeExecBackend(project))
     res, _ = _run(proj, "generate", offline=True, options={"slice_id": ready_slice(proj).id})
     assert res.status == "ok" and res.cost_usd == 0.0
 
 
 def test_generate_stage_budget_stop_is_graceful(proj, monkeypatch):
-    import migration_agent.migrate.exec as ex
+    import parity_migrate.migrate.exec as ex
     monkeypatch.setattr(ex, "get_backend", lambda project: FakeExecBackend(project))
     res, _ = _run(proj, "generate", llm=BrokeLLM(), options={"slice_id": ready_slice(proj).id})
     assert res.status == "stopped_budget" and "budget reached" in res.error
@@ -131,7 +131,7 @@ def test_cutover_stage_not_ready_and_refused_approve(proj):
 
 
 def test_cutover_stage_approves_when_ready(proj, monkeypatch):
-    from migration_agent.migrate.cutover import Readiness
+    from parity_migrate.migrate.cutover import Readiness
     from p2_m5_helpers import init_target
     head = init_target(proj)
     monkeypatch.setattr(co, "readiness", lambda project: Readiness(ready=True))

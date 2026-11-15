@@ -8,17 +8,17 @@ from pathlib import Path
 import pytest
 from click.testing import CliRunner
 
-from migration_agent.analyze.runner import run_analyze
-from migration_agent.cli import main
-from migration_agent.llm.offline import OfflineLLM
-from migration_agent.migrate.knowledge import (KnowledgeError, LibMap, dep_glob_match, libmaps_for, load_libmaps,
+from parity_migrate.analyze.runner import run_analyze
+from parity_migrate.cli import main
+from parity_migrate.llm.offline import OfflineLLM
+from parity_migrate.migrate.knowledge import (KnowledgeError, LibMap, dep_glob_match, libmaps_for, load_libmaps,
                                                parse_libmap)
-from migration_agent.migrate.models import TargetSpec
-from migration_agent.migrate.paths import Phase2Layout
-from migration_agent.migrate.target import (TargetSpecError, build_spec, detect_source, java_version, load_target,
+from parity_migrate.migrate.models import TargetSpec
+from parity_migrate.migrate.paths import Phase2Layout
+from parity_migrate.migrate.target import (TargetSpecError, build_spec, detect_source, java_version, load_target,
                                             major_minor, parse_target_text)
-from migration_agent.project import Project
-from migration_agent.review.approval import approve
+from parity_migrate.project import Project
+from parity_migrate.review.approval import approve
 
 REPOS = Path(__file__).parent.parent / "eval" / "repos"
 _CACHE: dict[str, Path] = {}

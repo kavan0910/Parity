@@ -30,7 +30,7 @@ def price_for_tier(settings: Settings, tier: str) -> tuple[float, float]:
 
 
 def engine_config(profile: str, settings: Settings) -> dict:
-    """Engine ``config`` dict (see migration_agent.service). Includes the server's API key: never log or persist it."""
+    """Engine ``config`` dict (see parity_migrate.service). Includes the server's API key: never log or persist it."""
     if profile not in _TIERS:
         raise ValueError(f"unknown model_profile {profile!r}")
     models = {t: model_for_tier(settings, tier) for t, tier in _TIERS[profile].items()}

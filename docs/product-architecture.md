@@ -15,7 +15,7 @@ The analysis engine is real and unusually disciplined: evidence-checked claims, 
 budget and cache controls, 576 passing tests, ~9.4k lines (`docs/architecture.md`). That is the hard, differentiated part.
 **Everything around it is not a product yet.** It is a single-user CLI whose only state is a local folder, whose only UI
 is a loopback server that refuses any other address, and which has no accounts, tenancy, job system, metering or
-hosted storage (`docs/architecture.md:Trust boundaries`, `src/migration_agent/review_ui/server.py`).
+hosted storage (`docs/architecture.md:Trust boundaries`, `src/parity_migrate/review_ui/server.py`).
 
 Top risks, in order:
 
@@ -25,7 +25,7 @@ Top risks, in order:
 2. **Customer source code is the crown jewel.** A hosted version concentrates other companies' proprietary code. One
    isolation failure ends the business. The current design (read-only, jailed tools, secret redaction, egress allowlist)
    is a strong base, but it is built for one trusted operator.
-3. **State model does not fit multi-tenant SaaS.** The folder is the state (`src/migration_agent/project.py`), writes use
+3. **State model does not fit multi-tenant SaaS.** The folder is the state (`src/parity_migrate/project.py`), writes use
    local `os.replace` and `flock`. Fine on one disk, wrong for stateless workers.
 4. **Positioning (decided: the product is the migration).** The MVP is taking an existing legacy app and migrating it
    to the newest version of its stack or to a different technology, and proving the new app behaves like the old one.
@@ -83,7 +83,7 @@ Principles:
 
 - **Control plane and data plane are separate.** The API never touches customer code. Workers touch code but hold no
   database credentials, only a short-lived, job-scoped token.
-- **The engine stays a pure library.** `migration_agent` keeps working as the CLI (free, open-core marketing channel) and
+- **The engine stays a pure library.** `parity_migrate` keeps working as the CLI (free, open-core marketing channel) and
   becomes the worker's job body. **[Inferred]**
 - **Artifacts live in object storage; Postgres holds metadata and a queryable copy of the graph.** Snapshots are already
   immutable files (`docs/architecture.md:Snapshots, not mutation`), which maps directly to immutable objects.
@@ -110,7 +110,7 @@ Principles:
   evidence list). Indexed in Postgres for the UI; the snapshot file stays the source of truth.
 - **UserDoc** (uploaded documentation for the Verifier), **Finding**, **Resolution**, **Comment**.
 - **UsageEvent** (workspace, run, model, input/output tokens, provider cost, timestamp). Derived from the existing
-  per-call audit record (`src/migration_agent/audit.py`).
+  per-call audit record (`src/parity_migrate/audit.py`).
 - **Plan** and **Entitlement** (limits such as repos, lines analysed per month, seats). Plain tables with **no provider
   coupling**; see section 9.
 - **AuditLog** (who did what), separate from usage.
@@ -254,7 +254,7 @@ real customers will matter more than breadth of features. **[Inferred]** I have 
 ## 15. Decisions needed from the owner
 
 1. **Who is the first customer?** (agency doing modernisation, in-house platform team, acquirer doing diligence?)
-2. **Name:** decided. The product is called **Parity**: legacy app in, migrated app out, with proof that the two behave the same. (The command-line tool and the Python package keep the name `migration-agent`.) Understanding the legacy app is step 1 of it.
+2. **Name:** decided. The product is called **Parity**: legacy app in, migrated app out, with proof that the two behave the same. (The command-line tool and the Python package keep the name `parity`.) Understanding the legacy app is step 1 of it.
 3. **Open-core or closed?** Is the CLI free and public, with the hosted service as the paid product?
 4. **Hosting preference and budget** (single cloud, region, data-residency promises).
 5. **Data policy you are willing to promise** (retention period, model provider terms, BYO key).

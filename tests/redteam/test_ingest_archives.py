@@ -7,7 +7,7 @@ import zipfile
 
 import pytest
 
-from migration_agent.ingest import IngestError, ingest
+from parity_migrate.ingest import IngestError, ingest
 
 
 def _tree(p):

@@ -8,11 +8,11 @@ from pathlib import Path
 import pytest
 from click.testing import CliRunner
 
-from migration_agent.cli import main
-from migration_agent.extract.config import extract_config, write_config
-from migration_agent.migrate import configmap as C
-from migration_agent.migrate.models import SourceStack, TargetSpec, TargetStack
-from migration_agent.migrate.target import build_spec, detect_source, write_target
+from parity_migrate.cli import main
+from parity_migrate.extract.config import extract_config, write_config
+from parity_migrate.migrate import configmap as C
+from parity_migrate.migrate.models import SourceStack, TargetSpec, TargetStack
+from parity_migrate.migrate.target import build_spec, detect_source, write_target
 
 from phase2_helpers import approved_project
 
@@ -141,7 +141,7 @@ def test_spring_boot_renames_drops_and_secret_reference(proj, tmp_path):
 
 
 def test_libmap_rename_rules_unit():
-    from migration_agent.migrate.knowledge import load_libmaps
+    from parity_migrate.migrate.knowledge import load_libmaps
     entries = {e.id: e for m in load_libmaps() for e in m.entries}
     assert C.libmap_rename(entries["prop-data-cassandra"], "spring.data.cassandra.keyspace-name") == \
         ("renamed", "spring.cassandra.keyspace-name", C.libmap_rename(entries["prop-data-cassandra"],

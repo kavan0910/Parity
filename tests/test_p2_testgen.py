@@ -5,13 +5,13 @@ import json
 import pytest
 from click.testing import CliRunner
 
-from migration_agent.cli import main
-from migration_agent.llm.base import BudgetExceeded, FakeLLM
-from migration_agent.migrate import testgen
-from migration_agent.migrate.casestore import (UNPLANNED, contract_graph, find_case, load_cases, load_hypotheses,
+from parity_migrate.cli import main
+from parity_migrate.llm.base import BudgetExceeded, FakeLLM
+from parity_migrate.migrate import testgen
+from parity_migrate.migrate.casestore import (UNPLANNED, contract_graph, find_case, load_cases, load_hypotheses,
                                                scope_nodes)
-from migration_agent.migrate.contract import load_contract
-from migration_agent.migrate.paths import Phase2Layout
+from parity_migrate.migrate.contract import load_contract
+from parity_migrate.migrate.paths import Phase2Layout
 
 from p2_m3_helpers import CANCEL_EP, RULE_ID, m3_project
 

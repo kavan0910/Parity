@@ -4,16 +4,16 @@ import json
 import pytest
 from click.testing import CliRunner
 
-from migration_agent.cli import main
-from migration_agent.migrate import cutover as co
-from migration_agent.migrate.approvals import SliceDecision, SliceDecisionsFile
-from migration_agent.migrate.configmap import ConfigMap, ConfigMapEntry, SecretRef
-from migration_agent.migrate.equivalence import CaseOutcome, EquivalenceRunMeta, run_meta_path
-from migration_agent.migrate.models import (
+from parity_migrate.cli import main
+from parity_migrate.migrate import cutover as co
+from parity_migrate.migrate.approvals import SliceDecision, SliceDecisionsFile
+from parity_migrate.migrate.configmap import ConfigMap, ConfigMapEntry, SecretRef
+from parity_migrate.migrate.equivalence import CaseOutcome, EquivalenceRunMeta, run_meta_path
+from parity_migrate.migrate.models import (
     CutoverApproval, EquivalenceDiff, EquivalenceReport, MigrationPlan, SliceApproval,
 )
-from migration_agent.migrate.paths import Phase2Layout
-from migration_agent.migrate.state import atomic_write_json, now_iso, transition
+from parity_migrate.migrate.paths import Phase2Layout
+from parity_migrate.migrate.state import atomic_write_json, now_iso, transition
 
 from p2_m5_helpers import commit, git, init_target, m5_project, make_case, walk_to_awaiting
 from phase2_helpers import edit_contract
@@ -136,7 +136,7 @@ def test_blocker_coverage_gaps(ready, monkeypatch):
 
 
 def test_coverage_gate_uses_recorder_for_real(ready, monkeypatch):
-    from migration_agent.migrate import recorder
+    from parity_migrate.migrate import recorder
     monkeypatch.setattr(co, "_coverage_gaps", lambda project: recorder.coverage_gaps(project))
     assert _blockers(ready["p"], "coverage")       # the express-crud fixture has uncovered in-scope nodes
 
@@ -147,7 +147,7 @@ def test_blocker_config_gaps(ready, monkeypatch):
 
 
 def test_config_gate_without_map_blocks(ready, monkeypatch):
-    from migration_agent.migrate import configmap
+    from parity_migrate.migrate import configmap
     monkeypatch.setattr(co, "_config_gaps", lambda project: configmap.config_gaps(project))
     assert any("config map not generated" in b for b in _blockers(ready["p"], "config"))
 
@@ -178,7 +178,7 @@ def test_blocker_open_decision(ready):
 
 
 def test_blocker_budget(ready):
-    from migration_agent.audit import AuditLog
+    from parity_migrate.audit import AuditLog
     p = ready["p"]
     lay = Phase2Layout(p)
     lay.target_yaml.parent.mkdir(parents=True, exist_ok=True)
@@ -213,7 +213,7 @@ def test_approve_writes_hashes_and_verifies(ready):
     assert isinstance(a, CutoverApproval)
     disk = CutoverApproval.model_validate_json(lay.cutover_approval.read_text())
     assert disk.tree_commit == ready["head"] and disk.slice_ids == [ready["s1"], ready["s2"]]
-    from migration_agent.migrate.state import sha256_file
+    from parity_migrate.migrate.state import sha256_file
     assert disk.contract_sha256 == sha256_file(lay.contract_file)
     assert disk.plan_sha256 == sha256_file(lay.cutover_plan)
     hashes = json.loads((lay.cutover_dir / "hashes.json").read_text())
@@ -267,7 +267,7 @@ def test_plan_md_content(ready):
     for r in routes:
         assert f"harness flip PROJECT {r['slice']}" in md and f"harness unflip PROJECT {r['slice']}" in md
     assert md == co.render_plan(p)          # deterministic
-    assert "run 'migration-agent config schema-check PROJECT'" in md
+    assert "run 'parity config schema-check PROJECT'" in md
 
 
 def test_cli_cutover_not_ready_then_approve(ready, monkeypatch):
@@ -293,10 +293,10 @@ def test_cli_cutover_not_ready_then_approve(ready, monkeypatch):
 
 def test_full_suite_reads_composite_report_written_by_equivalence(tmp_path):
     """Seam test: cutover must understand equivalence.CompositeReport (the real `equivalence composite` output)."""
-    from migration_agent.migrate import cutover
-    from migration_agent.migrate.equivalence import CompositeCase, CompositeReport
-    from migration_agent.migrate.models import MigrationPlan
-    from migration_agent.project import Project
+    from parity_migrate.migrate import cutover
+    from parity_migrate.migrate.equivalence import CompositeCase, CompositeReport
+    from parity_migrate.migrate.models import MigrationPlan
+    from parity_migrate.project import Project
     p = Project.init(tmp_path / "p", source="s")
     path = cutover.composite_report_path(p)
     path.parent.mkdir(parents=True, exist_ok=True)

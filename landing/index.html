@@ -48,11 +48,10 @@
     <header class="nav">
       <a class="logo" href="#top" aria-label="Parity, home"><i class="ph ph-terminal-window" aria-hidden="true"></i>Parity</a>
       <nav class="nav-links body-5" aria-label="Primary">
-        <a href="#mvp">The MVP</a>
-        <a href="#impact">Impact</a>
-        <a href="#benefits">Benefits</a>
+        <a href="#mvp">Why Parity</a>
         <a href="#how">How it works</a>
-        <a href="#migrate">Migrate</a>
+        <a href="#paths">Migration paths</a>
+        <a href="#impact">Results</a>
         <a href="#proof">Proof</a>
         <a href="#faq">FAQ</a>
       </nav>
@@ -62,14 +61,13 @@
     </header>
   </div>
   <div class="panel" id="panel" data-open="false" aria-hidden="true">
-    <a class="plink" style="--i:0" href="#mvp">The MVP</a>
-    <a class="plink" style="--i:0" href="#impact">Impact</a>
-    <a class="plink" style="--i:0" href="#benefits">Benefits</a>
+    <a class="plink" style="--i:0" href="#mvp">Why Parity</a>
     <a class="plink" style="--i:1" href="#how">How it works</a>
-    <a class="plink" style="--i:2" href="#migrate">Migrate</a>
-    <a class="plink" style="--i:3" href="#proof">Proof</a>
-    <a class="plink" style="--i:4" href="#faq">FAQ</a>
-    <a class="plink" style="--i:5" href="#quickstart">Quickstart</a>
+    <a class="plink" style="--i:2" href="#paths">Migration paths</a>
+    <a class="plink" style="--i:3" href="#impact">Results</a>
+    <a class="plink" style="--i:4" href="#proof">Proof</a>
+    <a class="plink" style="--i:5" href="#faq">FAQ</a>
+    <a class="plink" style="--i:6" href="#quickstart">Quickstart</a>
   </div>
 
   <main id="main">
@@ -89,7 +87,7 @@
           <a class="btn btn-primary btn-lg button-lg" href="#quickstart">Run the quickstart <i class="ph ph-arrow-right" aria-hidden="true"></i></a>
           <span class="proof body-6"><i class="ph ph-seal-check" aria-hidden="true"></i>Mapped Spring PetClinic, 4,297 lines, for $0.077 in 51 seconds</span>
         </div>
-        <div class="hero-visual reveal" data-d="3">
+        <div class="hero-visual tilt-scene reveal" data-d="3">
           <div class="term" role="img" aria-label="Terminal showing Parity ingesting and analyzing a service, reporting it ready for approval, then writing the approved doc and the migration contract">
             <div class="term-bar"><b></b><b></b><b></b><span>~/legacy-service</span></div>
             <div class="term-body" id="term" aria-hidden="true"></div>
@@ -267,24 +265,24 @@
           <h2 class="heading-2">Three moves from legacy app to migrated app</h2>
         </div>
         <div class="steps">
-          <article class="step reveal"><span class="n caption-1">01</span><h3 class="title-1">Understand the legacy app</h3><p class="body-6">Copy the source into a project, redact secrets and pull static facts. The model then reads the code in chunks and returns nodes, edges and business rules, each checked against the real file and line.</p><pre><code>migration-agent init ./svc
-migration-agent ingest svc.migration
-migration-agent extract svc.migration
-migration-agent analyze svc.migration \
+          <article class="step reveal"><span class="n caption-1">01</span><h3 class="title-1">Understand the legacy app</h3><p class="body-6">Copy the source into a project, redact secrets and pull static facts. The model then reads the code in chunks and returns nodes, edges and business rules, each checked against the real file and line.</p><pre><code>parity init ./svc
+parity ingest svc.migration
+parity extract svc.migration
+parity analyze svc.migration \
   --config gemini.config.json --max-usd 1</code></pre></article>
-          <article class="step reveal" data-d="1"><span class="n caption-1">02</span><h3 class="title-1">Check it and approve it</h3><p class="body-6">Run the Verifier against your docs and resolve or defer each finding. Mark every quirk or suspected bug to preserve (the default) or fix. Approval is refused while any blocker is open.</p><pre><code>migration-agent verify svc.migration
-migration-agent resolve svc.migration \
+          <article class="step reveal" data-d="1"><span class="n caption-1">02</span><h3 class="title-1">Check it and approve it</h3><p class="body-6">Run the Verifier against your docs and resolve or defer each finding. Mark every quirk or suspected bug to preserve (the default) or fix. Approval is refused while any blocker is open.</p><pre><code>parity verify svc.migration
+parity resolve svc.migration \
   F-0001 --status accepted_code
-migration-agent decide svc.migration \
+parity decide svc.migration \
   RULE-0003 --fix
-migration-agent status svc.migration
-migration-agent approve svc.migration \
+parity status svc.migration
+parity approve svc.migration \
   --by "Your Name"</code></pre></article>
-          <article class="step reveal" data-d="2"><span class="n caption-1">03</span><h3 class="title-1">Migrate with proof</h3><p class="body-6">Describe the target, plan slices from the approved contract, then generate and verify one slice at a time. Each slice waits for your approval. <a class="inline" href="#migrate">See the four stages</a></p><pre><code>migration-agent target init \
+          <article class="step reveal" data-d="2"><span class="n caption-1">03</span><h3 class="title-1">Migrate with proof</h3><p class="body-6">Describe the target, plan slices from the approved contract, then generate and verify one slice at a time. Each slice waits for your approval. <a class="inline" href="#migrate">See the four stages</a></p><pre><code>parity target init \
   svc.migration --runtime 21 \
   --framework spring-boot@3.3
-migration-agent plan svc.migration
-migration-agent generate \
+parity plan svc.migration
+parity generate \
   svc.migration --slice SLICE-0001</code></pre></article>
         </div>
       </div>
@@ -394,34 +392,34 @@ pip install ".[llm]"
 cp .env.example .env   <span class="c"># add GEMINI_API_KEY or ANTHROPIC_API_KEY</span>
 
 <span class="c"># 1. understand</span>
-migration-agent init ./my-service
-migration-agent ingest my-service.migration
-migration-agent extract my-service.migration
-migration-agent analyze my-service.migration --dry-run   <span class="c"># estimate first</span>
-migration-agent analyze my-service.migration --config gemini.config.json --max-usd 1
-migration-agent review my-service.migration
+parity init ./my-service
+parity ingest my-service.migration
+parity extract my-service.migration
+parity analyze my-service.migration --dry-run   <span class="c"># estimate first</span>
+parity analyze my-service.migration --config gemini.config.json --max-usd 1
+parity review my-service.migration
 
 <span class="c"># 2. approve</span>
-migration-agent status my-service.migration
-migration-agent approve my-service.migration --by "Your Name"
+parity status my-service.migration
+parity approve my-service.migration --by "Your Name"
 
 <span class="c"># 3. migrate (beta, needs Docker; set request_headers in harness.yaml if your service needs a token)</span>
-migration-agent doctor my-service.migration
-migration-agent target init my-service.migration --runtime 21 --framework spring-boot@3.3
-migration-agent target fit my-service.migration --max-usd 1
-migration-agent plan my-service.migration
-migration-agent harness import-source my-service.migration --from-original
-migration-agent harness build my-service.migration --legacy
-migration-agent harness up my-service.migration --legacy
-migration-agent tests generate my-service.migration
-migration-agent tests record my-service.migration --harness
-migration-agent generate my-service.migration --slice SLICE-0001
-migration-agent harness build my-service.migration --new
-migration-agent harness up my-service.migration --new
-migration-agent equivalence run my-service.migration --slice SLICE-0001
-migration-agent equivalence fuzz my-service.migration --slice SLICE-0001   <span class="c"># advisory</span>
-migration-agent approve-slice my-service.migration SLICE-0001 --by "Your Name"
-migration-agent cutover my-service.migration   <span class="c"># readiness + plan; approve it in the review UI or with --approve</span></code></pre>
+parity doctor my-service.migration
+parity target init my-service.migration --runtime 21 --framework spring-boot@3.3
+parity target fit my-service.migration --max-usd 1
+parity plan my-service.migration
+parity harness import-source my-service.migration --from-original
+parity harness build my-service.migration --legacy
+parity harness up my-service.migration --legacy
+parity tests generate my-service.migration
+parity tests record my-service.migration --harness
+parity generate my-service.migration --slice SLICE-0001
+parity harness build my-service.migration --new
+parity harness up my-service.migration --new
+parity equivalence run my-service.migration --slice SLICE-0001
+parity equivalence fuzz my-service.migration --slice SLICE-0001   <span class="c"># advisory</span>
+parity approve-slice my-service.migration SLICE-0001 --by "Your Name"
+parity cutover my-service.migration   <span class="c"># readiness + plan; approve it in the review UI or with --approve</span></code></pre>
           <p class="qs-msg body-6" id="copymsg" role="status" aria-live="polite"></p>
         </div>
       </div>

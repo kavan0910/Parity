@@ -21,7 +21,7 @@ Phase 2 (migrate, prove, cut over) is what delivers the migrated app.
 ```mermaid
 flowchart LR
   subgraph User
-    CLI[CLI: migration-agent]
+    CLI[CLI: parity]
     UI[Review UI<br/>127.0.0.1 + token]
     UD[(user_docs/)]
   end
@@ -108,7 +108,7 @@ flowchart LR
   model, system, prompt and prompt version; the audit log records tokens and USD per call.
 * **Atomic writes** (temp file + `os.replace`) for all feedback and graph files; audit appends use `O_APPEND` plus `flock`.
 * **Model-agnostic**: `LLMClient` is a one-method protocol; LiteLLM implements it, `OfflineLLM` and `FakeLLM` stand in for tests and `--offline`.
-* **Container is the boundary**; the in-process guard is a tripwire. See `src/migration_agent/sandbox/README.md`
+* **Container is the boundary**; the in-process guard is a tripwire. See `src/parity_migrate/sandbox/README.md`
   for what it does and does not stop.
 
 ## Module map

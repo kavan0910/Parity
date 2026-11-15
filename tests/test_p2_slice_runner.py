@@ -6,15 +6,15 @@ import subprocess
 import pytest
 from click.testing import CliRunner
 
-from migration_agent.cli import main
-from migration_agent.migrate import slice_runner as sr
-from migration_agent.migrate import targetrepo
-from migration_agent.migrate.codegen import OfflineCodegenLLM
-from migration_agent.migrate.exec.fake import FakeExecBackend, FakeOutcome
-from migration_agent.migrate.ledger import spent
-from migration_agent.migrate.models import CharacterizationCase, SliceState
-from migration_agent.migrate.paths import Phase2Layout
-from migration_agent.migrate.state import load_state, save_state, transition
+from parity_migrate.cli import main
+from parity_migrate.migrate import slice_runner as sr
+from parity_migrate.migrate import targetrepo
+from parity_migrate.migrate.codegen import OfflineCodegenLLM
+from parity_migrate.migrate.exec.fake import FakeExecBackend, FakeOutcome
+from parity_migrate.migrate.ledger import spent
+from parity_migrate.migrate.models import CharacterizationCase, SliceState
+from parity_migrate.migrate.paths import Phase2Layout
+from parity_migrate.migrate.state import load_state, save_state, transition
 
 from p2_m4_helpers import ScriptLLM, m4_project, passing_suite, plan, ready_slice, reply, tree_snapshot
 
@@ -35,7 +35,7 @@ def git(p, *args):
 
 
 def entry_with_recorded_case(p):
-    from migration_agent.migrate.casestore import save_case
+    from parity_migrate.migrate.casestore import save_case
     entry = next(s for s in plan(p).slices if s.kind == "entry")
     for d in entry.depends_on:                                      # pretend dependencies are approved
         save_state(p, SliceState(slice_id=d, status="approved"))
@@ -72,7 +72,7 @@ def test_offline_loop_reaches_awaiting_human(proj):
     assert all(m.source.startswith("runs/") for j in fb.jobs for m in j.mounts)
     # git: one agent commit + tag per iteration
     log = git(proj, "log", "--format=%an <%ae>|%s")
-    assert log.splitlines()[0].startswith("migration-agent <agent@localhost>|" + sid)
+    assert log.splitlines()[0].startswith("parity <agent@localhost>|" + sid)
     assert f"slice/{sid}/iter-1" in git(proj, "tag")
     assert git(proj, "config", "core.hooksPath").strip() == "/dev/null"
     # audit: spans per step tagged with the slice, model calls attributed to the slice
@@ -294,7 +294,7 @@ def test_entry_slice_needs_recorded_cases(proj):
         save_state(proj, SliceState(slice_id=d, status="approved"))
     o = run(proj, entry.id).outcomes[0]
     assert o.action == "refused" and "no characterization cases" in o.reason
-    from migration_agent.migrate.casestore import save_case
+    from parity_migrate.migrate.casestore import save_case
     case = CharacterizationCase.model_validate({"id": "CT-0001", "slice": entry.id, "kind": "http",
                                                 "request": {"method": "GET", "path": "/api/x"}})
     save_case(proj, case)
@@ -393,7 +393,7 @@ def test_in_place_without_legacy_src_seeds_from_code_with_warning(tmp_path, tmp_
 
 
 def test_cli_generate_offline(proj, monkeypatch):
-    import migration_agent.migrate.exec as ex
+    import parity_migrate.migrate.exec as ex
     monkeypatch.setattr(ex, "get_backend", lambda project=None: FakeExecBackend(project))
     sid = entry_with_recorded_case(proj).id
     res = CliRunner().invoke(main, ["generate", str(proj.root), "--slice", sid, "--offline"])

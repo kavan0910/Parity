@@ -8,13 +8,13 @@ from pathlib import Path
 
 import pytest
 
-from migration_agent import service
-from migration_agent.cli import main
-from migration_agent.graph import load_latest
-from migration_agent.llm.base import FakeLLM, LLMAuthError, LLMResponse
-from migration_agent.llm.offline import OfflineLLM
-from migration_agent.storage import ArchiveError, pack_project, unpack_project
-from migration_agent.verify.models import Finding, FindingsFile
+from parity_migrate import service
+from parity_migrate.cli import main
+from parity_migrate.graph import load_latest
+from parity_migrate.llm.base import FakeLLM, LLMAuthError, LLMResponse
+from parity_migrate.llm.offline import OfflineLLM
+from parity_migrate.storage import ArchiveError, pack_project, unpack_project
+from parity_migrate.verify.models import Finding, FindingsFile
 
 REPO = Path(__file__).parent.parent / "eval" / "repos" / "express-crud"
 
@@ -33,7 +33,7 @@ class CostLLM(OfflineLLM):
 
 def _real_client(monkeypatch):
     """tests/e2e installs a replay stand-in for LiteLLMClient that may still be active; use the real class."""
-    import migration_agent.llm.litellm_client as lc
+    import parity_migrate.llm.litellm_client as lc
     monkeypatch.setattr(lc, "LiteLLMClient", getattr(lc, "_RealClient", lc.LiteLLMClient))
     return lc
 
@@ -142,7 +142,7 @@ def test_budget_stop_is_graceful(ingested):
 
 def test_budget_from_config_and_exception_path(ingested):
     def boom(task, system, prompt):
-        from migration_agent.llm.base import BudgetExceeded
+        from parity_migrate.llm.base import BudgetExceeded
         raise BudgetExceeded("budget $0.00 reached")
     r = service.run_stage(ingested, "analyze", llm=FakeLLM(boom), config={"max_usd": 0.0})
     assert r.status == "stopped_budget"
@@ -340,7 +340,7 @@ def test_resolve_unknown_finding_and_budget(analyzed):
 
 
 def test_graph_functions_on_empty_project(tmp_path):
-    from migration_agent.project import Project
+    from parity_migrate.project import Project
     Project.init(tmp_path / "e", "x")
     assert service.graph_snapshot(tmp_path / "e") == {"version": 0, "nodes": [], "edges": []}
     assert service.graph_versions(tmp_path / "e") == []

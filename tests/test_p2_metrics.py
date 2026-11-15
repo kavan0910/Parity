@@ -5,14 +5,14 @@ import json
 import pytest
 from click.testing import CliRunner
 
-from migration_agent.audit import AuditLog
-from migration_agent.cli import main
-from migration_agent.migrate.metrics import compute_metrics, render_table
-from migration_agent.migrate.models import (
+from parity_migrate.audit import AuditLog
+from parity_migrate.cli import main
+from parity_migrate.migrate.metrics import compute_metrics, render_table
+from parity_migrate.migrate.models import (
     EquivalenceDiff, EquivalenceReport, RuntimeFinding, RuntimeFindingsFile,
 )
-from migration_agent.migrate.paths import Phase2Layout
-from migration_agent.migrate.state import atomic_write_json
+from parity_migrate.migrate.paths import Phase2Layout
+from parity_migrate.migrate.state import atomic_write_json
 
 from p2_m5_helpers import HUMAN, commit, git, init_target, m5_project, make_case
 from phase2_helpers import approved_project
@@ -128,5 +128,5 @@ def test_metrics_cli_table_and_json(synth):
 
 
 def test_service_metrics_facade(synth):
-    from migration_agent import service
+    from parity_migrate import service
     assert service.metrics(synth["p"].root)["totals"]["calls"] == 4

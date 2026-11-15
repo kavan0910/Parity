@@ -16,7 +16,7 @@ next to Docker; see "Phase 2 (migration) deployment" at the end.
 * no secrets in the image, no `ENV` for keys; `pip --no-cache-dir`;
 * OCI labels (`org.opencontainers.image.title|description|version|revision|created|source|base.name`);
 * no `HEALTHCHECK`: it is a batch CLI, and `review` binds to loopback inside the container, so it is neither
-  probeable nor reachable through a published port. Run `migration-agent review` on the host.
+  probeable nor reachable through a published port. Run `parity review` on the host.
 
 Build (context is the repository root):
 
@@ -26,7 +26,7 @@ docker buildx imagetools inspect python:3.12-slim      # note the Digest
 docker build -f docker/Dockerfile \
   --build-arg PYTHON_IMAGE=python:3.12-slim@sha256:<digest> \
   --build-arg VERSION=$VERSION --build-arg VCS_REF=$(git rev-parse HEAD) --build-arg BUILD_DATE=$(date -u +%FT%TZ) \
-  -t migration-agent:$VERSION .
+  -t parity:$VERSION .
 ```
 Always pin the base by digest for anything you ship. Without the build arg the moving `python:3.12-slim` tag is used.
 
@@ -70,7 +70,7 @@ allowlist from `docker/squid.conf` at start-up. Examples:
 
 ## Environment variables
 
-Read by `migration_agent.config_env` (precedence: defaults < `MA_LLM_CONFIG` file < `MA_*` variables). Empty values
+Read by `parity_migrate.config_env` (precedence: defaults < `MA_LLM_CONFIG` file < `MA_*` variables). Empty values
 are ignored; invalid values fail fast with a message naming the variable. Explicit CLI flags take precedence once the
 CLI wires them (see the 0.2.0 changelog for what is wired).
 
@@ -93,22 +93,22 @@ client applies it (tracked in the changelog).
 
 ## Releases, signing and verification
 
-Version is defined once, in `pyproject.toml`; `migration_agent.__version__` reads it from package metadata.
+Version is defined once, in `pyproject.toml`; `parity_migrate.__version__` reads it from package metadata.
 To release:
 
 ```bash
 git tag v0.2.0                                   # must equal pyproject version
 python scripts/release.py v0.2.0                 # clean tree, tag format, build, dist/SHA256SUMS, prints cosign commands
-git push origin v0.2.0                           # CI builds, pushes ghcr.io/<owner>/migration-agent:0.2.0, signs (keyless cosign), attaches SBOM
+git push origin v0.2.0                           # CI builds, pushes ghcr.io/<owner>/parity:0.2.0, signs (keyless cosign), attaches SBOM
 ```
 Verify as a consumer:
 ```bash
 cd dist && sha256sum -c SHA256SUMS
-cosign verify-blob --bundle migration_agent-0.2.0-py3-none-any.whl.sigstore.json \
-  --certificate-identity-regexp 'https://github.com/<owner>/migration-agent/' \
-  --certificate-oidc-issuer https://token.actions.githubusercontent.com migration_agent-0.2.0-py3-none-any.whl
-cosign verify ghcr.io/<owner>/migration-agent:0.2.0 \
-  --certificate-identity-regexp 'https://github.com/<owner>/migration-agent/' \
+cosign verify-blob --bundle parity_migrate-0.2.0-py3-none-any.whl.sigstore.json \
+  --certificate-identity-regexp 'https://github.com/<owner>/parity/' \
+  --certificate-oidc-issuer https://token.actions.githubusercontent.com parity_migrate-0.2.0-py3-none-any.whl
+cosign verify ghcr.io/<owner>/parity:0.2.0 \
+  --certificate-identity-regexp 'https://github.com/<owner>/parity/' \
   --certificate-oidc-issuer https://token.actions.githubusercontent.com
 ```
 `scripts/release.py` never signs by itself. Signing in CI is keyless (GitHub OIDC; no stored secrets) and is skipped on
@@ -136,16 +136,16 @@ Delete the folder to remove all derived data.
 * Use `--max-usd` / `MA_MAX_USD` on every model run; review `audit` totals.
 * Prefer the `offline` profile for everything that does not need a model.
 * Treat the Squid proxy as a trusted component; allow only one host. Allowlisting is by domain name (see the
-  caveats in `src/migration_agent/sandbox/README.md`).
+  caveats in `src/parity_migrate/sandbox/README.md`).
 * The Docker files have been reviewed but not exercised on the authoring machine (no Docker available); run a smoke test
-  (`docker run --rm --read-only --network none --tmpfs /tmp migration-agent:<v> --help`) in your environment. CI does this on every build.
+  (`docker run --rm --read-only --network none --tmpfs /tmp parity:<v> --help`) in your environment. CI does this on every build.
 
 ## Phase 2 (migration) deployment
 
 Phase 2 is **CLI/self-hosted only** (decision P2-Q13). It is not part of the hosted platform in `deploy/`, and the
 hosted worker must not run exec jobs (it holds database credentials).
 
-Phase 2 builds and runs code through the Docker CLI on the machine where you run `migration-agent`. The
+Phase 2 builds and runs code through the Docker CLI on the machine where you run `parity`. The
 `docker/Dockerfile` engine image has no Docker CLI and the compose profiles above give it no Docker socket; keep it
 that way. Run the Phase 2 commands from a host install (`pip install ".[llm]"`) on a machine with Docker, in a
 project folder on local disk. Mounting the Docker socket into the engine container would give the model-facing

@@ -17,12 +17,12 @@ from pathlib import Path
 import pytest
 from click.testing import CliRunner
 
-from migration_agent.cli import main
-from migration_agent.migrate import equivalence as eq, targetrepo
-from migration_agent.migrate.differential import load_fuzz_reports
-from migration_agent.migrate.paths import Phase2Layout
-from migration_agent.migrate.target import load_target
-from migration_agent.project import Project
+from parity_migrate.cli import main
+from parity_migrate.migrate import equivalence as eq, targetrepo
+from parity_migrate.migrate.differential import load_fuzz_reports
+from parity_migrate.migrate.paths import Phase2Layout
+from parity_migrate.migrate.target import load_target
+from parity_migrate.project import Project
 
 ROOT = Path(__file__).resolve().parent.parent
 IMAGES = ("node:20.18.0-bookworm", "ubuntu/squid:6.6-24.04_beta", "python:3.12.7-alpine3.20")

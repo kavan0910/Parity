@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from migration_agent.sandbox.guard import SandboxPolicy
+from parity_migrate.sandbox.guard import SandboxPolicy
 
 
 SRC = str(Path(__file__).resolve().parents[1] / "src")
@@ -18,7 +18,7 @@ def run(body: str, tmp_path, **policy):
     prelude = textwrap.dedent(f"""
         import json, sys
         from pathlib import Path
-        from migration_agent.sandbox.guard import enforce_readonly_process, SandboxPolicy
+        from parity_migrate.sandbox.guard import enforce_readonly_process, SandboxPolicy
         scratch = Path({str(tmp_path / 'scratch')!r}); scratch.mkdir(exist_ok=True)
         pol = SandboxPolicy(write_dirs=[scratch], **{policy!r})
         enforce_readonly_process(pol)

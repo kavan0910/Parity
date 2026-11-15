@@ -8,12 +8,12 @@ from pathlib import Path
 
 import pytest
 
-from migration_agent.graph.models import ID_PREFIX, Evidence, Graph, Node
-from migration_agent.graph.store import save_snapshot
-from migration_agent.project import Project
-from migration_agent.review_ui import page as page_mod
-from migration_agent.review_ui.server import serve
-from migration_agent.verify.models import Finding, FindingsFile
+from parity_migrate.graph.models import ID_PREFIX, Evidence, Graph, Node
+from parity_migrate.graph.store import save_snapshot
+from parity_migrate.project import Project
+from parity_migrate.review_ui import page as page_mod
+from parity_migrate.review_ui.server import serve
+from parity_migrate.verify.models import Finding, FindingsFile
 
 XSS = '</script><script>alert(1)</script><img src=x onerror=alert(2)>'
 

@@ -2,9 +2,9 @@ import json
 
 import pytest
 
-from migration_agent.analyze.module_analyzer import AnalysisError
-from migration_agent.analyze.rules import RULES_PROMPT_VERSION, extract_rules
-from migration_agent.llm.base import FakeLLM
+from parity_migrate.analyze.module_analyzer import AnalysisError
+from parity_migrate.analyze.rules import RULES_PROMPT_VERSION, extract_rules
+from parity_migrate.llm.base import FakeLLM
 
 EV = {"file": "p.py", "line_start": 3, "quote": "if total > 100:"}
 COMP = {"type": "component", "module": "m", "qualified_symbol": "price"}

@@ -1,7 +1,7 @@
-"""Adapter between the backend and ``migration_agent.service`` (platform contract section 2).
+"""Adapter between the backend and ``parity_migrate.service`` (platform contract section 2).
 
 The real module is imported lazily. Tests (and any alternative engine) inject an object with the same functions via
-``set_engine``; nothing else in the backend imports ``migration_agent`` directly.
+``set_engine``; nothing else in the backend imports ``parity_migrate`` directly.
 """
 from __future__ import annotations
 
@@ -32,7 +32,7 @@ class Engine(Protocol):
 
 
 class ModuleEngine:
-    """Delegates to a module exposing the section-2 functions (default: ``migration_agent.service``)."""
+    """Delegates to a module exposing the section-2 functions (default: ``parity_migrate.service``)."""
 
     def __init__(self, module: Any):
         self._m = module
@@ -49,8 +49,8 @@ class ModuleEngine:
 
 def _pkg_version() -> str:
     try:
-        import migration_agent
-        return str(getattr(migration_agent, "__version__", "unknown"))
+        import parity_migrate
+        return str(getattr(parity_migrate, "__version__", "unknown"))
     except Exception:  # pragma: no cover
         return "unknown"
 
@@ -67,7 +67,7 @@ def get_engine() -> Any:
     global _engine
     if _engine is None:
         try:
-            _engine = ModuleEngine(importlib.import_module("migration_agent.service"))
+            _engine = ModuleEngine(importlib.import_module("parity_migrate.service"))
         except ImportError as e:
-            raise EngineUnavailable("migration_agent.service is not installed") from e
+            raise EngineUnavailable("parity_migrate.service is not installed") from e
     return _engine

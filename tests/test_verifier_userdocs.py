@@ -1,7 +1,7 @@
 import zipfile
 
-from migration_agent.project import Project
-from migration_agent.verify.userdocs import load_user_docs
+from parity_migrate.project import Project
+from parity_migrate.verify.userdocs import load_user_docs
 
 DOCX_XML = ('<?xml version="1.0"?><w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body>'
             '<w:p><w:pPr><w:pStyle w:val="Heading1"/></w:pPr><w:r><w:t>Billing Rules</w:t></w:r></w:p>'

@@ -12,8 +12,8 @@ import json
 import re
 from pathlib import Path
 
-from migration_agent.evalharness import EVAL_REPOS, load_expected
-from migration_agent.pipeline import ROUTE_RES
+from parity_migrate.evalharness import EVAL_REPOS, load_expected
+from parity_migrate.pipeline import ROUTE_RES
 
 TASKS = ("chunk_extract", "cross_ref", "business_rules", "gap_fill", "verifier")
 HDR = re.compile(r"^=== (.+?) \(lines (\d+)-(\d+)\) ===$", re.M)
@@ -173,7 +173,7 @@ class ReplayBackend:
         return self._compare()
 
     def _compare(self) -> dict:
-        from migration_agent.graph import load_latest
+        from parity_migrate.graph import load_latest
         g = load_latest(self.root / "graph")
         doc = (self.root / "docs" / "understanding.latest.md").read_text()
         rule_text = self.expected["rules"][0]["text"]

@@ -69,10 +69,10 @@
   /* ---- hero terminal: real output from a run on the Express sample ---- */
   var term = document.getElementById("term");
   var script = [
-    { cmd: "migration-agent ingest my-service.migration", out: ["ingested 18 files, skipped 1, secret findings 2"] },
-    { cmd: "migration-agent analyze my-service.migration --max-usd 1", out: ["plan: 1 chunk(s), estimated cost $0.01", "done: {'chunks': 1, 'nodes': 39, 'edges': 30, 'coverage_complete': True, …}"] },
-    { cmd: "migration-agent status my-service.migration", out: ["ready for approval: yes", "approval: none (not approved yet)"] },
-    { cmd: "migration-agent approve my-service.migration --by Priya", out: ["approved graph v2 by Priya", "contract:     docs/migration_contract.json"] }
+    { cmd: "parity ingest my-service.migration", out: ["ingested 18 files, skipped 1, secret findings 2"] },
+    { cmd: "parity analyze my-service.migration --max-usd 1", out: ["plan: 1 chunk(s), estimated cost $0.01", "done: {'chunks': 1, 'nodes': 39, 'edges': 30, 'coverage_complete': True, …}"] },
+    { cmd: "parity status my-service.migration", out: ["ready for approval: yes", "approval: none (not approved yet)"] },
+    { cmd: "parity approve my-service.migration --by Priya", out: ["approved graph v2 by Priya", "contract:     docs/migration_contract.json"] }
   ];
   function line(html, cls) {
     var d = document.createElement("div");
@@ -211,5 +211,27 @@
     requestAnimationFrame(function () { requestAnimationFrame(function () {
       h1.querySelectorAll("span").forEach(function (s) { s.style.opacity = "1"; s.style.transform = "none"; });
     }); });
+  }
+
+  // 3D pointer tilt on the hero visual and the card grids (fine pointers, motion allowed)
+  if (!reduce && window.matchMedia("(hover: hover) and (pointer: fine)").matches) {
+    document.querySelectorAll(".grid-3").forEach(function (g) { g.classList.add("grid-3d"); });
+    var tilt = function (el, max) {
+      el.addEventListener("pointermove", function (e) {
+        var r = el.getBoundingClientRect();
+        var px = (e.clientX - r.left) / r.width - 0.5, py = (e.clientY - r.top) / r.height - 0.5;
+        el.style.setProperty("--ry", (px * max).toFixed(2) + "deg");
+        el.style.setProperty("--rx", (-py * max).toFixed(2) + "deg");
+      });
+      el.addEventListener("pointerleave", function () { el.style.setProperty("--rx", "0deg"); el.style.setProperty("--ry", "0deg"); });
+    };
+    document.querySelectorAll(".tilt-scene > *").forEach(function (el) { tilt(el, 6); });
+    document.querySelectorAll(".card").forEach(function (el) { tilt(el, 8); });
+    // slow parallax for the floating shapes
+    var fl = document.querySelectorAll(".float span");
+    window.addEventListener("scroll", function () {
+      var y = window.scrollY; if (y > 900) return;
+      fl.forEach(function (s, k) { s.style.translate = "0 " + (y * (0.04 + k * 0.02)).toFixed(1) + "px"; });
+    }, { passive: true });
   }
 })();

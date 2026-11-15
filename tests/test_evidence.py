@@ -1,7 +1,7 @@
 import pytest
 
-from migration_agent.analyze.evidence import EvidenceError, assert_all_evidence_valid, verify_evidence
-from migration_agent.graph.models import Edge, Evidence, Graph, Node
+from parity_migrate.analyze.evidence import EvidenceError, assert_all_evidence_valid, verify_evidence
+from parity_migrate.graph.models import Edge, Evidence, Graph, Node
 
 
 @pytest.fixture

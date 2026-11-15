@@ -9,20 +9,20 @@ from pathlib import Path
 import pytest
 from click.testing import CliRunner
 
-from migration_agent.analyze.evidence import check_evidence
-from migration_agent.analyze.runner import run_analyze
-from migration_agent.audit import AuditLog
-from migration_agent.cli import main
-from migration_agent.llm.base import BudgetExceeded, FakeLLM, LLMResponse
-from migration_agent.llm.offline import OfflineLLM
-from migration_agent.migrate import fit as fitmod
-from migration_agent.migrate.fit import (PROMPT_VERSION, FitError, OfflineFitLLM, fit_blockers, fit_state,
+from parity_migrate.analyze.evidence import check_evidence
+from parity_migrate.analyze.runner import run_analyze
+from parity_migrate.audit import AuditLog
+from parity_migrate.cli import main
+from parity_migrate.llm.base import BudgetExceeded, FakeLLM, LLMResponse
+from parity_migrate.llm.offline import OfflineLLM
+from parity_migrate.migrate import fit as fitmod
+from parity_migrate.migrate.fit import (PROMPT_VERSION, FitError, OfflineFitLLM, fit_blockers, fit_state,
                                          load_prompt, load_report, load_resolutions, resolve_risk, run_fit)
-from migration_agent.migrate.models import FitReport
-from migration_agent.migrate.paths import Phase2Layout
-from migration_agent.migrate.target import build_spec, detect_source, load_target, write_target
-from migration_agent.project import Project
-from migration_agent.review.approval import approve
+from parity_migrate.migrate.models import FitReport
+from parity_migrate.migrate.paths import Phase2Layout
+from parity_migrate.migrate.target import build_spec, detect_source, load_target, write_target
+from parity_migrate.project import Project
+from parity_migrate.review.approval import approve
 
 REPOS = Path(__file__).parent.parent / "eval" / "repos"
 _CACHE: dict[str, Path] = {}
@@ -456,7 +456,7 @@ def test_fit_state_for_ui(spring):
 
 
 def test_make_llm_uses_project_ledger(spring, monkeypatch):
-    from migration_agent.llm import litellm_client as lc
+    from parity_migrate.llm import litellm_client as lc
 
     class Client:                      # records the wiring; never touches the network
         def __init__(self, config=None, *, budget=None, cache_dir=None, audit=None, agent="llm", **kw):

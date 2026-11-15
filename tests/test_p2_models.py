@@ -5,10 +5,10 @@ import textwrap
 import pytest
 from pydantic import ValidationError
 
-from migration_agent.migrate import models as m
-from migration_agent.migrate.ids import IdAllocator, allocate, allocator
-from migration_agent.migrate.paths import PHASE2_DIRS, Phase2Layout
-from migration_agent.project import Project, ProjectMeta
+from parity_migrate.migrate import models as m
+from parity_migrate.migrate.ids import IdAllocator, allocate, allocator
+from parity_migrate.migrate.paths import PHASE2_DIRS, Phase2Layout
+from parity_migrate.project import Project, ProjectMeta
 
 TARGET_YAML = textwrap.dedent("""\
     schema_version: 1

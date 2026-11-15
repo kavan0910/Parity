@@ -7,12 +7,12 @@ import json
 
 import pytest
 
-from migration_agent.ingest.secrets import redact_text, scan_text
-from migration_agent.review import comments as rcomments
-from migration_agent.review import resolutions as rresolutions
-from migration_agent.review.reanalyze import reanalyze
-from migration_agent.review_ui.server import serve
-from migration_agent.verify.verifier import run_verifier
+from parity_migrate.ingest.secrets import redact_text, scan_text
+from parity_migrate.review import comments as rcomments
+from parity_migrate.review import resolutions as rresolutions
+from parity_migrate.review.reanalyze import reanalyze
+from parity_migrate.review_ui.server import serve
+from parity_migrate.verify.verifier import run_verifier
 
 from rt_helpers import RecordingTransport, analyze, llm_client, make_project, tree_text
 
@@ -122,7 +122,7 @@ def test_nothing_secret_in_any_prompt_trace_cache_or_artifact(world, tmp_path):
     assert res.findings, "fixture should produce one verified finding"
 
     # --- review: comment + resolution carrying pasted credentials, then targeted re-analysis
-    from migration_agent.graph import load_latest
+    from parity_migrate.graph import load_latest
     node_id = load_latest(proj.graph_dir).nodes[0].id
     rcomments.add_comment(proj, node_id, f"is this right? key={s['github']} and {s['aws_access_key']}")
     rresolutions.add_resolution(proj, res.findings[0].id, "needs_reanalysis", f"see postgres://a:{s['db_password']}@h/x")
@@ -142,7 +142,7 @@ def test_nothing_secret_in_any_prompt_trace_cache_or_artifact(world, tmp_path):
 
 
 def test_audit_scrubs_credentials_in_free_text(tmp_path, mk):
-    from migration_agent.audit import AuditLog, read_audit
+    from parity_migrate.audit import AuditLog, read_audit
     s = mk.fake_secrets()
     log = AuditLog(tmp_path / "a.jsonl")
     log.record("x", "act", command=f"run --token {s['github']}", error=f"password={s['config_password']} failed",
@@ -159,7 +159,7 @@ def test_audit_scrubs_credentials_in_free_text(tmp_path, mk):
 def test_review_server_state_never_contains_secrets(world):
     proj, rep, s = world
     analyze(proj, RecordingTransport())
-    from migration_agent.graph import load_latest
+    from parity_migrate.graph import load_latest
     node_id = load_latest(proj.graph_dir).nodes[0].id
     server, url = serve(proj.root)
     try:

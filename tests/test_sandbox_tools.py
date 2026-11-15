@@ -2,7 +2,7 @@ import os
 
 import pytest
 
-from migration_agent.sandbox.tools import ReadOnlyTools, SandboxViolation
+from parity_migrate.sandbox.tools import ReadOnlyTools, SandboxViolation
 
 
 @pytest.fixture

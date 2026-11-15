@@ -302,7 +302,7 @@ footer{border-top:1px solid var(--line);padding:30px 20px;text-align:center;colo
 <h3>Two ways to use it</h3>
 <div class="tw"><table>
 <caption>Web app versus CLI</caption>
-<thead><tr><th>Web app (hosted)</th><th>CLI (<code>migration-agent</code>)</th></tr></thead>
+<thead><tr><th>Web app (hosted)</th><th>CLI (<code>parity</code>)</th></tr></thead>
 <tbody><tr>
 <td>Teams, shared review, roles, audit log, usage metering. You never see an API key: the operator's server holds it. You choose a <em>model profile</em> (Fast, Balanced, Best), not a model name.</td>
 <td>One engineer, one machine. All state lives in a single <code>&lt;name&gt;.migration</code> folder. You bring your own model API key and pick models with a config file. Includes a local review UI bound to <code>127.0.0.1</code>.</td>
@@ -325,14 +325,14 @@ footer{border-top:1px solid var(--line);padding:30px 20px;text-align:center;colo
 <div class="cli"><span class="t">Same thing in the CLI</span>
 <div class="pw"><pre><code>pip install ".[llm]"                         # needs Python 3.11+
 cp .env.example .env                         # add ANTHROPIC_API_KEY or GEMINI_API_KEY
-migration-agent init https://github.com/spring-projects/spring-petclinic --project ./petclinic.migration
-migration-agent ingest  petclinic.migration
-migration-agent extract petclinic.migration
-migration-agent analyze petclinic.migration --dry-run        # plan and cost estimate
-migration-agent analyze petclinic.migration --max-usd 1
+parity init https://github.com/spring-projects/spring-petclinic --project ./petclinic.migration
+parity ingest  petclinic.migration
+parity extract petclinic.migration
+parity analyze petclinic.migration --dry-run        # plan and cost estimate
+parity analyze petclinic.migration --max-usd 1
 cp requirements.md petclinic.migration/user_docs/            # optional
-migration-agent verify  petclinic.migration
-migration-agent review  petclinic.migration                  # local review UI</code></pre></div></div>
+parity verify  petclinic.migration
+parity review  petclinic.migration                  # local review UI</code></pre></div></div>
 </section>
 
 <!-- ============================================================ 3 -->
@@ -472,9 +472,9 @@ migration-agent review  petclinic.migration                  # local review UI</
 </tbody></table></div>
 <p>Separately, the engine's <strong>ingest</strong> step decides what is actually analysed. It skips symlinks, binaries, files over 1 MB and vendor or build directories (<code>.git</code>, <code>node_modules</code>, <code>vendor</code>, <code>build</code>, <code>dist</code>, <code>target</code>, virtualenvs). Credential files such as <code>.env</code>, <code>*.pem</code>, <code>id_rsa</code> and <code>.npmrc</code> are <strong>withheld entirely</strong>, and secrets found inside other files are replaced with <code>[REDACTED:&lt;kind&gt;]</code> before anything reaches a prompt. Redaction is pattern based, so an unusual secret format can slip through; do not rely on it as your only control. Skipped files appear as blind spots, not as findings.</p>
 <div class="cli"><span class="t">CLI equivalent</span>
-<div class="pw"><pre><code>migration-agent init ./legacy-orders                    # directory, .zip, tarball or git URL
-migration-agent init https://example.com/team/orders.git --project ./orders.migration --name "Orders service"
-migration-agent ingest legacy-orders.migration           # prints what was copied and skipped; see ingest_report.json</code></pre></div></div>
+<div class="pw"><pre><code>parity init ./legacy-orders                    # directory, .zip, tarball or git URL
+parity init https://example.com/team/orders.git --project ./orders.migration --name "Orders service"
+parity ingest legacy-orders.migration           # prints what was copied and skipped; see ingest_report.json</code></pre></div></div>
 </section>
 
 <!-- ============================================================ 6 -->
@@ -520,8 +520,8 @@ migration-agent ingest legacy-orders.migration           # prints what was copie
 <p>Measured so far (small repositories, one chunk each, Gemini Flash-class models): roughly a few cents per run. That does not extrapolate to large codebases, where chunking, rate limits and parallelism are untested.</p>
 
 <div class="cli"><span class="t">CLI equivalent</span>
-<div class="pw"><pre><code>migration-agent analyze petclinic.migration --dry-run                          # prints: plan: N chunk(s), estimated cost $X
-migration-agent analyze petclinic.migration --config gemini-lite.config.json --max-usd 3
+<div class="pw"><pre><code>parity analyze petclinic.migration --dry-run                          # prints: plan: N chunk(s), estimated cost $X
+parity analyze petclinic.migration --config gemini-lite.config.json --max-usd 3
 # models are chosen in the config file (tasks: chunk_extract, cross_ref, business_rules, gap_fill, verifier)</code></pre></div></div>
 </section>
 
@@ -586,10 +586,10 @@ migration-agent analyze petclinic.migration --config gemini-lite.config.json --m
 <h3>When it ends</h3>
 <p>The panel becomes <span class="ui">Latest run</span> with a <span class="ui">Start another run</span> button. The <span class="ui">Run history</span> table below lists every run (started, type with profile and "incremental", status, duration, cost). A failed run shows its error in a red notice; a budget stop shows it in amber. The error text is scrubbed so it never contains the server's API key.</p>
 <div class="cli"><span class="t">CLI equivalent</span>
-<div class="pw"><pre><code>migration-agent analyze petclinic.migration --max-usd 2          # runs in your terminal; Ctrl-C to stop. Re-run to resume.
-migration-agent analyze petclinic.migration --workers 4          # parallel chunk calls
-migration-agent verify  petclinic.migration --max-usd 1
-migration-agent audit   petclinic.migration                      # per-call tokens and USD</code></pre></div></div>
+<div class="pw"><pre><code>parity analyze petclinic.migration --max-usd 2          # runs in your terminal; Ctrl-C to stop. Re-run to resume.
+parity analyze petclinic.migration --workers 4          # parallel chunk calls
+parity verify  petclinic.migration --max-usd 1
+parity audit   petclinic.migration                      # per-call tokens and USD</code></pre></div></div>
 </section>
 
 <!-- ============================================================ 8 -->
@@ -607,7 +607,7 @@ migration-agent audit   petclinic.migration                      # per-call toke
 <div class="cli"><span class="t">CLI equivalent</span>
 <div class="pw"><pre><code>less petclinic.migration/docs/understanding.latest.md       # the same document
 open petclinic.migration/docs/graph.html                      # standalone interactive graph
-migration-agent render petclinic.migration                     # facts-only version, no model (for checking extraction)</code></pre></div></div>
+parity render petclinic.migration                     # facts-only version, no model (for checking extraction)</code></pre></div></div>
 </section>
 
 <!-- ============================================================ 9 -->
@@ -642,7 +642,7 @@ migration-agent render petclinic.migration                     # facts-only vers
 <p>Open <span class="ui">Versions</span>. With only one version you see "Only one version so far". Otherwise pick <span class="ui">From</span> and <span class="ui">To</span> and press <span class="ui">Compare</span>. You get three columns, <strong>Added</strong>, <strong>Removed</strong> and <strong>Changed</strong> nodes, each with type, name and ID (clicking opens the node in the version you are looking at; removed nodes are not clickable). Use this after a re-analysis or after switching model profile to see exactly what moved.</p>
 <div class="call"><span class="t">Tip</span><p>Because IDs are stable, a node that appears under "Changed" is the same thing re-described, not a new thing. A node that vanishes and a similar one that appears usually means its symbol or module changed in the code.</p></div>
 <div class="cli"><span class="t">CLI equivalent</span>
-<div class="pw"><pre><code>migration-agent review petclinic.migration --no-browser       # local UI on 127.0.0.1 with document, graph versions, diffs
+<div class="pw"><pre><code>parity review petclinic.migration --no-browser       # local UI on 127.0.0.1 with document, graph versions, diffs
 ls petclinic.migration/graph/snapshots/                         # v001.json, v002.json ... immutable
 open petclinic.migration/docs/graph.html                        # standalone interactive graph</code></pre></div></div>
 </section>
@@ -671,7 +671,7 @@ curl -X DELETE "$API/v1/projects/$PID/user-docs/$DOC_ID" -H "Authorization: Bear
 <p>Then run <span class="ui">Verify: compare with your docs</span>. Documents are copied into the worker's scratch area per run; only the Verifier ever reads them. Uploading docs after a verify run does not change old findings; start a new Verify run.</p>
 <div class="cli"><span class="t">CLI equivalent</span>
 <div class="pw"><pre><code>cp requirements.md runbook.docx petclinic.migration/user_docs/
-migration-agent verify petclinic.migration --max-usd 1          # writes feedback/findings.json, prints one line per finding</code></pre></div>
+parity verify petclinic.migration --max-usd 1          # writes feedback/findings.json, prints one line per finding</code></pre></div>
 <p>The Verifier requires an existing understanding document. If <code>verify</code> reports nothing, <code>user_docs/</code> is empty or the formats are unsupported (<code>.pdf</code> needs <code>pypdf</code>, not installed by default).</p></div>
 </section>
 
@@ -733,9 +733,9 @@ migration-agent verify petclinic.migration --max-usd 1          # writes feedbac
 <div class="call warn"><span class="t">Check that the re-analysis really started</span><p>After <span class="ui">The document is right</span> or <span class="ui">Look again</span> the app shows "Saved. A re-analysis run was queued; follow it on the Overview tab." That message is shown whenever you pick those answers. If your workspace limits refuse the new run (for example a spend limit), the server saves your answer, creates no run and explains why in its reply, but <strong>the page does not display that reason</strong>. Open <span class="ui">Overview</span> and look at <span class="ui">Run history</span> to confirm a <code>reanalyze</code> run exists. If another re-analysis is already queued or running, none is added; the queued one will pick up your answer. If a re-analysis is stopped by its budget, nothing is written.</p></div>
 <p>When a finding is answered, a green label with your answer appears on the card, "Resolved: ..." with your note, name and time. Answered findings disappear from <span class="ui">Open</span> and stay visible under <span class="ui">All</span>. When none are open: "All done. You answered every finding. Start a re-analysis from the Overview tab to refresh the document."</p>
 <div class="cli"><span class="t">CLI equivalent</span>
-<div class="pw"><pre><code>migration-agent resolve orders.migration F-0001 --status accepted_doc --note "Discount is 25% from 10 items"
-migration-agent resolve orders.migration F-0004 --status dismissed --no-reanalyze
-migration-agent resolve orders.migration F-0007 --status needs_reanalysis --max-usd 1</code></pre></div>
+<div class="pw"><pre><code>parity resolve orders.migration F-0001 --status accepted_doc --note "Discount is 25% from 10 items"
+parity resolve orders.migration F-0004 --status dismissed --no-reanalyze
+parity resolve orders.migration F-0007 --status needs_reanalysis --max-usd 1</code></pre></div>
 <p>Statuses in the web app: <code>accepted_doc</code>, <code>accepted_code</code>, <code>dismissed</code>, <code>needs_reanalysis</code>. In the CLI, re-analysis runs right away unless you pass <code>--no-reanalyze</code>, and there is a fifth status, <code>deferred</code> ("decide later"): no re-analysis, it does not block approval and it is listed in the migration contract. The web app does not offer it yet.</p></div>
 </section>
 
@@ -749,7 +749,7 @@ migration-agent resolve orders.migration F-0007 --status needs_reanalysis --max-
 </ul>
 <p>Comments are stored with your name and time. They are also queued for the engine: at the start of the next run, unapplied comments and answers are replayed into the project, where the re-analysis can use them as untrusted hints (never as evidence). A comment on its own does <strong>not</strong> start a run in the web app; in the CLI, <code>resolve --comment</code> does. Viewers can read but not write comments. Comments cannot be edited or deleted in the app.</p>
 <div class="cli"><span class="t">CLI equivalent</span>
-<div class="pw"><pre><code>migration-agent resolve orders.migration --comment RULE-0003 --note "Check the VIP exception in pricing.py"</code></pre></div></div>
+<div class="pw"><pre><code>parity resolve orders.migration --comment RULE-0003 --note "Check the VIP exception in pricing.py"</code></pre></div></div>
 </section>
 
 <!-- ============================================================ 13 -->
@@ -769,9 +769,9 @@ curl -X POST "$API/v1/projects/$PID/source" -H "Authorization: Bearer $TOKEN" \
 curl -X POST "$API/v1/projects/$PID/source" -H "Authorization: Bearer $TOKEN" -F "file=@repo.tar.gz"</code></pre></div>
 <p>After the run, open <span class="ui">Versions</span> and compare the last two versions to see what changed in the service. Run Verify again if you also changed your docs.</p>
 <div class="cli"><span class="t">CLI equivalent</span>
-<div class="pw"><pre><code>migration-agent ingest   orders.migration --refresh      # re-copy the updated source into code/
-migration-agent analyze  orders.migration --incremental --max-usd 2
-migration-agent changelog orders.migration               # regenerate docs/changelog.md from snapshot diffs</code></pre></div></div>
+<div class="pw"><pre><code>parity ingest   orders.migration --refresh      # re-copy the updated source into code/
+parity analyze  orders.migration --incremental --max-usd 2
+parity changelog orders.migration               # regenerate docs/changelog.md from snapshot diffs</code></pre></div></div>
 </section>
 
 <!-- ============================================================ 14 -->
@@ -790,7 +790,7 @@ migration-agent changelog orders.migration               # regenerate docs/chang
 <p>Each re-analysis produces a changelog (<code>docs/changelog.md</code>) describing what changed between consecutive graph versions and which comment or answer caused it.</p>
 <div class="call na"><span class="t">Not in the web app yet</span><p>The changelog endpoint exists but no page shows it. Fetch it with <code>curl "$API/v1/projects/$PID/changelog" -H "Authorization: Bearer $TOKEN"</code>, or use the <span class="ui">Versions</span> diff in the app for the node-level picture.</p></div>
 <div class="cli"><span class="t">CLI equivalent</span>
-<div class="pw"><pre><code>migration-agent changelog orders.migration && less orders.migration/docs/changelog.md</code></pre></div></div>
+<div class="pw"><pre><code>parity changelog orders.migration && less orders.migration/docs/changelog.md</code></pre></div></div>
 </section>
 
 <!-- ============================================================ 15 -->
@@ -855,7 +855,7 @@ migration-agent changelog orders.migration               # regenerate docs/chang
 <tr><td><code>storage.purge</code></td><td>A project's stored files were confirmed deleted.</td></tr>
 <tr><td><code>workspace.create</code></td><td>A workspace was created.</td></tr>
 </tbody></table></div>
-<p>Your own sign-in events (<code>auth.login</code>, <code>auth.login_failed</code>, <code>auth.signup</code>) are kept per account and are not part of the workspace log shown here. Audit entries survive project deletion; they contain identifiers, not code. The CLI keeps its own log in <code>audit/audit.jsonl</code> (every model call with tokens and USD): <code>migration-agent audit PROJECT</code>.</p>
+<p>Your own sign-in events (<code>auth.login</code>, <code>auth.login_failed</code>, <code>auth.signup</code>) are kept per account and are not part of the workspace log shown here. Audit entries survive project deletion; they contain identifiers, not code. The CLI keeps its own log in <code>audit/audit.jsonl</code> (every model call with tokens and USD): <code>parity audit PROJECT</code>.</p>
 </section>
 
 <!-- ============================================================ 18 -->

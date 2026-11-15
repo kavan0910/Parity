@@ -1,11 +1,11 @@
 import json
 
-from migration_agent.graph.models import Graph, Node
-from migration_agent.graph.store import save_snapshot
-from migration_agent.llm.base import FakeLLM
-from migration_agent.project import Project
-from migration_agent.verify import run_verifier
-from migration_agent.verify.models import FindingsFile
+from parity_migrate.graph.models import Graph, Node
+from parity_migrate.graph.store import save_snapshot
+from parity_migrate.llm.base import FakeLLM
+from parity_migrate.project import Project
+from parity_migrate.verify import run_verifier
+from parity_migrate.verify.models import FindingsFile
 
 UND = "# Understanding\n\n## Billing {#sec-1}\nCOMP-0001 charges   customers\nnet 15 days.\n\nCOMP-0002 sends mail.\nCOMP-0003 audits.\n"
 CODE_SECRET = "def secret_function_xyz(): return 42"

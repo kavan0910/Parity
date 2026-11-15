@@ -331,3 +331,15 @@ footer { border-top: 1px solid var(--border); padding: var(--s-500) 0; }
 .qs pre { font-size: 14px; line-height: 20px; }
 @media (prefers-reduced-motion: reduce) { .mstep:hover { transform: none; } }
 .card code, .faq .a code { white-space: nowrap; }
+
+/* 3D depth (motion-safe) */
+@media (prefers-reduced-motion: no-preference) {
+  .tilt-scene { perspective: 1200px; }
+  .tilt-scene > * { transform-style: preserve-3d; transition: transform 300ms var(--ease); will-change: transform; transform: rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg)); }
+  .tilt-scene > .gcard { transform: rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg)) translateZ(24px); box-shadow: 0 30px 60px -30px rgba(0,0,0,.5); }
+  .grid-3d { perspective: 1000px; }
+  .grid-3d .card { transform: rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg)); transform-style: preserve-3d; }
+  .grid-3d .card:hover { transform: rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg)) translateY(-4px) translateZ(12px); }
+  .float span { transform-style: preserve-3d; }
+}
+@media (hover: none) { .tilt-scene > *, .grid-3d .card { transform: none !important; } }

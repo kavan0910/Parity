@@ -10,11 +10,11 @@ import pytest
 import yaml
 from click.testing import CliRunner
 
-from migration_agent.cli import main
-from migration_agent.migrate import exec as p2exec
-from migration_agent.migrate import harness as H
-from migration_agent.project import Project
-from migration_agent.sandbox.tools import ReadOnlyTools, SandboxViolation
+from parity_migrate.cli import main
+from parity_migrate.migrate import exec as p2exec
+from parity_migrate.migrate import harness as H
+from parity_migrate.project import Project
+from parity_migrate.sandbox.tools import ReadOnlyTools, SandboxViolation
 
 from p2_exec_helpers import FakeDocker, flag_values
 from phase2_helpers import approved_project

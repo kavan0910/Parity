@@ -247,7 +247,7 @@ next to Docker; see "Phase 2 (migration) deployment" at the end.</p>
 <li>no secrets in the image, no <code>ENV</code> for keys; <code>pip --no-cache-dir</code>;</li>
 <li>OCI labels (<code>org.opencontainers.image.title|description|version|revision|created|source|base.name</code>);</li>
 <li>no <code>HEALTHCHECK</code>: it is a batch CLI, and <code>review</code> binds to loopback inside the container, so it is neither
-  probeable nor reachable through a published port. Run <code>migration-agent review</code> on the host.</li>
+  probeable nor reachable through a published port. Run <code>parity review</code> on the host.</li>
 </ul>
 <p>Build (context is the repository root):</p>
 <div class="pw"><pre><code language-bash>VERSION=$(python3 -c &quot;import tomllib;print(tomllib.load(open('pyproject.toml','rb'))['project']['version'])&quot;)
@@ -255,7 +255,7 @@ docker buildx imagetools inspect python:3.12-slim      # note the Digest
 docker build -f docker/Dockerfile \
   --build-arg PYTHON_IMAGE=python:3.12-slim@sha256:&lt;digest&gt; \
   --build-arg VERSION=$VERSION --build-arg VCS_REF=$(git rev-parse HEAD) --build-arg BUILD_DATE=$(date -u +%FT%TZ) \
-  -t migration-agent:$VERSION .
+  -t parity:$VERSION .
 </code></pre></div>
 <p>Always pin the base by digest for anything you ship. Without the build arg the moving <code>python:3.12-slim</code> tag is used.</p>
 <h2 id="running-compose-profiles">Running: compose profiles</h2>
@@ -329,7 +329,7 @@ allowlist from <code>docker/squid.conf</code> at start-up. Examples:</p>
 </tbody>
 </table></div>
 <h2 id="environment-variables">Environment variables</h2>
-<p>Read by <code>migration_agent.config_env</code> (precedence: defaults &lt; <code>MA_LLM_CONFIG</code> file &lt; <code>MA_*</code> variables). Empty values
+<p>Read by <code>parity_migrate.config_env</code> (precedence: defaults &lt; <code>MA_LLM_CONFIG</code> file &lt; <code>MA_*</code> variables). Empty values
 are ignored; invalid values fail fast with a message naming the variable. Explicit CLI flags take precedence once the
 CLI wires them (see the 0.2.0 changelog for what is wired).</p>
 <div class="tw"><table>
@@ -389,18 +389,18 @@ CLI wires them (see the 0.2.0 changelog for what is wired).</p>
 <p>Note: <code>MA_LLM_API_BASE</code> is exposed by <code>config_env.load_settings_from_env()</code>; it takes effect in the LLM client once the
 client applies it (tracked in the changelog).</p>
 <h2 id="releases-signing-and-verification">Releases, signing and verification</h2>
-<p>Version is defined once, in <code>pyproject.toml</code>; <code>migration_agent.__version__</code> reads it from package metadata.
+<p>Version is defined once, in <code>pyproject.toml</code>; <code>parity_migrate.__version__</code> reads it from package metadata.
 To release:</p>
 <div class="pw"><pre><code language-bash>git tag v0.2.0                                   # must equal pyproject version
 python scripts/release.py v0.2.0                 # clean tree, tag format, build, dist/SHA256SUMS, prints cosign commands
-git push origin v0.2.0                           # CI builds, pushes ghcr.io/&lt;owner&gt;/migration-agent:0.2.0, signs (keyless cosign), attaches SBOM
+git push origin v0.2.0                           # CI builds, pushes ghcr.io/&lt;owner&gt;/parity:0.2.0, signs (keyless cosign), attaches SBOM
 </code></pre></div>
 <p>Verify as a consumer:</p>
 <div class="pw"><pre><code language-bash>cd dist &amp;&amp; sha256sum -c SHA256SUMS
-cosign verify-blob --bundle migration_agent-0.2.0-py3-none-any.whl.sigstore.json \
+cosign verify-blob --bundle parity_migrate-0.2.0-py3-none-any.whl.sigstore.json \
   --certificate-identity-regexp 'https://github.com/&lt;owner&gt;/migration-agent/' \
-  --certificate-oidc-issuer https://token.actions.githubusercontent.com migration_agent-0.2.0-py3-none-any.whl
-cosign verify ghcr.io/&lt;owner&gt;/migration-agent:0.2.0 \
+  --certificate-oidc-issuer https://token.actions.githubusercontent.com parity_migrate-0.2.0-py3-none-any.whl
+cosign verify ghcr.io/&lt;owner&gt;/parity:0.2.0 \
   --certificate-identity-regexp 'https://github.com/&lt;owner&gt;/migration-agent/' \
   --certificate-oidc-issuer https://token.actions.githubusercontent.com
 </code></pre></div>
@@ -426,14 +426,14 @@ Delete the folder to remove all derived data.</p>
 <li>Use <code>--max-usd</code> / <code>MA_MAX_USD</code> on every model run; review <code>audit</code> totals.</li>
 <li>Prefer the <code>offline</code> profile for everything that does not need a model.</li>
 <li>Treat the Squid proxy as a trusted component; allow only one host. Allowlisting is by domain name (see the
-  caveats in <code>src/migration_agent/sandbox/README.md</code>).</li>
+  caveats in <code>src/parity_migrate/sandbox/README.md</code>).</li>
 <li>The Docker files have been reviewed but not exercised on the authoring machine (no Docker available); run a smoke test
-  (<code>docker run --rm --read-only --network none --tmpfs /tmp migration-agent:&lt;v&gt; --help</code>) in your environment. CI does this on every build.</li>
+  (<code>docker run --rm --read-only --network none --tmpfs /tmp parity:&lt;v&gt; --help</code>) in your environment. CI does this on every build.</li>
 </ul>
 <h2 id="phase-2-migration-deployment">Phase 2 (migration) deployment</h2>
 <p>Phase 2 is <strong>CLI/self-hosted only</strong> (decision P2-Q13). It is not part of the hosted platform in <code>deploy/</code>, and the
 hosted worker must not run exec jobs (it holds database credentials).</p>
-<p>Phase 2 builds and runs code through the Docker CLI on the machine where you run <code>migration-agent</code>. The
+<p>Phase 2 builds and runs code through the Docker CLI on the machine where you run <code>parity</code>. The
 <code>docker/Dockerfile</code> engine image has no Docker CLI and the compose profiles above give it no Docker socket; keep it
 that way. Run the Phase 2 commands from a host install (<code>pip install ".[llm]"</code>) on a machine with Docker, in a
 project folder on local disk. Mounting the Docker socket into the engine container would give the model-facing

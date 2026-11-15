@@ -12,7 +12,7 @@ has not run live.
 
 ## Module map
 
-All Phase 2 code lives in `src/migration_agent/migrate/`. Each module's docstring is the detailed reference.
+All Phase 2 code lives in `src/parity_migrate/migrate/`. Each module's docstring is the detailed reference.
 
 | Module | Milestone | Commands | Purpose |
 |---|---|---|---|
@@ -94,21 +94,21 @@ graph facts and generated text; `legacy_src/` is mounted only into exec containe
 ## Public entry points
 
 ```python
-from migration_agent.migrate.contract import check_contract, require_contract   # ContractCheck / MigrationContract
-from migration_agent.migrate.ledger import budget_for                            # Budget capped by project budget
-from migration_agent.migrate.target import detect_source, load_target            # Detection / TargetSpec
-from migration_agent.migrate.fit import run_fit, resolve_risk, fit_blockers      # FitRun / FitResolution / [Risk]
-from migration_agent.migrate.planner import plan_project, build_plan             # PlanResult / PlanDraft
-from migration_agent.migrate.testgen import generate_cases, approve_spec         # TestgenReport
-from migration_agent.migrate.recorder import record_cases, run_suite, coverage_gaps
-from migration_agent.migrate.harness import import_source, build, up, down, status, flip, unflip, run_cases_in_network
-from migration_agent.migrate.slice_runner import generate, dry_run, GenerateOptions   # GenerateReport
-from migration_agent.migrate.equivalence import run_equivalence, run_composite, approve_mask
-from migration_agent.migrate.approvals import approve_slice, reject_slice, approval_blockers, add_comment
-from migration_agent.migrate.configmap import build_config_map, config_gaps, set_decision
-from migration_agent.migrate.schemacompat import check, schema_blockers
-from migration_agent.migrate.cutover import readiness, write_plan, approve, verify_approval
-from migration_agent.migrate.metrics import compute_metrics
+from parity_migrate.migrate.contract import check_contract, require_contract   # ContractCheck / MigrationContract
+from parity_migrate.migrate.ledger import budget_for                            # Budget capped by project budget
+from parity_migrate.migrate.target import detect_source, load_target            # Detection / TargetSpec
+from parity_migrate.migrate.fit import run_fit, resolve_risk, fit_blockers      # FitRun / FitResolution / [Risk]
+from parity_migrate.migrate.planner import plan_project, build_plan             # PlanResult / PlanDraft
+from parity_migrate.migrate.testgen import generate_cases, approve_spec         # TestgenReport
+from parity_migrate.migrate.recorder import record_cases, run_suite, coverage_gaps
+from parity_migrate.migrate.harness import import_source, build, up, down, status, flip, unflip, run_cases_in_network
+from parity_migrate.migrate.slice_runner import generate, dry_run, GenerateOptions   # GenerateReport
+from parity_migrate.migrate.equivalence import run_equivalence, run_composite, approve_mask
+from parity_migrate.migrate.approvals import approve_slice, reject_slice, approval_blockers, add_comment
+from parity_migrate.migrate.configmap import build_config_map, config_gaps, set_decision
+from parity_migrate.migrate.schemacompat import check, schema_blockers
+from parity_migrate.migrate.cutover import readiness, write_plan, approve, verify_approval
+from parity_migrate.migrate.metrics import compute_metrics
 ```
 
 Signatures (keyword-only arguments shown after `*`):
@@ -131,7 +131,7 @@ Signatures (keyword-only arguments shown after `*`):
 | `cutover.readiness` / `approve` | `(project) -> Readiness` / `(project, by, note="") -> CutoverApproval` |
 | `compute_metrics` | `(project) -> dict` (pure read; missing data is `None`, never 0) |
 
-For hosts that embed the engine, `migration_agent.service.run_stage` wraps the main steps (see
+For hosts that embed the engine, `parity_migrate.service.run_stage` wraps the main steps (see
 [platform-contract.md](platform-contract.md) section 2).
 
 ## Shared contracts (`migrate/models.py`)
@@ -294,7 +294,7 @@ class ExecBackend(Protocol):
 - Results are files under `runs/RUN-NNNN/` written by `record_run` (1 MB log cap, redaction, audit record
   `exec`/`exec_run`).
 - `get_backend(project)` returns `DockerBackend(project)`. Tests inject `FakeExecBackend` by monkeypatching
-  `migration_agent.migrate.exec.get_backend`.
+  `parity_migrate.migrate.exec.get_backend`.
 
 Configuration: `harness/mirror.json` `{"hosts": [...], "ports": [443], "runtime": "auto", "proxy_image": ...,
 "user": "auto"}`; `MA_MIRROR_HOSTS` (comma separated) overrides `hosts`; `MA_EXEC_RUNTIME` (`auto|runsc|runc`)

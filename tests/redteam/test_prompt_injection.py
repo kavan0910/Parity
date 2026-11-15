@@ -7,11 +7,11 @@ import re
 
 import pytest
 
-from migration_agent.analyze.evidence import check_evidence, verify_evidence
-from migration_agent.analyze.module_analyzer import neutralize, render, sanitize_patch
-from migration_agent.graph.models import Evidence, Graph, Node
-from migration_agent.graph import load_latest
-from migration_agent.sandbox.tools import ReadOnlyTools, SandboxViolation
+from parity_migrate.analyze.evidence import check_evidence, verify_evidence
+from parity_migrate.analyze.module_analyzer import neutralize, render, sanitize_patch
+from parity_migrate.graph.models import Evidence, Graph, Node
+from parity_migrate.graph import load_latest
+from parity_migrate.sandbox.tools import ReadOnlyTools, SandboxViolation
 
 from rt_helpers import RecordingTransport, analyze, make_project
 
@@ -211,8 +211,8 @@ def test_verify_evidence_rejects_injected_node(jail):
 
 # ---- verifier (user_docs) and re-analysis (comments / resolution notes) -----------
 def test_verifier_user_docs_are_delimited_and_forged_markers_neutralised(tmp_path, mk):
-    from migration_agent.project import Project
-    from migration_agent.verify.verifier import run_verifier
+    from parity_migrate.project import Project
+    from parity_migrate.verify.verifier import run_verifier
     from rt_helpers import llm_client
     p = Project.init(tmp_path / "p", source="s")
     (p.docs / "understanding.latest.md").write_text("# U\n\n- COMP-0001 thing\n")
@@ -234,8 +234,8 @@ def test_verifier_user_docs_are_delimited_and_forged_markers_neutralised(tmp_pat
 
 
 def test_verifier_drops_hostile_model_findings(tmp_path):
-    from migration_agent.project import Project
-    from migration_agent.verify.verifier import run_verifier
+    from parity_migrate.project import Project
+    from parity_migrate.verify.verifier import run_verifier
     from rt_helpers import llm_client
     p = Project.init(tmp_path / "p", source="s")
     (p.docs / "understanding.latest.md").write_text("# U\n\nThe service has a health endpoint.\n")
@@ -261,9 +261,9 @@ def test_verifier_drops_hostile_model_findings(tmp_path):
 
 
 def test_reanalysis_notes_cannot_forge_delimiters_or_inject(tmp_path, mk):
-    from migration_agent.review import comments as rc, resolutions as rr
-    from migration_agent.review.reanalyze import reanalyze
-    from migration_agent.verify.models import Finding, FindingsFile
+    from parity_migrate.review import comments as rc, resolutions as rr
+    from parity_migrate.review.reanalyze import reanalyze
+    from parity_migrate.verify.models import Finding, FindingsFile
     from rt_helpers import llm_client
     repo = tmp_path / "repo"
     mk.make_injection_repo(repo)

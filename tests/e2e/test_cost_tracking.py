@@ -5,9 +5,9 @@ from click.testing import CliRunner
 
 from e2e_support import invoke, make_run
 from e2e_replay import write_config
-from migration_agent.analyze.runner import estimate
-from migration_agent.cli import main
-from migration_agent.llm.litellm_client import LLMConfig
+from parity_migrate.analyze.runner import estimate
+from parity_migrate.cli import main
+from parity_migrate.llm.litellm_client import LLMConfig
 
 PRICE = (3.0, 15.0)
 
@@ -127,7 +127,7 @@ def test_resume_after_budget_stop_reuses_paid_calls(budget_run):
 
 def test_no_key_and_no_offline_fails_cleanly(tmp_path, mp, monkeypatch):
     r = make_run("express-crud", tmp_path, mp, tag="nokey")
-    monkeypatch.setattr("migration_agent.dotenv.load_dotenv", lambda *a, **k: None)   # a developer .env must not leak in
+    monkeypatch.setattr("parity_migrate.dotenv.load_dotenv", lambda *a, **k: None)   # a developer .env must not leak in
     for k in ("ANTHROPIC_API_KEY", "GEMINI_API_KEY", "GOOGLE_API_KEY", "OPENAI_API_KEY"):
         monkeypatch.delenv(k, raising=False)
     res = CliRunner().invoke(main, ["analyze", str(r.root), "--config", str(r.config)])

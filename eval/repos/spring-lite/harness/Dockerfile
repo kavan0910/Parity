@@ -1,4 +1,4 @@
-# Harness image for the spring-lite fixture (legacy service), used by `migration-agent harness build`.
+# Harness image for the spring-lite fixture (legacy service), used by `parity harness build`.
 # Built with `docker build --network none --pull=false`: no RUN step needs the network. Maven resolves
 # dependencies in the harness build job (phase "build": package-mirror-only network, or offline from /cache).
 # TODO(M1): pin the base image by digest for CI, e.g.

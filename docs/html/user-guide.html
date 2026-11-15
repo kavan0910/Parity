@@ -253,7 +253,7 @@ model (section 9).</p>
 <p>Requires Python 3.11 or newer.</p>
 <div class="pw"><pre><code language-bash>python -m venv .venv &amp;&amp; . .venv/bin/activate
 pip install &quot;.[llm]&quot;          # from a checkout; &quot;[llm]&quot; adds LiteLLM, needed for real model calls
-migration-agent --help
+parity --help
 </code></pre></div>
 <p>Without the <code>llm</code> extra everything works except real model calls (<code>analyze --offline</code>, <code>extract</code>, <code>render</code>,
 <code>ingest</code>, <code>audit</code>, <code>changelog</code> and <code>review</code> need no model). Add <code>pytest</code> with <code>pip install -e ".[dev,llm]"</code> for development.
@@ -292,26 +292,26 @@ writes; section 9.4 lists them. A project that never runs Phase 2 keeps exactly 
 reviews and docs do not break. <code>llm_cache/</code> contains prompts' responses derived from your code: treat it as
 sensitive and exclude it from sharing.</p>
 <h2 id="3-quick-start">3. Quick start</h2>
-<div class="pw"><pre><code language-bash>migration-agent init ./legacy-orders                 # creates ./legacy-orders.migration
-migration-agent ingest legacy-orders.migration
-migration-agent extract legacy-orders.migration
+<div class="pw"><pre><code language-bash>parity init ./legacy-orders                 # creates ./legacy-orders.migration
+parity ingest legacy-orders.migration
+parity extract legacy-orders.migration
 cp requirements.md legacy-orders.migration/user_docs/   # optional: docs for the Verifier
-migration-agent analyze legacy-orders.migration --dry-run          # plan + cost estimate
-migration-agent analyze legacy-orders.migration --max-usd 5
-migration-agent verify  legacy-orders.migration
-migration-agent review  legacy-orders.migration      # opens the local review UI
-migration-agent status  legacy-orders.migration      # Phase 1 readiness: blockers and warnings
-migration-agent approve legacy-orders.migration --by &quot;Jane Doe&quot;   # writes docs/migration_contract.json
+parity analyze legacy-orders.migration --dry-run          # plan + cost estimate
+parity analyze legacy-orders.migration --max-usd 5
+parity verify  legacy-orders.migration
+parity review  legacy-orders.migration      # opens the local review UI
+parity status  legacy-orders.migration      # Phase 1 readiness: blockers and warnings
+parity approve legacy-orders.migration --by &quot;Jane Doe&quot;   # writes docs/migration_contract.json
 </code></pre></div>
-<p>Try the pipeline without any model: <code>migration-agent analyze PROJECT --offline</code> (deterministic stand-in; produces
+<p>Try the pipeline without any model: <code>parity analyze PROJECT --offline</code> (deterministic stand-in; produces
 the facts-level graph and documents, not a real analysis).</p>
 <p>After approval, Phase 2 continues in section 9.</p>
 <h2 id="4-commands">4. Commands</h2>
 <p>All commands take the project folder as the first argument. Every command appends to <code>audit/audit.jsonl</code>.
-Run <code>migration-agent COMMAND --help</code> for the authoritative option list.</p>
+Run <code>parity COMMAND --help</code> for the authoritative option list.</p>
 <h3 id="init-source-project-path-name-text"><code>init SOURCE [--project PATH] [--name TEXT]</code></h3>
 <p>Creates the project folder. <code>SOURCE</code> is a directory, <code>.zip</code>, tarball or git URL. Nothing is copied yet.</p>
-<div class="pw"><pre><code language-bash>migration-agent init https://example.com/team/orders.git --project ./orders.migration --name &quot;Orders service&quot;
+<div class="pw"><pre><code language-bash>parity init https://example.com/team/orders.git --project ./orders.migration --name &quot;Orders service&quot;
 </code></pre></div>
 <h3 id="ingest-project"><code>ingest PROJECT</code></h3>
 <p>Copies the source into <code>code/</code>. Safe by construction: archive entries with absolute paths, <code>..</code>, NUL bytes are
@@ -354,8 +354,8 @@ then renders <code>docs/understanding.latest.md</code> and <code>docs/graph.html
 </tr>
 </tbody>
 </table></div>
-<div class="pw"><pre><code language-bash>migration-agent analyze orders.migration --config gemini-lite.config.json --dry-run
-migration-agent analyze orders.migration --config gemini.config.json --max-usd 3
+<div class="pw"><pre><code language-bash>parity analyze orders.migration --config gemini-lite.config.json --dry-run
+parity analyze orders.migration --config gemini.config.json --max-usd 3
 </code></pre></div>
 <h3 id="render-project"><code>render PROJECT</code></h3>
 <p>Builds a <strong>facts-only</strong> graph from the inventory (no model) and renders the document. Useful to check
@@ -373,10 +373,10 @@ dropped (<code>dropped_unverifiable</code>). Kinds: <code>contradiction</code>, 
 Statuses: <code>accepted_doc</code> (the document is right, the code differs: re-analyse), <code>accepted_code</code> (code is the truth),
 <code>dismissed</code>, <code>needs_reanalysis</code>, <code>deferred</code> (acknowledged, to be handled during the migration: no re-analysis, it does
 not block approval, and it is listed under <code>deferred_findings</code> in the migration contract).</p>
-<div class="pw"><pre><code language-bash>migration-agent resolve orders.migration F-0001 --status accepted_doc --note &quot;Discount is 25% from 10 items&quot;
-migration-agent resolve orders.migration --comment RULE-0003 --note &quot;Check the VIP exception in pricing.py&quot;
-migration-agent resolve orders.migration F-0004 --status dismissed --no-reanalyze
-migration-agent resolve orders.migration F-0005 --status deferred --note &quot;Decide with the payments team&quot;
+<div class="pw"><pre><code language-bash>parity resolve orders.migration F-0001 --status accepted_doc --note &quot;Discount is 25% from 10 items&quot;
+parity resolve orders.migration --comment RULE-0003 --note &quot;Check the VIP exception in pricing.py&quot;
+parity resolve orders.migration F-0004 --status dismissed --no-reanalyze
+parity resolve orders.migration F-0005 --status deferred --note &quot;Decide with the payments team&quot;
 </code></pre></div>
 <p>Your note is passed to the model as untrusted <em>data</em>; every resulting claim still needs verbatim code evidence.
 If the budget stops a re-analysis, nothing is written.</p>
@@ -387,8 +387,8 @@ call. Items without a decision default to <strong>preserve</strong>, because sil
 risk; the document shows <code>Migration decision: preserve (default)</code>, <code>preserve</code>, or <code>fix - &lt;note&gt;</code>. Only nodes flagged
 as quirk or suspected bug in the latest graph accept a decision. Decisions are keyed by stable ID and survive
 re-analysis.</p>
-<div class="pw"><pre><code language-bash>migration-agent decide orders.migration RULE-0007 --fix --note &quot;Refund window is off by one day&quot;
-migration-agent decide orders.migration COMP-0012 --preserve --note &quot;Clients depend on the trailing slash&quot;
+<div class="pw"><pre><code language-bash>parity decide orders.migration RULE-0007 --fix --note &quot;Refund window is off by one day&quot;
+parity decide orders.migration COMP-0012 --preserve --note &quot;Clients depend on the trailing slash&quot;
 </code></pre></div>
 <h3 id="status-project"><code>status PROJECT</code></h3>
 <p>Prints Phase 1 readiness and the approval state (<code>none</code>, <code>approved</code>, <code>stale</code>). Always exits 0.
@@ -411,7 +411,7 @@ low or no confidence nodes.</p>
 <p>The approval pins the graph (sha256 of <code>graph/snapshots/vNNN.json</code>) and the document (sha256 of its text). Any
 later snapshot (analyze, resolve, render) or document change (for example a changed decision) makes the approval
 <code>stale</code>; run <code>status</code> and <code>approve</code> again.</p>
-<p><code>docs/migration_contract.json</code> (<code>MigrationContract</code> in <code>migration_agent.verify.models</code>):</p>
+<p><code>docs/migration_contract.json</code> (<code>MigrationContract</code> in <code>parity_migrate.verify.models</code>):</p>
 <div class="tw"><table>
 <thead>
 <tr>
@@ -471,7 +471,7 @@ later snapshot (analyze, resolve, render) or document change (for example a chan
 caused each change.</p>
 <h3 id="audit-project-format-tablejson"><code>audit PROJECT [--format table|json]</code></h3>
 <p>Prints the audit log with totals (calls, tokens, USD).</p>
-<div class="pw"><pre><code language-bash>migration-agent audit orders.migration --format json | jq '.[] | select(.status==&quot;error&quot;)'
+<div class="pw"><pre><code language-bash>parity audit orders.migration --format json | jq '.[] | select(.status==&quot;error&quot;)'
 </code></pre></div>
 <h2 id="5-llm-configuration">5. LLM configuration</h2>
 <p><code>--config FILE</code> takes a JSON file; the settings may sit under a top-level <code>"llm"</code> key. Two ready-made files
@@ -559,7 +559,7 @@ approve/reject, fit-risk decisions and mask approvals; section 9.8). Do not forw
 <li><strong>Tool sandbox.</strong> The model only gets <code>read_file</code>, <code>list_dir</code>, <code>grep</code>, <code>file_stat</code>, jailed to <code>code/</code> (symlinks resolved,
   <code>..</code> and NUL rejected, size caps, no write/exec/network capability exists).</li>
 <li><strong>Process guard.</strong> An optional audit-hook tripwire blocks writes outside scratch space, process spawn and
-  non-allowlisted sockets. It is defence in depth, not a boundary (see <code>src/migration_agent/sandbox/README.md</code>).</li>
+  non-allowlisted sockets. It is defence in depth, not a boundary (see <code>src/parity_migrate/sandbox/README.md</code>).</li>
 <li><strong>Container boundary.</strong> The Docker image runs non-root with a read-only root filesystem, all capabilities
   dropped, and either no network or egress only through an allowlisting proxy to the model host.</li>
 <li><strong>Secrets.</strong> Credential files are withheld at ingest and secret values are redacted from <code>code/</code>, reports, and user docs before they reach a prompt or <code>findings.json</code>.
@@ -663,8 +663,8 @@ the second promise and relaxes the first one, inside a boundary:</p>
 <p>Threat model: <a href="threat-model.html">threat-model.md</a> section 9.</p>
 <h3 id="92-prerequisites">9.2 Prerequisites</h3>
 <ul>
-<li>An approved Phase 1 project: <code>migration-agent status PROJECT</code> shows <code>approved</code>, and
-  <code>migration-agent contract check PROJECT</code> prints <code>contract: OK</code>.</li>
+<li>An approved Phase 1 project: <code>parity status PROJECT</code> shows <code>approved</code>, and
+  <code>parity contract check PROJECT</code> prints <code>contract: OK</code>.</li>
 <li><strong>Docker</strong> (engine plus CLI on <code>PATH</code>) on the machine that runs Phase 2. Rootless Docker or Podman is preferred.</li>
 <li><strong>Images present locally.</strong> Phase 2 never pulls images (<code>--pull never</code>, <code>docker build --pull=false</code>). Pull them
   yourself, pinned by digest where you can:</li>
@@ -693,7 +693,7 @@ the second promise and relaxes the first one, inside a boundary:</p>
   across sessions.</li>
 </ul>
 <p>Check with:</p>
-<div class="pw"><pre><code language-bash>migration-agent doctor orders.migration           # contract, exec sandbox, git, budget; exit 1 if any fails
+<div class="pw"><pre><code language-bash>parity doctor orders.migration           # contract, exec sandbox, git, budget; exit 1 if any fails
 </code></pre></div>
 <p><code>doctor</code> does not check that images are present or that the mirror is reachable; <code>harness build</code> reports those.</p>
 <h3 id="93-the-harness-spec-harnessharnessyaml">9.3 The harness spec (<code>harness/harness.yaml</code>)</h3>
@@ -825,49 +825,49 @@ timestamp against a naive one, is still a difference.</p>
 <h3 id="95-commands-in-order">9.5 Commands in order</h3>
 <p>Every Phase 2 command that writes runs the contract gate first. If the graph was re-analysed after approval, approve
 again, or pass <code>--pin-contract</code> to work from the approved snapshot (a warning). <code>--accept-unmapped</code> accepts unmapped
-inventory items (logged in the audit). Run <code>migration-agent COMMAND --help</code> for the full option list.</p>
+inventory items (logged in the audit). Run <code>parity COMMAND --help</code> for the full option list.</p>
 <p><strong>1. Check the entry gate.</strong></p>
-<div class="pw"><pre><code language-bash>migration-agent contract check orders.migration          # exit 1 on any error; lists deferred findings as blockers
-migration-agent contract schema --out contract.schema.json
-migration-agent doctor orders.migration
+<div class="pw"><pre><code language-bash>parity contract check orders.migration          # exit 1 on any error; lists deferred findings as blockers
+parity contract schema --out contract.schema.json
+parity doctor orders.migration
 </code></pre></div>
 <p><strong>2. Describe the target.</strong> <code>target init</code> detects the source stack from the manifests and takes the target from
 flags. The kind is inferred (<code>version_upgrade</code>, <code>framework_move</code>, <code>language_move</code>) unless you give <code>--kind</code>; the
 strategy defaults to <code>in_place</code> for version upgrades and <code>strangler</code> otherwise.</p>
-<div class="pw"><pre><code language-bash>migration-agent target init orders.migration --runtime 21 --framework spring-boot@3.3 --build maven \
+<div class="pw"><pre><code language-bash>parity target init orders.migration --runtime 21 --framework spring-boot@3.3 --build maven \
   --base-image eclipse-temurin:21-jre@sha256:&lt;digest&gt; --budget-usd 25
-migration-agent target show orders.migration             # validate and print target/target.yaml
+parity target show orders.migration             # validate and print target/target.yaml
 </code></pre></div>
 <p><strong>3. Target-fit analysis.</strong> A deterministic layer matches the libmap tables (Java 8 to 21, Spring Boot 2 to 3, Django
 3 to 5, Express to Fastify, JS to Go) against dependencies, code lines and config keys. A model layer adds risks
 whose evidence quotes must verify against <code>code/</code>; unverified risks are dropped and counted.</p>
-<div class="pw"><pre><code language-bash>migration-agent target fit orders.migration --max-usd 2          # or --offline: deterministic layer only
-migration-agent target resolve orders.migration RISK-0003 --status mitigate --note &quot;Replace springfox with springdoc&quot;
+<div class="pw"><pre><code language-bash>parity target fit orders.migration --max-usd 2          # or --offline: deterministic layer only
+parity target resolve orders.migration RISK-0003 --status mitigate --note &quot;Replace springfox with springdoc&quot;
 </code></pre></div>
 <p>Statuses: <code>accepted</code>, <code>mitigate</code>, <code>wont_fix</code>. Open high-severity risks become blockers on the slices they touch.</p>
 <p><strong>4. Plan.</strong> The planner orders slices from the approved graph: foundation slices (build, config, cross-cutting, data,
 shared code) first, then entry slices (endpoint groups, jobs, consumers), then bootstrap. Every in-scope node lands
 in exactly one slice. <code>dead_code</code> nodes are listed, not migrated, unless <code>--include-dead-code</code>.</p>
-<div class="pw"><pre><code language-bash>migration-agent plan orders.migration --dry-run          # print, write nothing
-migration-agent plan orders.migration                    # writes plan/ and slices/*/state.json (planned)
+<div class="pw"><pre><code language-bash>parity plan orders.migration --dry-run          # print, write nothing
+parity plan orders.migration                    # writes plan/ and slices/*/state.json (planned)
 </code></pre></div>
 <p><code>--name-with-model</code> adds an optional naming pass; <code>--max-slice-tokens N</code> splits large slices (default 60000).
 Re-planning keeps slice ids for the same node sets.</p>
 <p><strong>5. Import the original source and start the legacy harness.</strong></p>
-<div class="pw"><pre><code language-bash>migration-agent harness import-source orders.migration --from-original   # or --from PATH; checked against source_hash
-migration-agent harness build orders.migration           # legacy is the default role
-migration-agent harness up orders.migration              # waits for the health check
-migration-agent harness status orders.migration
+<div class="pw"><pre><code language-bash>parity harness import-source orders.migration --from-original   # or --from PATH; checked against source_hash
+parity harness build orders.migration           # legacy is the default role
+parity harness up orders.migration              # waits for the health check
+parity harness status orders.migration
 </code></pre></div>
 <p><code>import-source</code> refuses a source whose hash differs from the contract. A contract without <code>source_hash</code> needs
 <code>--accept-unpinned</code> (audited). <code>--force</code> replaces an existing <code>legacy_src/</code>.</p>
 <p><strong>6. Characterization tests.</strong> <code>tests generate</code> proposes request inputs per endpoint, job, business rule, quirk and
 suspected bug. The model never writes expected values for preserved behaviour.</p>
-<div class="pw"><pre><code language-bash>migration-agent tests generate orders.migration --max-usd 3       # or --offline
-migration-agent tests record orders.migration --harness           # every case twice against the running legacy harness
-migration-agent tests coverage orders.migration --fail-on-gaps
-migration-agent tests mark-untestable orders.migration JOB-0002 --reason &quot;Needs the mainframe feed&quot; --by alice
-migration-agent tests approve-spec orders.migration CT-0014 --by alice     # fix-decision cases only
+<div class="pw"><pre><code language-bash>parity tests generate orders.migration --max-usd 3       # or --offline
+parity tests record orders.migration --harness           # every case twice against the running legacy harness
+parity tests coverage orders.migration --fail-on-gaps
+parity tests mark-untestable orders.migration JOB-0002 --reason &quot;Needs the mainframe feed&quot; --by alice
+parity tests approve-spec orders.migration CT-0014 --by alice     # fix-decision cases only
 </code></pre></div>
 <p>Recording runs each case twice. Fields that differ between the two runs become masks; secret-looking values are
 masked too. Outcomes: <code>recorded</code>, <code>harness_issue</code> (no response; fix the harness), <code>unstable</code> (status differs),
@@ -878,9 +878,9 @@ rule, or consistent 5xx answers, become runtime findings in <code>migration/runt
 build in the sandbox, unit tests and the characterization suite against the new service (in-network), a fresh review,
 then <code>awaiting_human</code>. Failures go back into a fix iteration until <code>--max-iterations</code> (default 4), then the slice is
 <code>blocked</code> with a reason.</p>
-<div class="pw"><pre><code language-bash>migration-agent generate orders.migration --all --dry-run         # per-slice token and USD estimate
-migration-agent generate orders.migration --slice SLICE-0001 --max-usd 5
-migration-agent generate orders.migration --all --max-usd 20 --max-usd-per-slice 4
+<div class="pw"><pre><code language-bash>parity generate orders.migration --all --dry-run         # per-slice token and USD estimate
+parity generate orders.migration --slice SLICE-0001 --max-usd 5
+parity generate orders.migration --all --max-usd 20 --max-usd-per-slice 4
 </code></pre></div>
 <p>The loop refuses blocked slices, slices with unaccepted blockers, slices whose dependencies are not approved, entry
 slices without recorded cases, and a <code>target_code/</code> with uncommitted edits. For <code>in_place</code> version upgrades, the
@@ -890,10 +890,10 @@ call is lost.</p>
 <p><strong>8. Equivalence.</strong> Runs the slice's cases, plus every case of earlier approved slices, against legacy and new, and
 classifies each difference as <code>match</code>, <code>noise</code>, <code>intended_divergence</code>, <code>regression</code> or <code>unknown</code>. Exit 1 when any
 regression or unknown diff remains.</p>
-<div class="pw"><pre><code language-bash>migration-agent harness build orders.migration --new &amp;&amp; migration-agent harness up orders.migration --new
-migration-agent equivalence orders.migration --slice SLICE-0001             # in-network against both harnesses
-migration-agent equivalence orders.migration --all --triage --max-usd 1     # cheap model explains unknown diffs
-migration-agent equivalence orders.migration --slice SLICE-0001 --legacy-url http://127.0.0.1:8080 --new-url http://127.0.0.1:8081
+<div class="pw"><pre><code language-bash>parity harness build orders.migration --new &amp;&amp; parity harness up orders.migration --new
+parity equivalence orders.migration --slice SLICE-0001             # in-network against both harnesses
+parity equivalence orders.migration --all --triage --max-usd 1     # cheap model explains unknown diffs
+parity equivalence orders.migration --slice SLICE-0001 --legacy-url http://127.0.0.1:8080 --new-url http://127.0.0.1:8081
 </code></pre></div>
 <p><code>equivalence PROJECT ...</code> is the same as <code>equivalence run PROJECT ...</code>. In harness mode both services are restarted
 first, which re-runs the seeds, so each starts from the same data (<code>--no-reset</code> keeps their state; with
@@ -907,7 +907,7 @@ blocks the slice until answered.</p>
 of mutations to each recorded HTTP case (empty, long, numeric-edge and unicode query values; JSON fields set to null,
 a wrong type, empty or removed; another body shape; an unknown field or parameter), asks legacy twice so its own noise
 is masked, and reports where the new service answers differently.</p>
-<div class="pw"><pre><code language-bash>migration-agent equivalence fuzz orders.migration --slice SLICE-0001 --max-variants 8   # exit 1 on a high-severity divergence
+<div class="pw"><pre><code language-bash>parity equivalence fuzz orders.migration --slice SLICE-0001 --max-variants 8   # exit 1 on a high-severity divergence
 </code></pre></div>
 <p>Results: <code>equivalence/fuzz/SLICE-NNNN.json</code> and <code>equivalence/report.md</code>. A divergence is <code>high</code> when one side answers
 5xx and the other does not, or the status class differs. It never blocks <code>approve-slice</code>; <code>cutover</code> lists it as a
@@ -915,35 +915,35 @@ warning. It mutates only fields that already exist in recorded bodies, so it wil
 reached.</p>
 <p><strong>9. Review and approve each slice</strong> (section 9.6 and 9.8).</p>
 <p><strong>10. Config and schema.</strong></p>
-<div class="pw"><pre><code language-bash>migration-agent config map orders.migration              # writes config/ and generated files in target_code/
-migration-agent config set orders.migration DB_URL --status renamed --target-key spring.datasource.url
-migration-agent config set orders.migration LEGACY_FLAG --status dropped --reason &quot;Feature removed in 2019&quot;
-migration-agent config schema-check orders.migration     # sandbox; --static compares Phase 1 facts without Docker
-migration-agent config schema-blockers orders.migration
+<div class="pw"><pre><code language-bash>parity config map orders.migration              # writes config/ and generated files in target_code/
+parity config set orders.migration DB_URL --status renamed --target-key spring.datasource.url
+parity config set orders.migration LEGACY_FLAG --status dropped --reason &quot;Feature removed in 2019&quot;
+parity config schema-check orders.migration     # sandbox; --static compares Phase 1 facts without Docker
+parity config schema-blockers orders.migration
 </code></pre></div>
 <p>Secrets map to references only (<code>${NAME}</code> or a required env var) plus a deploy-time checklist; values are never
 read or written. The default is no schema change (decision P2-Q10). Declared changes go in
 <code>data/schema_changes.yaml</code> and are applied only to the ephemeral sandbox database.</p>
 <p><strong>11. Strangler routing</strong> (strategy <code>strangler</code>). The composite harness runs legacy, new and a router on one
 internal network. Flipping a slice sends its endpoints to the new service; everything else stays on legacy.</p>
-<div class="pw"><pre><code language-bash>migration-agent harness build orders.migration --composite &amp;&amp; migration-agent harness up orders.migration --composite
-migration-agent harness flip orders.migration SLICE-0003 --by alice --reason &quot;approved&quot;
-migration-agent harness routes orders.migration
-migration-agent equivalence composite orders.migration
-migration-agent harness unflip orders.migration SLICE-0003 --by alice --reason &quot;rollback test&quot;
+<div class="pw"><pre><code language-bash>parity harness build orders.migration --composite &amp;&amp; parity harness up orders.migration --composite
+parity harness flip orders.migration SLICE-0003 --by alice --reason &quot;approved&quot;
+parity harness routes orders.migration
+parity equivalence composite orders.migration
+parity harness unflip orders.migration SLICE-0003 --by alice --reason &quot;rollback test&quot;
 </code></pre></div>
 <p>Only approved slices can be flipped. <code>--force-for-testing</code> flips an unapproved slice for sandbox testing and is
 audited. When the composite is up, <code>flip</code> and <code>unflip</code> run the composite suite afterwards (<code>--no-verify</code> skips it).
 With <code>db.engine</code> <code>sqlite</code> or <code>none</code>, each service keeps its own private database in the composite
 (<code>db_shared: false</code>), so the composite does not test a shared database in that case.</p>
 <p><strong>12. Cut-over.</strong></p>
-<div class="pw"><pre><code language-bash>migration-agent cutover orders.migration                 # readiness + cutover/plan.md; exit 1 while not ready
-migration-agent cutover orders.migration --approve --by alice --note &quot;Go for Tuesday&quot;
+<div class="pw"><pre><code language-bash>parity cutover orders.migration                 # readiness + cutover/plan.md; exit 1 while not ready
+parity cutover orders.migration --approve --by alice --note &quot;Go for Tuesday&quot;
 </code></pre></div>
 <p><strong>13. Metrics.</strong></p>
-<div class="pw"><pre><code language-bash>migration-agent metrics orders.migration                 # or --format json
+<div class="pw"><pre><code language-bash>parity metrics orders.migration                 # or --format json
 </code></pre></div>
-<p><strong>Harness clean-up:</strong> <code>migration-agent harness down PROJECT [--legacy|--new|--composite]</code>.</p>
+<p><strong>Harness clean-up:</strong> <code>parity harness down PROJECT [--legacy|--new|--composite]</code>.</p>
 <h3 id="96-blockers">9.6 Blockers</h3>
 <p>A slice cannot be generated or approved while it has open blockers. <code>approve-slice</code> lists every one.</p>
 <div class="tw"><table>
@@ -958,17 +958,17 @@ migration-agent cutover orders.migration --approve --by alice --note &quot;Go fo
 <tr>
 <td><code>F-NNNN</code> deferred Verifier finding</td>
 <td>contract <code>deferred_findings</code> touching the slice's items</td>
-<td><code>migration-agent slice accept-observed PROJECT SLICE-NNNN F-NNNN --by NAME --note "..."</code> (migrate as observed), or resolve it in Phase 1 and approve again</td>
+<td><code>parity slice accept-observed PROJECT SLICE-NNNN F-NNNN --by NAME --note "..."</code> (migrate as observed), or resolve it in Phase 1 and approve again</td>
 </tr>
 <tr>
 <td><code>RISK-NNNN</code></td>
 <td>open high-severity fit risk on the slice</td>
-<td><code>migration-agent target resolve PROJECT RISK-NNNN --status ... --note ...</code></td>
+<td><code>parity target resolve PROJECT RISK-NNNN --status ... --note ...</code></td>
 </tr>
 <tr>
 <td>Open <code>legacy_bug</code> decision</td>
 <td>equivalence triage</td>
-<td><code>migration-agent slice decide PROJECT SLICE-NNNN EQ-NNNN --choice preserve|fix --by NAME</code></td>
+<td><code>parity slice decide PROJECT SLICE-NNNN EQ-NNNN --choice preserve|fix --by NAME</code></td>
 </tr>
 <tr>
 <td>Open <code>spec_ambiguity</code> question (slice <code>blocked</code>)</td>
@@ -978,17 +978,17 @@ migration-agent cutover orders.migration --approve --by alice --note &quot;Go fo
 <tr>
 <td>Pending fix request</td>
 <td>equivalence regression or <code>new_bug</code></td>
-<td><code>migration-agent generate PROJECT --slice SLICE-NNNN</code>, then <code>equivalence</code> again</td>
+<td><code>parity generate PROJECT --slice SLICE-NNNN</code>, then <code>equivalence</code> again</td>
 </tr>
 <tr>
 <td>Unapproved mask proposal</td>
 <td><code>harness_issue</code> triage</td>
-<td><code>migration-agent equivalence approve-mask PROJECT EQ-NNNN --by NAME --reason "..."</code> (applies from the next run)</td>
+<td><code>parity equivalence approve-mask PROJECT EQ-NNNN --by NAME --reason "..."</code> (applies from the next run)</td>
 </tr>
 <tr>
 <td>Unapproved specified expectation</td>
 <td>fix-decision case</td>
-<td><code>migration-agent tests approve-spec PROJECT CT-NNNN --by NAME</code></td>
+<td><code>parity tests approve-spec PROJECT CT-NNNN --by NAME</code></td>
 </tr>
 <tr>
 <td>Schema blind spot</td>
@@ -998,25 +998,25 @@ migration-agent cutover orders.migration --approve --by alice --note &quot;Go fo
 </tbody>
 </table></div>
 <h3 id="97-slice-approval-and-human-edits">9.7 Slice approval and human edits</h3>
-<p><code>migration-agent approve-slice PROJECT SLICE-NNNN --by NAME [--note TEXT]</code> is refused unless: the contract gate
+<p><code>parity approve-slice PROJECT SLICE-NNNN --by NAME [--note TEXT]</code> is refused unless: the contract gate
 passes; the slice is <code>awaiting_human</code>; the latest build is green; the latest suite is green except approved intended
 divergences; the latest equivalence report has no <code>regression</code> or <code>unknown</code> diff; <code>target_code</code> HEAD has not changed
 since that equivalence run; all blockers are cleared. On success it writes <code>slices/SLICE-NNNN/approval.json</code> (who,
 when, commit, report hashes) and tags <code>slice/SLICE-NNNN/approved</code> in <code>target_code/</code>.
-<code>migration-agent reject-slice PROJECT SLICE-NNNN --by NAME --reason TEXT</code> rejects a slice awaiting review.</p>
+<code>parity reject-slice PROJECT SLICE-NNNN --by NAME --reason TEXT</code> rejects a slice awaiting review.</p>
 <p>You may edit <code>target_code/</code> yourself and commit with git. A commit after the equivalence run (yours or the agent's)
 makes approval wait for a new equivalence run. The agent never overwrites uncommitted edits: <code>generate</code> refuses a
 dirty tree. Human commits count in the human-edit metric.</p>
 <p>Reviewer findings: mark each finding the reviewer raised as a real problem or as noise with
-<code>migration-agent slice review-finding PROJECT SLICE-NNNN K:I (--accept|--dismiss) --by NAME [--note T]</code> (<code>K</code> is the
+<code>parity slice review-finding PROJECT SLICE-NNNN K:I (--accept|--dismiss) --by NAME [--note T]</code> (<code>K</code> is the
 iteration, <code>I</code> the finding's position; the Slice tab has the same buttons). Your verdicts are stored in
 <code>slices/SLICE-NNNN/review_marks.json</code> and are what <code>metrics</code> uses for reviewer precision.</p>
-<p>Comments: <code>migration-agent slice comment PROJECT ITEM_ID --text "..." [--file F --line N] [--by NAME]</code>, where
+<p>Comments: <code>parity slice comment PROJECT ITEM_ID --text "..." [--file F --line N] [--by NAME]</code>, where
 <code>ITEM_ID</code> is a <code>SLICE-</code>, <code>CT-</code>, <code>EQ-</code>, <code>RISK-</code> or graph id and <code>--file</code> a <code>target_code</code>-relative path.
-<code>migration-agent generate PROJECT --slice SLICE-NNNN --from-comments</code> runs a fix iteration with the unprocessed
+<code>parity generate PROJECT --slice SLICE-NNNN --from-comments</code> runs a fix iteration with the unprocessed
 comments and reopens <code>awaiting_human</code>, <code>rejected</code> or <code>approved</code> slices.</p>
 <h3 id="98-review-ui-for-phase-2">9.8 Review UI for Phase 2</h3>
-<p><code>migration-agent review PROJECT</code> shows extra tabs once Phase 2 files exist (<code>target/fit_report.json</code>,
+<p><code>parity review PROJECT</code> shows extra tabs once Phase 2 files exist (<code>target/fit_report.json</code>,
 <code>plan/migration_plan.json</code> or <code>slices/</code>): <strong>Target fit</strong> (risks, resolve), <strong>Plan</strong> (slices, status, estimate,
 equivalence %), <strong>Slice</strong> (state, iterations, build and test results, git diff, review findings, equivalence diffs,
 blockers, approve and reject buttons, mask approvals, Accept/Dismiss buttons on each reviewer finding), <strong>Cut-over</strong>
@@ -1051,7 +1051,7 @@ findings you marked that you accepted (<code>slice review-finding</code>, or the
 <h3 id="911-hosted-platform">9.11 Hosted platform</h3>
 <p>Phase 2 runs only from the CLI on a machine you control (decision P2-Q13). The hosted worker in <code>backend/</code> runs only
 the Phase 1 stages (ingest, extract, analyze, verify, resolve) and must not run Phase 2 exec: it holds database
-credentials and is not an isolated job runner. <code>migration_agent.service.run_stage</code> exposes Phase 2 stages for
+credentials and is not an isolated job runner. <code>parity_migrate.service.run_stage</code> exposes Phase 2 stages for
 self-hosted integrations only (<a href="platform-contract.html">platform-contract.md</a> section 2).</p>
 <h3 id="912-troubleshooting">9.12 Troubleshooting</h3>
 <div class="tw"><table>

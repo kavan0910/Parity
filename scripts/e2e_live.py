@@ -16,8 +16,8 @@ from pathlib import Path
 
 from click.testing import CliRunner
 
-from migration_agent.cli import main
-from migration_agent.evalharness import EVAL_REPOS, load_actual, load_expected, score
+from parity_migrate.cli import main
+from parity_migrate.evalharness import EVAL_REPOS, load_actual, load_expected, score
 
 DEFAULT_REPOS = ["express-crud", "spring-lite", "django-lite"]
 

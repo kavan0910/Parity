@@ -5,7 +5,7 @@ through click's `CliRunner` on the three reference repos in `eval/repos/`, with 
 
 ## How the LLM is faked
 
-`conftest.py` replaces `migration_agent.llm.litellm_client.LiteLLMClient` with a factory that builds the **real**
+`conftest.py` replaces `parity_migrate.llm.litellm_client.LiteLLMClient` with a factory that builds the **real**
 client around `ReplayBackend.transport` (`e2e_replay.py`). Cost accounting, the disk cache, the budget guard and
 the audit log therefore all run for real. The replay answers are derived from `eval/repos/<repo>/expected.json`
 (node/edge/rule lists with evidence lines read from the actual repo files) plus canned Verifier findings

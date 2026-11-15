@@ -336,7 +336,7 @@ finding to the migration phase (no re-analysis; listed in the contract's <code>d
 bug, <code>{"schema_version": 1, "decisions": [{"item_id", "decision": "preserve"|"fix", "note", "created"}]}</code>; items without an
 entry default to preserve. <code>feedback/approvals.json</code>: approval history, the last entry is current.
 <code>docs/migration_contract.json</code>: <code>MigrationContract</code>, fields listed in <a href="user-guide.html">user-guide.md</a> (<code>approve</code>);
-schema 2 adds <code>source_hash</code>. <code>migration-agent contract schema</code> prints its JSON Schema.</p>
+schema 2 adds <code>source_hash</code>. <code>parity contract schema</code> prints its JSON Schema.</p>
 <h2 id="4-other-files">4. Other files</h2>
 <ul>
 <li><code>docs/changelog.md</code>: one section per graph version: <code>## vN (from vM)</code>, <code>Triggered by: ...</code>, then Added / Changed / Removed with evidence and the <em>why</em>.</li>
@@ -447,29 +447,29 @@ Phase 2 problems are reported in <code>p2.errors</code> and never break the Phas
 </table></div>
 <p>POST requires <code>Content-Type: application/json</code> (415 otherwise), <code>Content-Length</code> (411), body at most 64 KB (413).
 Validation failures return 400 with a short message. The server records feedback and approvals only; re-analysis
-is triggered by <code>migration-agent resolve PROJECT</code>, generation and equivalence by the CLI.</p>
+is triggered by <code>parity resolve PROJECT</code>, generation and equivalence by the CLI.</p>
 <h2 id="6-python-entry-points">6. Python entry points</h2>
 <ul>
-<li><code>migration_agent.__version__</code>: installed package version.</li>
-<li><code>migration_agent.llm.litellm_client.LLMConfig</code>, <code>LiteLLMClient</code>, <code>Budget</code>; <code>migration_agent.llm.base.LLMClient</code> (protocol:
+<li><code>parity_migrate.__version__</code>: installed package version.</li>
+<li><code>parity_migrate.llm.litellm_client.LLMConfig</code>, <code>LiteLLMClient</code>, <code>Budget</code>; <code>parity_migrate.llm.base.LLMClient</code> (protocol:
   <code>complete(*, task, system, prompt, json_mode=True, prompt_version="v1") -&gt; LLMResponse</code>), <code>BudgetExceeded</code>, <code>FakeLLM</code>.</li>
-<li><code>migration_agent.graph</code>: <code>Graph</code>, <code>Node</code>, <code>Edge</code>, <code>Evidence</code>, <code>Registry</code>, <code>save_snapshot</code>, <code>load_latest</code>, <code>load_snapshot</code>, <code>diff_graphs</code>.</li>
-<li><code>migration_agent.config_env</code>:</li>
+<li><code>parity_migrate.graph</code>: <code>Graph</code>, <code>Node</code>, <code>Edge</code>, <code>Evidence</code>, <code>Registry</code>, <code>save_snapshot</code>, <code>load_latest</code>, <code>load_snapshot</code>, <code>diff_graphs</code>.</li>
+<li><code>parity_migrate.config_env</code>:</li>
 <li><code>load_llm_config_from_env(env=None) -&gt; LLMConfig</code>: defaults, then the <code>MA_LLM_CONFIG</code> file, then <code>MA_LLM_*</code> overrides. Raises <code>EnvConfigError</code> (a <code>ValueError</code>) naming the bad variable.</li>
 <li><code>load_settings_from_env(env=None) -&gt; EnvSettings(api_base, max_usd, log_level, config_path)</code>.</li>
 <li><code>configure_logging(env=None)</code>: applies <code>MA_LOG_LEVEL</code>.
   Variables are listed in <a href="deployment.html#environment-variables">deployment.md</a>.</li>
 </ul>
-<div class="pw"><pre><code language-python>from migration_agent.config_env import load_llm_config_from_env, load_settings_from_env
+<div class="pw"><pre><code language-python>from parity_migrate.config_env import load_llm_config_from_env, load_settings_from_env
 cfg, st = load_llm_config_from_env(), load_settings_from_env()
 </code></pre></div>
 <ul>
-<li><code>migration_agent.service</code>: <code>run_stage</code> (Phase 1 and Phase 2 stages), <code>metrics</code>, <code>estimate</code>, <code>review_state</code> and the
+<li><code>parity_migrate.service</code>: <code>run_stage</code> (Phase 1 and Phase 2 stages), <code>metrics</code>, <code>estimate</code>, <code>review_state</code> and the
   other functions in <a href="platform-contract.html">platform-contract.md</a> section 2.</li>
-<li>Phase 2 library functions (<code>migration_agent.migrate.*</code>): see <a href="phase2-architecture.html">phase2-architecture.md</a>.</li>
+<li>Phase 2 library functions (<code>parity_migrate.migrate.*</code>): see <a href="phase2-architecture.html">phase2-architecture.md</a>.</li>
 </ul>
 <h2 id="7-phase-2-files">7. Phase 2 files</h2>
-<p>Formats are pydantic models in <code>migration_agent.migrate.models</code> (shared) or in the module that writes the file.
+<p>Formats are pydantic models in <code>parity_migrate.migrate.models</code> (shared) or in the module that writes the file.
 All are strict (<code>extra="forbid"</code>) and carry <code>schema_version</code> where they are top-level files.</p>
 <div class="tw"><table>
 <thead>

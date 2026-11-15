@@ -1,11 +1,11 @@
 import json
 
-from migration_agent.analyze.coverage import check_coverage
-from migration_agent.analyze.gapfill import fill_gaps
-from migration_agent.graph.models import Graph
-from migration_agent.llm.base import FakeLLM
-from migration_agent.pipeline import Inventory, InventoryItem
-from migration_agent.sandbox.tools import ReadOnlyTools
+from parity_migrate.analyze.coverage import check_coverage
+from parity_migrate.analyze.gapfill import fill_gaps
+from parity_migrate.graph.models import Graph
+from parity_migrate.llm.base import FakeLLM
+from parity_migrate.pipeline import Inventory, InventoryItem
+from parity_migrate.sandbox.tools import ReadOnlyTools
 
 
 def setup(tmp_path):

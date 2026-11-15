@@ -1,11 +1,11 @@
-"""End-to-end against the real engine (migration_agent.service) in offline mode: no model, no network, no spend."""
+"""End-to-end against the real engine (parity_migrate.service) in offline mode: no model, no network, no spend."""
 import io
 import zipfile
 from pathlib import Path
 
 import pytest
 
-service = pytest.importorskip("migration_agent.service")
+service = pytest.importorskip("parity_migrate.service")
 
 from app import engine as engine_mod  # noqa: E402
 from tests.conftest import drain  # noqa: E402

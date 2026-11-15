@@ -5,14 +5,14 @@ from pathlib import Path
 
 from click.testing import CliRunner
 
-from migration_agent.analyze.incremental import Manifest, hash_file, load_cost_total
-from migration_agent.analyze.runner import estimate, run_analyze
-from migration_agent.cli import main
-from migration_agent.graph import load_latest
-from migration_agent.llm.base import LLMResponse
-from migration_agent.llm.offline import OfflineLLM
-from migration_agent.pipeline import run_extract
-from migration_agent.project import Project
+from parity_migrate.analyze.incremental import Manifest, hash_file, load_cost_total
+from parity_migrate.analyze.runner import estimate, run_analyze
+from parity_migrate.cli import main
+from parity_migrate.graph import load_latest
+from parity_migrate.llm.base import LLMResponse
+from parity_migrate.llm.offline import OfflineLLM
+from parity_migrate.pipeline import run_extract
+from parity_migrate.project import Project
 
 CTX = 14_000  # per-chunk budget of 400 tokens: one small directory per chunk
 

@@ -1,9 +1,9 @@
 import random
 
-from migration_agent.analyze.merger import Checkpoint, merge_patches
-from migration_agent.analyze.patch import ChunkPatch, EdgePatch, NodePatch, NodeRef, UnresolvedRef
-from migration_agent.graph.models import Evidence
-from migration_agent.graph.registry import Registry
+from parity_migrate.analyze.merger import Checkpoint, merge_patches
+from parity_migrate.analyze.patch import ChunkPatch, EdgePatch, NodePatch, NodeRef, UnresolvedRef
+from parity_migrate.graph.models import Evidence
+from parity_migrate.graph.registry import Registry
 
 
 def ev(f="a.py", s=1, q=None):

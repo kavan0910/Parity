@@ -1,15 +1,15 @@
 """M4 codemods (migrate/codemods/): adapters, sandbox-only execution, patch apply + agent commit."""
 import subprocess
 
-from migration_agent.migrate import slice_runner as sr
-from migration_agent.migrate import targetrepo
-from migration_agent.migrate.codegen import OfflineCodegenLLM
-from migration_agent.migrate.codemods import (
+from parity_migrate.migrate import slice_runner as sr
+from parity_migrate.migrate import targetrepo
+from parity_migrate.migrate.codegen import OfflineCodegenLLM
+from parity_migrate.migrate.codemods import (
     DjangoUpgradeAdapter, JscodeshiftAdapter, LebabAdapter, OpenRewriteAdapter, run_codemod, run_codemods, tree_changes,
 )
-from migration_agent.migrate.exec.fake import FakeExecBackend, FakeOutcome
-from migration_agent.migrate.models import TargetSpec
-from migration_agent.migrate.paths import Phase2Layout
+from parity_migrate.migrate.exec.fake import FakeExecBackend, FakeOutcome
+from parity_migrate.migrate.models import TargetSpec
+from parity_migrate.migrate.paths import Phase2Layout
 
 from p2_m4_helpers import m4_project, passing_suite, ready_slice
 

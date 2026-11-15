@@ -3,7 +3,7 @@ usage: PYTHONPATH=src python scripts/score.py <project_dir> <eval_repo>"""
 import sys
 from pathlib import Path
 
-from migration_agent.evalharness import load_actual, load_expected, score
+from parity_migrate.evalharness import load_actual, load_expected, score
 
 proj, repo = Path(sys.argv[1]), sys.argv[2]
 r = score(load_actual(proj / "graph"), load_expected(repo), Path(__file__).resolve().parents[1] / "eval" / "repos" / repo)

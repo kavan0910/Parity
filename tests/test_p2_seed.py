@@ -6,7 +6,7 @@ import types
 import pytest
 import yaml
 
-from migration_agent.migrate import harness as H
+from parity_migrate.migrate import harness as H
 
 from phase2_helpers import approved_project
 
@@ -46,7 +46,7 @@ def test_headers_resolve_from_the_roles_secrets(proj):
 
 
 def test_new_service_inherits_request_headers_by_default(proj):
-    from migration_agent.migrate.paths import Phase2Layout
+    from parity_migrate.migrate.paths import Phase2Layout
     lay = Phase2Layout(proj)
     lay.ensure(lay.target_dir)
     lay.target_yaml.write_text("kind: framework_move\nsource: {language: javascript, runtime: node@20}\n"
@@ -135,7 +135,7 @@ def test_failed_seed_on_up_tears_the_harness_down(proj, monkeypatch):
     monkeypatch.setattr(H, "replay_seeds", lambda *a, **k: (_ for _ in ()).throw(H.HarnessError("seed failed")))
     monkeypatch.setattr(H, "down", lambda project, role, **k: calls.append(role))
     from p2_exec_helpers import FakeDocker
-    from migration_agent.migrate import exec as p2exec
+    from parity_migrate.migrate import exec as p2exec
     fd = FakeDocker()
     monkeypatch.setattr(p2exec, "get_backend", lambda project=None: fd.backend(project))
     H.build(proj, "legacy")

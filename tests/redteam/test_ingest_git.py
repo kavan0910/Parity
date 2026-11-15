@@ -6,8 +6,8 @@ import subprocess
 
 import pytest
 
-from migration_agent import ingest as ing
-from migration_agent.ingest import IngestError, ingest
+from parity_migrate import ingest as ing
+from parity_migrate.ingest import IngestError, ingest
 
 pytestmark = pytest.mark.skipif(shutil.which("git") is None, reason="git not installed")
 

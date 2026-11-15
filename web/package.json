@@ -1,5 +1,5 @@
 {
-  "name": "migration-agent-web",
+  "name": "parity-web",
   "version": "0.1.0",
   "private": true,
   "description": "Web application for the hosted Migration Agent platform",

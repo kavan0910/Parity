@@ -251,7 +251,7 @@ Phase 2 (migrate, prove, cut over) is what delivers the migrated app.</p>
 <h2 id="component-diagram">Component diagram</h2>
 <div class="cb mm"><span class="lbl">diagram source (mermaid)</span><pre><code>flowchart LR
   subgraph User
-    CLI[CLI: migration-agent]
+    CLI[CLI: parity]
     UI[Review UI&lt;br/&gt;127.0.0.1 + token]
     UD[(user_docs/)]
   end
@@ -361,7 +361,7 @@ Phase 2 (migrate, prove, cut over) is what delivers the migrated app.</p>
   model, system, prompt and prompt version; the audit log records tokens and USD per call.</li>
 <li><strong>Atomic writes</strong> (temp file + <code>os.replace</code>) for all feedback and graph files; audit appends use <code>O_APPEND</code> plus <code>flock</code>.</li>
 <li><strong>Model-agnostic</strong>: <code>LLMClient</code> is a one-method protocol; LiteLLM implements it, <code>OfflineLLM</code> and <code>FakeLLM</code> stand in for tests and <code>--offline</code>.</li>
-<li><strong>Container is the boundary</strong>; the in-process guard is a tripwire. See <code>src/migration_agent/sandbox/README.md</code>
+<li><strong>Container is the boundary</strong>; the in-process guard is a tripwire. See <code>src/parity_migrate/sandbox/README.md</code>
   for what it does and does not stop.</li>
 </ul>
 <h2 id="module-map">Module map</h2>

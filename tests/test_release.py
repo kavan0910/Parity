@@ -63,8 +63,8 @@ def test_cosign_commands_are_printed_not_run():
 
 
 def test_version_attribute():
-    import migration_agent
-    assert migration_agent.__version__
+    import parity_migrate
+    assert parity_migrate.__version__
 
 
 @pytest.mark.skipif(shutil.which("git") is None, reason="needs build backend + network")
