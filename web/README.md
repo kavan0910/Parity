@@ -49,3 +49,12 @@ components/     ui primitives, shell, run panel/launcher, graph explorer, canvas
 lib/            api.ts (client), sse.ts, token.ts, graphFilter.ts, graphLayout.ts, runState.ts, mock/ (fixtures + fake API)
 tests/          Vitest + Testing Library
 ```
+
+## SEO
+
+All search and social metadata comes from `lib/site.ts` (title, description, FAQ, steps, migration paths) and is rendered
+by `app/layout.tsx`, `app/page.tsx` (visible FAQ and JSON-LD), `app/robots.ts`, `app/sitemap.ts`, `app/manifest.ts` and
+`app/opengraph-image.tsx`. Set `NEXT_PUBLIC_SITE_URL` (for example `https://your-domain.example`) at build time so the
+canonical URL, sitemap and social image URLs are absolute and correct; it defaults to `http://localhost:3100`. The
+signed-in pages are `noindex` and disallowed in `robots.txt`. Keep the numbers on the landing page to ones that are
+measured (see `docs/remaining-work.md`).

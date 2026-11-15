@@ -90,6 +90,16 @@ The version lives in `pyproject.toml` only.
   workdir-masking guard.
 - Docs: `docs/remaining-work.md` (what is built, verified and left, against every plan).
 
+### Changed: landing page SEO and impact
+- Both landing pages: paraphrased title and H1 ("Legacy App Migration: Upgrade or Replatform, With Proof"; "Upgrade or
+  replatform your legacy app, and prove it still works the same"), title under 60 characters and description under 160,
+  canonical, Open Graph and Twitter tags, JSON-LD (Organization, WebSite, WebPage, SoftwareApplication, HowTo, FAQPage), one
+  H1 and an unbroken heading outline, an impact section made only of measured numbers, a manual-versus-migration-agent
+  comparison, one section per migration path, `robots.txt` and `sitemap.xml`.
+- Web app: generated 1200x630 social image, manifest and icon, `noindex` for the signed-in pages, and all SEO text in
+  one module (`web/lib/site.ts`) that the visible FAQ and the structured data both render from.
+- Set the real origin before publishing: `NEXT_PUBLIC_SITE_URL` for the web app, the `{{site url}}` placeholder for `landing/`.
+
 ### Changed: positioning (the product is the migration)
 - Everything now states the MVP: take an existing legacy app, choose the target (a newer version or a different stack),
   and get a migrated app plus proof that it behaves like the original. Understanding the legacy app is step 1 of five

@@ -3,25 +3,35 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>migration agent: migrate a legacy app to the newest version or a different stack, with proof</title>
-  <meta name="description" content="Takes an existing legacy application and migrates it to the newest version of its stack or to a different technology, slice by slice in a sandbox, and checks each slice against responses recorded from the running legacy app.">
+  <title>Legacy App Migration: Upgrade or Replatform, With Proof</title>
+  <meta name="description" content="Upgrade or replatform legacy apps: Java 8 to 21, Spring Boot 2 to 3, Django 3 to 5, Express to Fastify, JavaScript to Go. Verified against your running app.">
+  <meta name="keywords" content="legacy application migration, legacy code modernization, application modernization tool, replatform legacy app, upgrade Java 8 to Java 21, Spring Boot 2 to 3 migration, Django 3 to 5 upgrade, Express to Fastify migration, JavaScript to Go migration, strangler fig migration, characterization tests">
+  <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
+  <meta name="author" content="migration agent">
+  <link rel="canonical" href="{{site url}}/">
   <meta property="og:type" content="website">
-  <meta property="og:title" content="Migrate a legacy app to the newest version or a different stack, with proof">
-  <meta property="og:description" content="Legacy app in, migrated app out. Each migrated slice is compared with responses recorded from the running legacy app.">
-  <meta property="og:image" content="og.jpg">
-  <meta property="og:image:alt" content="migration agent terminal and knowledge graph">
+  <meta property="og:site_name" content="migration agent">
+  <meta property="og:locale" content="en_US">
+  <meta property="og:url" content="{{site url}}/">
+  <meta property="og:title" content="Legacy App Migration: Upgrade or Replatform, With Proof">
+  <meta property="og:description" content="Upgrade or replatform legacy apps: Java 8 to 21, Spring Boot 2 to 3, Django 3 to 5, Express to Fastify, JavaScript to Go. Verified against your running app.">
+  <meta property="og:image" content="{{site url}}/og.jpg">
+  <meta property="og:image:alt" content="migration agent: a legacy app migrated to a newer version or a different stack, checked against the running original">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="Migrate a legacy app to the newest version or a different stack, with proof">
-  <meta name="twitter:description" content="Java 8 to 21, Spring Boot 2 to 3, Django 3 to 5, Express to Fastify, JavaScript to Go: migrated slice by slice and checked against the old app's own responses.">
-  <meta name="twitter:image" content="og.jpg">
+  <meta name="twitter:title" content="Legacy App Migration: Upgrade or Replatform, With Proof">
+  <meta name="twitter:description" content="Upgrade or replatform legacy apps: Java 8 to 21, Spring Boot 2 to 3, Django 3 to 5, Express to Fastify, JavaScript to Go. Verified against your running app.">
+  <meta name="twitter:image" content="{{site url}}/og.jpg">
+  <meta name="twitter:image:alt" content="migration agent: a legacy app migrated to a newer version or a different stack, checked against the running original">
   <meta name="theme-color" content="#000000">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23000'/%3E%3Cpath d='M8 21l5-5-5-5M15 22h9' stroke='%235eead4' stroke-width='2.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500;600&display=swap">
-  <script src="https://unpkg.com/@phosphor-icons/web@2.1.1"></script>
+  <script src="https://unpkg.com/@phosphor-icons/web@2.1.1" defer></script>
   <script>(function(){try{var t=localStorage.getItem("ma-theme");if(!t){t=window.matchMedia("(prefers-color-scheme: light)").matches?"light":"dark";}document.documentElement.setAttribute("data-theme",t);}catch(e){document.documentElement.setAttribute("data-theme","dark");}})();</script>
   <link rel="stylesheet" href="styles.css">
+  <script type="application/ld+json">{"@context": "https://schema.org", "@graph": [{"@type": "Organization", "@id": "{{site url}}/#org", "name": "migration agent", "url": "{{site url}}/", "logo": "{{site url}}/og.jpg"}, {"@type": "WebSite", "@id": "{{site url}}/#website", "url": "{{site url}}/", "name": "migration agent", "description": "Upgrade or replatform legacy apps: Java 8 to 21, Spring Boot 2 to 3, Django 3 to 5, Express to Fastify, JavaScript to Go. Verified against your running app.", "publisher": {"@id": "{{site url}}/#org"}, "inLanguage": "en"}, {"@type": "WebPage", "@id": "{{site url}}/#webpage", "url": "{{site url}}/", "name": "Legacy App Migration: Upgrade or Replatform, With Proof", "description": "Upgrade or replatform legacy apps: Java 8 to 21, Spring Boot 2 to 3, Django 3 to 5, Express to Fastify, JavaScript to Go. Verified against your running app.", "isPartOf": {"@id": "{{site url}}/#website"}, "about": {"@id": "{{site url}}/#app"}, "inLanguage": "en"}, {"@type": "SoftwareApplication", "@id": "{{site url}}/#app", "name": "migration agent", "url": "{{site url}}/", "applicationCategory": "DeveloperApplication", "operatingSystem": "macOS, Linux, Windows (with Docker)", "description": "Upgrade or replatform legacy apps: Java 8 to 21, Spring Boot 2 to 3, Django 3 to 5, Express to Fastify, JavaScript to Go. Verified against your running app.", "publisher": {"@id": "{{site url}}/#org"}, "featureList": ["Evidence-backed understanding of a legacy app: every claim cites a file and line", "Blind verification of the map against your own documentation", "Slice-by-slice migration generated in a Docker sandbox", "Equivalence checks against responses recorded from the running legacy app", "Differential fuzzing and latency comparison between old and new", "Strangler-style routing and an approved cut-over plan"]}]}</script>
+  <script type="application/ld+json">{"@context": "https://schema.org", "@type": "HowTo", "name": "How to migrate a legacy app to a newer version or a different stack", "description": "Upgrade or replatform legacy apps: Java 8 to 21, Spring Boot 2 to 3, Django 3 to 5, Express to Fastify, JavaScript to Go. Verified against your running app.", "step": [{"@type": "HowToStep", "position": 1, "name": "Understand the legacy app", "text": "Read the source in a read-only sandbox. Every claim in the resulting map cites a file and a line, and a blind Verifier compares it with your own documentation."}, {"@type": "HowToStep", "position": 2, "name": "Approve the map", "text": "Resolve the findings, decide per quirk whether to keep or fix the behaviour, and sign off. The approval goes stale if the map changes."}, {"@type": "HowToStep", "position": 3, "name": "Migrate slice by slice", "text": "Plan ordered slices and generate the new app in a Docker sandbox. The model returns structured edits and never gets a shell."}, {"@type": "HowToStep", "position": 4, "name": "Prove it behaves the same", "text": "Record the running legacy app's answers, then run the same cases against the new app and list every difference."}, {"@type": "HowToStep", "position": 5, "name": "Cut over", "text": "Route traffic to the new app one approved slice at a time, with a cut-over plan that needs its own approval."}]}</script>
   <script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[
     {"@type":"Question","name":"Does it change my code?","acceptedAnswer":{"@type":"Answer","text":"No. Ingest copies your source into a project folder and analysis reads only that copy. The migration writes the new service into target_code inside the project folder, never into your repository."}},
     {"@type":"Question","name":"Does the model run any code?","acceptedAnswer":{"@type":"Answer","text":"No. The model returns structured file edits only and has no shell, exec or network tool. Builds and tests run in a Docker sandbox: tests with no network, builds only through the package mirror you configure."}},
@@ -39,6 +49,7 @@
       <a class="logo" href="#top" aria-label="migration agent, home"><i class="ph ph-terminal-window" aria-hidden="true"></i>migration-agent</a>
       <nav class="nav-links body-5" aria-label="Primary">
         <a href="#mvp">The MVP</a>
+        <a href="#impact">Impact</a>
         <a href="#benefits">Benefits</a>
         <a href="#how">How it works</a>
         <a href="#migrate">Migrate</a>
@@ -52,6 +63,7 @@
   </div>
   <div class="panel" id="panel" data-open="false" aria-hidden="true">
     <a class="plink" style="--i:0" href="#mvp">The MVP</a>
+    <a class="plink" style="--i:0" href="#impact">Impact</a>
     <a class="plink" style="--i:0" href="#benefits">Benefits</a>
     <a class="plink" style="--i:1" href="#how">How it works</a>
     <a class="plink" style="--i:2" href="#migrate">Migrate</a>
@@ -71,7 +83,7 @@
         <span class="c" style="left:30vw;top:130px;width:12px;height:12px;--x:16px;--y:24px;--t:9s"></span>
       </div>
       <div class="container hero-inner">
-        <h1 class="heading-1 reveal">Migrate your legacy app<br> to the newest version,<br> or a different stack</h1>
+        <h1 class="heading-1 reveal">Upgrade or replatform<br> your legacy app, and prove<br> it still works the same</h1>
         <p class="sub title-2 reveal" data-d="1">migration agent takes the application you already run and migrates it, one slice at a time, to a current version of its stack or to a different technology. It records how your running app behaves and shows, case by case, that the new one answers the same way. Understanding the legacy code is step 1 of that migration.</p>
         <div class="hero-cta reveal" data-d="2">
           <a class="btn btn-primary btn-lg button-lg" href="#quickstart">Run the quickstart <i class="ph ph-arrow-right" aria-hidden="true"></i></a>
@@ -127,6 +139,56 @@
           <article class="card reveal"><span class="ic"><i class="ph ph-folder-open" aria-hidden="true"></i></span><h3 class="title-1">In: your legacy app</h3><p class="body-6">A source folder, an archive or a git URL of the application you run today. It is copied into a project; your repository is never touched.</p></article>
           <article class="card reveal" data-d="1"><span class="ic"><i class="ph ph-crosshair" aria-hidden="true"></i></span><h3 class="title-1">Choose: the target</h3><p class="body-6">A newer version of the same stack or a different technology: Java 8 to 21, Spring Boot 2 to 3, Django 3 to 5, Express to Fastify, JavaScript to Go.</p></article>
           <article class="card reveal" data-d="2"><span class="ic"><i class="ph ph-seal-check" aria-hidden="true"></i></span><h3 class="title-1">Out: the new app and the proof</h3><p class="body-6">New code in its own folder, an equivalence report against the running legacy app, and a cut-over plan you approve. Nothing is deployed for you.</p></article>
+        </div>
+      </div>
+    </section>
+
+    <!-- Impact -->
+    <section class="section" id="impact" aria-labelledby="impact-h">
+      <div class="container">
+        <div class="section-head reveal">
+          <span class="eyebrow caption-1"><i class="ph ph-chart-line-up" aria-hidden="true"></i>Impact</span>
+          <h2 class="heading-2" id="impact-h">Less guesswork, no silent regressions, and a bill you control</h2>
+          <p class="body-3">Migrations fail quietly: behaviour drifts and nobody notices until production. Here is what changes, with the numbers we have actually measured.</p>
+        </div>
+        <div class="stats" style="grid-template-columns:repeat(auto-fit,minmax(300px,1fr))">
+          <div class="stat reveal"><b class="mono">24 / 24</b><span class="body-6">recorded cases matched between the old and the new Express app in the sandbox trial; a deliberately changed status code was caught</span></div>
+          <div class="stat reveal" data-d="1"><b class="mono">90</b><span class="body-6">fuzz variants compared between old and new in that trial, with no difference on identical code</span></div>
+          <div class="stat reveal" data-d="2"><b class="mono">100%</b><span class="body-6">of cited evidence is checked against a real file and line range before it can steer the migration</span></div>
+          <div class="stat reveal"><b class="mono">$0.077</b><span class="body-6">to map Spring PetClinic (4,297 lines) in 51 seconds, with a hard budget that stops a run gracefully</span></div>
+          <div class="stat reveal" data-d="1"><b class="mono">5</b><span class="body-6">migration paths covered: Java 8 to 21, Spring Boot 2 to 3, Django 3 to 5, Express to Fastify, JavaScript to Go</span></div>
+          <div class="stat reveal" data-d="2"><b class="mono">0</b><span class="body-6">changes to your repository. Your source is copied; the new app is written to its own folder</span></div>
+        </div>
+        <p class="note body-6" style="margin-bottom:var(--s-400)">Measured on our reference apps with no AI model in the migration steps. Treat these as a regression guide, not a benchmark. Accuracy on large real repositories is not measured yet.</p>
+        <div class="table-wrap reveal">
+          <table>
+            <caption class="body-6 muted" style="text-align:left;padding:var(--s-200) var(--s-300)">Rewriting by hand versus migrating with migration agent</caption>
+            <thead><tr><th scope="col">Question</th><th scope="col">Manual rewrite</th><th scope="col">migration agent</th></tr></thead>
+            <tbody>
+              <tr><th scope="row">Do we know what the app does?</th><td>Reverse-engineered from memory and stale docs.</td><td>A map where every claim cites a file and line, checked against your own docs.</td></tr>
+              <tr><th scope="row">Did anything change in behaviour?</th><td>Found by users, after release.</td><td>Every difference between old and new listed, case by case, before cut-over.</td></tr>
+              <tr><th scope="row">Can we move gradually?</th><td>Often a big-bang switch.</td><td>Slice by slice, with a router and a rollback per step.</td></tr>
+              <tr><th scope="row">What will it cost?</th><td>Unknown until it is over.</td><td>Estimated before each run, capped with a hard budget.</td></tr>
+              <tr><th scope="row">Who decides?</th><td>Whoever merges last.</td><td>You approve the map, every slice and the cut-over.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- Migration paths -->
+    <section class="section" id="paths" aria-labelledby="paths-h" style="background:var(--surface-1)">
+      <div class="container">
+        <div class="section-head reveal">
+          <span class="eyebrow caption-1"><i class="ph ph-signpost" aria-hidden="true"></i>Migration paths</span>
+          <h2 class="heading-2" id="paths-h">Upgrade to the latest version, or move to a different stack</h2>
+          <p class="body-3">Deterministic tools do the mechanical rewrite first, so the AI model is left only with the parts that need judgement, and every result is compared with the running app.</p>
+        </div>
+        <div class="grid-3">
+          <article class="card reveal" id="java-spring"><h3 class="title-1">Java 8 to Java 21, Spring Boot 2 to 3</h3><p class="body-6">OpenRewrite recipes handle the mechanical upgrade first (javax to jakarta, language and API changes) in Maven or Gradle projects; the model fixes only what they leave. Run in the sandbox on a real Spring app.</p></article>
+          <article class="card reveal" id="django" data-d="1"><h3 class="title-1">Django 3 to Django 5</h3><p class="body-6">django-upgrade and pyupgrade rewrite deprecated imports and syntax before any model call, so the model is left with the parts that need judgement.</p></article>
+          <article class="card reveal" id="express-fastify" data-d="2"><h3 class="title-1">Express to Fastify</h3><p class="body-6">A framework move with no deterministic codemod: the model translates slice by slice, and every slice is compared with the running Express app before you approve it.</p></article>
+          <article class="card reveal" id="js-go"><h3 class="title-1">JavaScript to Go</h3><p class="body-6">A language move, best run as a strangler migration: routes move to the Go service one approved slice at a time while the old app keeps serving the rest.</p></article>
         </div>
       </div>
     </section>
@@ -190,7 +252,7 @@
             <p class="body-6">The Verifier only sees the generated doc and your docs, then reports what disagrees.</p>
           </article>
         </div>
-        <video class="reveal" controls preload="metadata" poster="og.jpg" style="width:100%;max-width:920px;border-radius:16px;border:1px solid var(--border);display:block">
+        <video class="reveal" controls preload="metadata" poster="og.jpg" aria-label="Demo: migration agent mapping a service and checking a migrated slice against the running legacy app" style="width:100%;max-width:920px;border-radius:16px;border:1px solid var(--border);display:block">
           <source src="demo.mp4" type="video/mp4">
           Your browser cannot play this video. The same run is described in the quickstart below.
         </video>
