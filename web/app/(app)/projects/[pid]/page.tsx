@@ -9,6 +9,7 @@ import { Card, EmptyState, ErrorState, LinkButton, LoadingBlock, StatusPill } fr
 import { RunLauncher } from "@/components/RunLauncher";
 import { RunPanel } from "@/components/RunPanel";
 import { useProject } from "@/components/ProjectContext";
+import { MigrationJourney } from "@/components/MigrationJourney";
 
 export default function Overview() {
   const { project, reload } = useProject();
@@ -21,6 +22,8 @@ export default function Overview() {
   const noSource = project.source_kind === "none";
 
   return (
+    <>
+    <MigrationJourney done={hasGraph ? 1 : 0} compact className="mb-8" />
     <div className="grid gap-8 lg:grid-cols-[1fr_340px]">
       <div className="min-w-0 space-y-8">
         {active ? (
@@ -29,7 +32,7 @@ export default function Overview() {
           <RunLauncher projectId={project.id} hasGraph={hasGraph} disabled={noSource ? "Add a source before starting a run." : null} onStarted={(r) => { setCurrent(r); runs.reload(); reload(); }} />
         )}
         <section aria-labelledby="runs-h">
-          <h2 id="runs-h" className="display mb-4 text-3xl">Run history</h2>
+          <h2 id="runs-h" className="display mb-4 text-3xl">Step 1 runs</h2>
           {runs.loading && !runs.data ? <LoadingBlock label="Loading runs" rows={3} /> : runs.error ? <ErrorState error={runs.error} onRetry={runs.reload} /> : list.length === 0 ? (
             <EmptyState title="No runs yet">Start your first analysis above. Small services finish in under a minute.</EmptyState>
           ) : (
@@ -55,6 +58,21 @@ export default function Overview() {
       </div>
 
       <aside className="space-y-4" aria-label="Project summary">
+        <Card className="border-accent p-5">
+          <p className="eyebrow">Next: migrate it</p>
+          <p className="mt-1 text-sm text-muted">
+            {hasGraph
+              ? "Step 1 is done. Review the findings, then approve and migrate in the command-line tool (Docker needed, beta):"
+              : "Run the analysis first. Once the map exists, approve and migrate in the command-line tool (Docker needed, beta):"}
+          </p>
+          <pre className="mt-3 overflow-x-auto rounded-lg bg-ink p-3 font-mono text-[11.5px] leading-5 text-bg"><code>{`migration-agent approve <project>.migration --by "You"
+migration-agent target init <project>.migration \
+  --runtime 21 --framework spring-boot@3.3
+migration-agent plan <project>.migration
+migration-agent generate <project>.migration --all
+migration-agent equivalence <project>.migration --all
+migration-agent cutover <project>.migration`}</code></pre>
+        </Card>
         <Card className="p-5">
           <p className="eyebrow">Source</p>
           <p className="mt-1 break-all font-mono text-sm">{noSource ? "None connected" : project.source_ref}</p>
@@ -77,5 +95,6 @@ export default function Overview() {
         <p className="px-1 text-xs text-muted">Costs are billed to your workspace allowance. See <Link href="/usage" className="underline">usage and plan</Link>.</p>
       </aside>
     </div>
+    </>
   );
 }

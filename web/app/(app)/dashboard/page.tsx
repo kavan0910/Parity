@@ -5,6 +5,7 @@ import { useAuth } from "@/lib/auth";
 import { useQuery } from "@/lib/hooks";
 import { num, relTime, usd } from "@/lib/format";
 import { Card, EmptyState, ErrorState, LinkButton, LoadingBlock, PageHeader, StatusPill } from "@/components/ui";
+import { MigrationJourney } from "@/components/MigrationJourney";
 
 export default function Dashboard() {
   const { workspace } = useAuth();
@@ -17,22 +18,23 @@ export default function Dashboard() {
   const open = items.reduce((a, p) => a + (p.open_findings ?? 0), 0);
   return (
     <>
-      <title>Projects · Migration Agent</title>
-      <PageHeader eyebrow={workspace?.name ?? "Workspace"} title="Projects" actions={canCreate && <LinkButton href="/projects/new" variant="primary">New project</LinkButton>}>
-        Each project is one legacy service. Open one to run an analysis, read the document and review findings.
+      <title>Migrations · Migration Agent</title>
+      <PageHeader eyebrow={workspace?.name ?? "Workspace"} title="Your migrations" actions={canCreate && <LinkButton href="/projects/new" variant="primary">Migrate an app</LinkButton>}>
+        Each project is one legacy app you want to move to a newer version or a different stack. This app runs step 1, understanding the legacy app; approval and the migration itself run in the command-line tool.
       </PageHeader>
+      <MigrationJourney compact className="rise rise-1 mb-8" />
 
       {projects.loading && !projects.data ? <LoadingBlock label="Loading projects" rows={4} /> : projects.error ? (
         <ErrorState error={projects.error} onRetry={projects.reload} title="Could not load projects" />
       ) : items.length === 0 ? (
-        <EmptyState title="No projects yet" action={canCreate ? <LinkButton href="/projects/new" variant="primary">Connect a repository</LinkButton> : undefined}>
-          {canCreate ? "Connect a git repository or upload an archive to get your first understanding document." : "Ask an owner or admin to create a project."}
+        <EmptyState title="No migrations yet" action={canCreate ? <LinkButton href="/projects/new" variant="primary">Connect a legacy app</LinkButton> : undefined}>
+          {canCreate ? "Connect the legacy app (a git repository or an archive). Step 1 reads it and produces the map the migration is built on." : "Ask an owner or admin to create a project."}
         </EmptyState>
       ) : (
         <>
           <dl className="rise rise-1 mb-8 grid grid-cols-2 gap-px overflow-hidden rounded-xl border border-line bg-line sm:grid-cols-4">
             {[
-              ["Projects", num(items.length)],
+              ["Legacy apps", num(items.length)],
               ["Open findings", num(open)],
               ["Spend, last 30 days", ent.data ? usd(ent.data.consumption.monthly_usd ?? 0) : "…"],
               ["Plan", ent.data?.plan ?? "…"],

@@ -56,8 +56,8 @@ export default function NewProject() {
   return (
     <>
       <title>New project · Migration Agent</title>
-      <nav aria-label="Breadcrumb" className="mb-4 text-sm text-muted"><Link href="/dashboard" className="hover:underline">Projects</Link> / <span className="text-ink">New</span></nav>
-      <PageHeader eyebrow="Step 1 of 2" title="Connect a service">
+      <nav aria-label="Breadcrumb" className="mb-4 text-sm text-muted"><Link href="/dashboard" className="hover:underline">Migrations</Link> / <span className="text-ink">New</span></nav>
+      <PageHeader eyebrow="Migration, step 1 of 5: understand" title="Connect the legacy app">
         Point us at the code. Nothing runs until you have seen the estimated cost on the next screen.
       </PageHeader>
       <form onSubmit={submit} noValidate className="rise rise-1 max-w-2xl space-y-7">

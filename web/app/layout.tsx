@@ -8,7 +8,7 @@ import { Providers } from "@/components/Providers";
 
 export const metadata: Metadata = {
   title: { default: "Migration Agent", template: "%s · Migration Agent" },
-  description: "Understand a legacy service before you migrate it. Every claim links to the code that proves it.",
+  description: "Migrate a legacy app to the newest version or a different stack, and prove the new one behaves like the old one.",
 };
 export const viewport: Viewport = {
   colorScheme: "light dark",

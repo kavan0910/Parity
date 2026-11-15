@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Logo, ThemeToggle } from "@/components/Brand";
 import { ConfidenceMeter, LinkButton, TypeGlyph } from "@/components/ui";
+import { MigrationJourney, TARGETS } from "@/components/MigrationJourney";
 
 const CODE = [
   [16, "def cancel(registration):"],
@@ -12,6 +13,12 @@ const CODE = [
   [22, "            nxt.save()"],
 ] as const;
 
+const PROOF = [
+  ["GET /api/orders", "200", "200"],
+  ["POST /api/orders (empty cart)", "400", "400"],
+  ["DELETE /api/products/999", "404", "404"],
+] as const;
+
 export default function Landing() {
   return (
     <div className="min-h-dvh">
@@ -19,13 +26,13 @@ export default function Landing() {
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-3 px-4 sm:px-6">
           <Logo />
           <nav aria-label="Primary" className="flex items-center gap-1">
+            <a href="#mvp" className="hidden rounded-lg px-3 py-2 text-sm hover:bg-surface-2 sm:block">The MVP</a>
             <a href="#how" className="hidden rounded-lg px-3 py-2 text-sm hover:bg-surface-2 sm:block">How it works</a>
             <a href="#status" className="hidden rounded-lg px-3 py-2 text-sm hover:bg-surface-2 sm:block">What you get</a>
-            <a href="#migrate" className="hidden rounded-lg px-3 py-2 text-sm hover:bg-surface-2 sm:block">Migrate</a>
             <a href="#honest" className="hidden rounded-lg px-3 py-2 text-sm hover:bg-surface-2 sm:block">Measured</a>
             <ThemeToggle />
             <Link href="/login" className="rounded-lg px-3 py-2 text-sm font-medium hover:bg-surface-2">Log in</Link>
-            <LinkButton href="/signup" variant="primary" className="hidden sm:inline-flex">Start free</LinkButton>
+            <LinkButton href="/signup" variant="primary" className="hidden sm:inline-flex">Start a migration</LinkButton>
           </nav>
         </div>
       </header>
@@ -34,22 +41,100 @@ export default function Landing() {
         <section className="dotgrid border-b border-line">
           <div className="mx-auto grid max-w-6xl gap-12 px-4 pb-20 pt-14 sm:px-6 lg:grid-cols-[1.05fr_1fr] lg:pt-24">
             <div>
-              <p className="eyebrow rise mb-5">Legacy service modernisation, with evidence at every step</p>
+              <p className="eyebrow rise mb-5">Legacy app migration</p>
               <h1 className="display rise rise-1 text-[3.1rem] sm:text-7xl">
-                Understand it, approve it, then migrate it <em className="text-accent">with proof</em>.
+                Migrate your legacy app to the <em className="text-accent">newest version</em>, or to a different stack.
               </h1>
               <p className="rise rise-2 mt-6 max-w-xl text-lg text-muted">
-                Migration Agent reads your legacy service in a read-only sandbox and writes an understanding document where every claim cites a file and a line.
-                You approve it. Then it migrates the service one slice at a time and checks each slice against the responses your running legacy service actually gives.
+                Migration Agent takes the application you already run and migrates it, one slice at a time, to a current version of its stack or to a different technology.
+                It records how your running app behaves and shows, case by case, that the new one answers the same way.
               </p>
               <div className="rise rise-3 mt-8 flex flex-wrap gap-3">
-                <LinkButton href="/signup" variant="primary" className="min-h-12 px-6 text-base">Create a workspace</LinkButton>
+                <LinkButton href="/signup" variant="primary" className="min-h-12 px-6 text-base">Start a migration</LinkButton>
                 <LinkButton href="/login" className="min-h-12 px-6 text-base">Log in</LinkButton>
               </div>
-              <p className="rise rise-4 mt-5 font-mono text-xs text-muted">Understand and approve run here. Migration is a command-line beta. Tried on three reference repos: Spring, Django and Express.</p>
+              <ul className="rise rise-4 mt-6 flex flex-wrap gap-1.5" aria-label="Supported migrations">
+                {TARGETS.map((t) => (
+                  <li key={t} className="rounded-full border border-line-strong bg-surface px-3 py-1 font-mono text-xs text-muted">{t}</li>
+                ))}
+              </ul>
+              <p className="rise rise-4 mt-4 font-mono text-xs text-muted">Beta. Tried on three reference apps: Spring, Django and Express.</p>
             </div>
 
-            <figure className="rise rise-2 relative" aria-label="A claim linked to the lines of code that prove it">
+            <figure className="rise rise-2" aria-label="An illustrative migration: a legacy app becomes a new app, and the two are compared">
+              <div className="rounded-2xl border border-line-strong bg-surface p-5 shadow-[var(--shadow)]">
+                <p className="eyebrow">Illustrative example</p>
+                <div className="mt-4 grid items-center gap-3 sm:grid-cols-[1fr_auto_1fr]">
+                  <div className="rounded-xl border border-line p-4">
+                    <p className="font-mono text-[11px] uppercase text-muted">Legacy app</p>
+                    <p className="mt-1 font-semibold">orders-service</p>
+                    <p className="font-mono text-xs text-muted">Java 8 · Spring Boot 2</p>
+                  </div>
+                  <span className="mx-auto font-mono text-xl text-accent" aria-hidden="true">{"→"}</span>
+                  <div className="rounded-xl border border-accent bg-accent-soft p-4">
+                    <p className="font-mono text-[11px] uppercase text-accent">New app</p>
+                    <p className="mt-1 font-semibold">orders-service</p>
+                    <p className="font-mono text-xs text-muted">Java 21 · Spring Boot 3</p>
+                  </div>
+                </div>
+                <div className="mt-5 overflow-hidden rounded-xl border border-line">
+                  <div className="grid grid-cols-[1fr_auto_auto_auto] gap-x-4 border-b border-line bg-surface-2 px-4 py-2 font-mono text-[11px] uppercase text-muted">
+                    <span>Recorded case</span><span>Old</span><span>New</span><span aria-label="Result">=</span>
+                  </div>
+                  {PROOF.map(([c, a, b]) => (
+                    <div key={c} className="grid grid-cols-[1fr_auto_auto_auto] gap-x-4 border-b border-line px-4 py-2 font-mono text-xs last:border-0">
+                      <span className="truncate">{c}</span><span>{a}</span><span>{b}</span><span className="text-ok">{"✓"}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <figcaption className="mt-3 pl-1 text-xs text-muted">The old app's own answers are recorded, never written by the model. A slice moves on only when the new app matches.</figcaption>
+            </figure>
+          </div>
+        </section>
+
+        <section id="mvp" className="mx-auto max-w-6xl scroll-mt-20 px-4 py-20 sm:px-6">
+          <p className="eyebrow mb-3">The MVP</p>
+          <h2 className="display max-w-3xl text-4xl sm:text-5xl">A legacy app goes in. A migrated app, and the proof, come out.</h2>
+          <div className="mt-10 grid gap-px overflow-hidden rounded-2xl border border-line bg-line md:grid-cols-3">
+            {[
+              ["In", "Your legacy app", "A git repository or an archive of the application you run today. It is copied; your repository is never touched."],
+              ["Choose", "The target", "A newer version of the same stack, or a different technology: Java 8 to 21, Spring Boot 2 to 3, Django 3 to 5, Express to Fastify, JavaScript to Go."],
+              ["Out", "The migrated app and the proof", "New code in its own folder, an equivalence report against the running legacy app, and a cut-over plan you approve. Nothing is deployed for you."],
+            ].map(([k, t, d]) => (
+              <div key={k} className="bg-surface p-7">
+                <span className="font-mono text-sm text-accent">{k}</span>
+                <h3 className="display mt-5 text-3xl">{t}</h3>
+                <p className="mt-2 text-muted">{d}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <section id="how" className="border-y border-line bg-surface-2">
+          <div className="mx-auto max-w-6xl scroll-mt-20 px-4 py-20 sm:px-6">
+            <p className="eyebrow mb-3">How the migration works</p>
+            <h2 className="display max-w-3xl text-4xl sm:text-5xl">Five steps from the app you have to the app you want.</h2>
+            <p className="mt-4 max-w-2xl text-muted">Understanding the legacy app is step 1, not the goal: you cannot migrate safely what you cannot describe. Everything after it is built on that approved map.</p>
+            <MigrationJourney className="mt-10" />
+            <div className="mt-6 grid gap-4 md:grid-cols-2">
+              <div className="rounded-2xl border border-line bg-surface p-6">
+                <p className="eyebrow mb-2">Why the map comes first</p>
+                <p className="text-sm text-muted">The migration plan, the test cases and the review of every generated slice all point back to items in this map. Each item cites a file and a line, so a claim that cannot be checked is dropped before it can steer the migration.</p>
+              </div>
+              <div className="rounded-2xl border border-line bg-surface p-6">
+                <p className="eyebrow mb-2">Why recorded behaviour decides</p>
+                <p className="text-sm text-muted">The old app is the oracle. Test inputs are run against it twice, noise is masked, and its answers become the expected result. Where you decided to fix a bug instead of keeping it, you approve the corrected expectation.</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section className="mx-auto max-w-6xl px-4 py-20 sm:px-6">
+          <p className="eyebrow mb-3">Step 1 in detail: understand the legacy app</p>
+          <h2 className="display max-w-3xl text-4xl sm:text-5xl">A map of what the app does that you can check, not a summary you have to trust.</h2>
+          <div className="mt-12 grid gap-12 lg:grid-cols-2">
+            <figure aria-label="A claim linked to the lines of code that prove it">
               <div className="rounded-2xl border border-line-strong bg-surface p-5 shadow-[var(--shadow)]">
                 <div className="flex items-center justify-between gap-3">
                   <span className="inline-flex items-center gap-2 text-sm font-medium"><TypeGlyph type="business_rule" size={16} />Waitlist promotion</span>
@@ -70,63 +155,14 @@ export default function Landing() {
                   ))}
                 </div>
               </div>
-              <figcaption className="mt-3 pl-1 text-xs text-muted">A claim that cannot point at real lines is dropped before it reaches the graph.</figcaption>
+              <figcaption className="mt-3 pl-1 text-xs text-muted">Every business rule the migration must preserve points at real lines.</figcaption>
             </figure>
-          </div>
-        </section>
-
-        <section id="how" className="mx-auto max-w-6xl scroll-mt-20 px-4 py-20 sm:px-6">
-          <p className="eyebrow mb-3">How it works</p>
-          <h2 className="display max-w-3xl text-4xl sm:text-5xl">Two phases, one folder of state, a human sign-off between them.</h2>
-          <p className="mt-4 max-w-2xl text-muted">Phase 1 produces a map you can check. You approve it. Phase 2 uses that approved map as the contract for the migration.</p>
-
-          <h3 className="eyebrow mt-12">Phase 1: understand and approve</h3>
-          <ol className="mt-4 grid gap-px overflow-hidden rounded-2xl border border-line bg-line md:grid-cols-4">
-            {[
-              ["01", "Connect", "Paste a public git URL or upload an archive. You see the estimated cost first, and a hard budget stops a run gracefully."],
-              ["02", "Read", "Static extraction finds routes, entities and config. Models add the business rules. Evidence that does not exist in the code is rejected."],
-              ["03", "Verify", "A blind Verifier compares the document with your own docs and flags contradictions. You resolve each one; only the affected code is re-read."],
-              ["04", "Approve", "Decide per quirk whether to preserve or fix it, then sign off. Approval pins the exact graph and document and goes stale if either changes."],
-            ].map(([n, t, d]) => (
-              <li key={n} className="bg-surface p-6">
-                <span className="font-mono text-sm text-accent">{n}</span>
-                <h4 className="display mt-5 text-2xl">{t}</h4>
-                <p className="mt-2 text-sm text-muted">{d}</p>
-              </li>
-            ))}
-          </ol>
-
-          <h3 className="eyebrow mt-12">Phase 2: migrate and prove equivalence (command-line beta)</h3>
-          <ol className="mt-4 grid gap-px overflow-hidden rounded-2xl border border-line bg-line md:grid-cols-4">
-            {[
-              ["05", "Plan", "Pick the target (Java 8 to 21, Spring Boot 2 to 3, Django 3 to 5, Express to Fastify, JS to Go). Target-fit finds risks; the planner cuts the service into ordered slices."],
-              ["06", "Record", "Cases run twice against your live legacy service in a Docker sandbox. Expected behaviour is recorded, never written by the model. Token-protected services get a random token per run."],
-              ["07", "Generate", "The model returns structured edits and never gets a shell. Builds and tests run in the sandbox; a fresh-session reviewer checks each slice."],
-              ["08", "Prove and cut over", "Old and new restart from the same data and run the same cases. You approve each slice, a router moves its routes, and the cut-over plan needs its own approval."],
-            ].map(([n, t, d]) => (
-              <li key={n} className="bg-surface p-6">
-                <span className="font-mono text-sm text-accent">{n}</span>
-                <h4 className="display mt-5 text-2xl">{t}</h4>
-                <p className="mt-2 text-sm text-muted">{d}</p>
-              </li>
-            ))}
-          </ol>
-        </section>
-
-        <section className="border-y border-line bg-surface-2">
-          <div className="mx-auto grid max-w-6xl gap-10 px-4 py-20 sm:px-6 md:grid-cols-2">
-            <div>
-              <p className="eyebrow mb-3">Watch it catch a wrong requirement</p>
-              <h2 className="display text-4xl sm:text-5xl">Docs and code disagree more often than anyone admits.</h2>
-              <p className="mt-4 text-muted">The Verifier never sees your code. It only compares the generated document with your own docs, then shows both quotes side by side.</p>
-            </div>
             <div className="space-y-3 rounded-2xl border border-line-strong bg-surface p-5">
+              <p className="eyebrow">Catching a wrong requirement before it is migrated</p>
               <div className="flex items-center justify-between"><strong>Owner search page size</strong><span className="rounded bg-danger-soft px-2 py-0.5 font-mono text-[11px] font-semibold uppercase text-danger">high</span></div>
               <blockquote className="quote px-4 py-2 text-sm"><span className="eyebrow block">docs/user-guide.md:41</span>Search results for owners are displayed 10 per page.</blockquote>
               <blockquote className="quote px-4 py-2"><span className="eyebrow block">OwnerController.java:122</span><code className="font-mono text-[12.5px]">int pageSize = 5;</code></blockquote>
-              <div className="flex flex-wrap gap-2 pt-1 text-sm">
-                {["The document is right", "The code is right", "Not a real problem", "Look again"].map((l) => <span key={l} className="rounded-lg border border-line-strong px-3 py-1.5">{l}</span>)}
-              </div>
+              <p className="text-sm text-muted">A Verifier that never sees your code compares the map with your own docs. You decide which is right, and the migration then preserves the right behaviour.</p>
             </div>
           </div>
         </section>
@@ -134,12 +170,12 @@ export default function Landing() {
         <section id="status" className="border-y border-line bg-surface-2">
           <div className="mx-auto max-w-6xl scroll-mt-20 px-4 py-20 sm:px-6">
             <p className="eyebrow mb-3">What you get today</p>
-            <h2 className="display max-w-3xl text-4xl sm:text-5xl">Where each part runs, and how far along it is.</h2>
+            <h2 className="display max-w-3xl text-4xl sm:text-5xl">Where each step runs, and how far along it is.</h2>
             <div className="mt-10 grid gap-4 md:grid-cols-3">
               {[
-                ["Available", "In this app", "Understand and verify", "Connect a repo, read it, review findings, explore the graph, add your docs for the Verifier, and track cost and usage."],
-                ["Available", "Command line", "Approve", "Record preserve-or-fix decisions per quirk, check readiness, and sign off. The approval writes the migration contract."],
-                ["Beta", "Command line, needs Docker", "Migrate with proof", "Target fit, slices, recorded cases, sandboxed generation, equivalence, fuzzing, a strangler router and a cut-over plan. Run it on your own machine."],
+                ["Available", "In this app", "Step 1: understand", "Connect the legacy app, read it, review findings, explore the graph, add your docs for the Verifier, and track cost and usage."],
+                ["Available", "Command line", "Step 2: approve", "Record keep-or-fix decisions per quirk, check readiness, and sign off. The approval writes the migration contract."],
+                ["Beta", "Command line, needs Docker", "Steps 3 to 5: migrate, prove, cut over", "Target fit, slices, recorded cases, sandboxed generation, equivalence, fuzzing, a strangler router and a cut-over plan. Run it on your own machine."],
               ].map(([badge, where, t, d]) => (
                 <article key={t} className="rounded-2xl border border-line-strong bg-surface p-6">
                   <p className="font-mono text-xs uppercase text-accent">{badge} · {where}</p>
@@ -149,9 +185,9 @@ export default function Landing() {
               ))}
             </div>
             <div className="mt-8 rounded-2xl border border-line-strong bg-surface p-6">
-              <p className="eyebrow mb-2">Sandbox trial of the migration beta, no model</p>
+              <p className="eyebrow mb-2">Sandbox trial of the migration steps, no model</p>
               <p className="text-sm text-muted">
-                On the Express sample, the sandbox built the old service, recorded 24 authenticated cases, and ran a copy as the new one:
+                On the Express sample, the sandbox built the old app, recorded 24 authenticated cases, and ran a copy as the new one:
                 24 of 24 matched and 90 fuzz variants found no difference. A deliberately changed status code was caught.
                 A second, subtler change (a price boundary) was <strong className="text-ink">not</strong> caught, because the offline cases never reach it.
                 Model-written cases are meant to cover that, and they have not run yet.
@@ -170,7 +206,7 @@ export default function Landing() {
               ["0.57", "F1 for edges on the Express sample. It is our weakest category and we say so."],
               ["0", "migration stages run with a real model so far. Accuracy on large real repositories is also unmeasured."],
             ].map(([v, l]) => (
-              <div key={v} className="border-t-2 border-ink pt-4">
+              <div key={l} className="border-t-2 border-ink pt-4">
                 <dt className="display text-6xl tnum">{v}</dt>
                 <dd className="mt-2 text-muted">{l}</dd>
               </div>
@@ -181,9 +217,9 @@ export default function Landing() {
 
         <section className="px-4 pb-24 sm:px-6">
           <div className="mx-auto max-w-6xl rounded-3xl bg-ink px-6 py-14 text-center text-bg sm:px-14">
-            <h2 className="display text-4xl sm:text-6xl">Find out what your service really does, then move it safely.</h2>
-            <p className="mx-auto mt-3 max-w-lg opacity-75">Billing is not enabled yet. Create a workspace and run your first analysis under the internal plan. Approval and migration run in the command-line tool.</p>
-            <LinkButton href="/signup" variant="primary" className="mt-8 min-h-12 px-8 text-base">Create a workspace</LinkButton>
+            <h2 className="display text-4xl sm:text-6xl">Move the app you have to the stack you want.</h2>
+            <p className="mx-auto mt-3 max-w-lg opacity-75">Billing is not enabled yet. Create a workspace and connect your legacy app under the internal plan. Approval and migration run in the command-line tool.</p>
+            <LinkButton href="/signup" variant="primary" className="mt-8 min-h-12 px-8 text-base">Start a migration</LinkButton>
           </div>
         </section>
       </main>
