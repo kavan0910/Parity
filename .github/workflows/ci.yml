@@ -33,6 +33,18 @@ jobs:
               assert any(n.endswith(needle) for n in names), needle
           PY
 
+  eval-phase2:
+    # Offline Phase 2 eval gate: scores eval/targets/* from recorded artifacts (no model, no network, no Docker)
+    # and fails on any drop against eval/targets/baseline.json.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -e ".[dev]"
+      - run: python scripts/eval_phase2.py
+
   image:
     needs: test
     runs-on: ubuntu-latest

@@ -24,6 +24,8 @@ log = logging.getLogger(__name__)
 
 Event = dict
 STAGES = ("ingest", "extract", "analyze", "verify", "resolve")
+# Phase 2 stages (docs/phase2-plan.md 12, M7); stage-specific arguments go in run_stage(options={...})
+P2_STAGES = ("target_fit", "plan", "tests", "generate", "equivalence", "cutover")
 
 
 class ServiceError(ValueError):
@@ -126,7 +128,7 @@ def run_stage(project_dir: Path, stage: str, *, source: str | None = None, confi
               max_usd: float | None = None, workers: int = 1, incremental: bool = False, offline: bool = False,
               on_event: Callable[[Event], None] | None = None, llm: object | None = None,
               finding_id: str | None = None, status: str | None = None, note: str | None = None,
-              reanalyze: bool = False) -> StageResult:
+              reanalyze: bool = False, options: dict | None = None) -> StageResult:
     """Run one pipeline stage on `project_dir`.
 
     ingest   copy `source` (path/zip/tar/git URL; defaults to project.json's source) into code/. Creates the
@@ -137,18 +139,40 @@ def run_stage(project_dir: Path, stage: str, *, source: str | None = None, confi
     verify   blind Verifier over user_docs/ -> feedback/findings.json (needs the understanding doc).
     resolve  optionally record `finding_id`+`status`(+`note`); with reanalyze=True run targeted re-analysis of
              pending resolutions/comments and regenerate docs/changelog.md.
+    Phase 2 stages (approved migration contract required; spend capped by `max_usd` AND the project budget in
+    target/target.yaml through migrate/ledger.py; `offline` uses the deterministic offline clients):
+    target_fit   target-fit analysis -> target/fit_report.json|md.
+    plan         slice plan -> plan/migration_plan.json|md. options: dry_run, name_with_model.
+    tests        characterization cases (tests generate). options: node_ids, record_url [+ record_url2] to also
+                 record them against a running legacy service.
+    generate     slice generation loop. options: slice_id | all (default all), max_usd_per_slice, max_iterations,
+                 from_comments.
+    equivalence  legacy vs new per slice in plan order. options: slice_id, legacy_url, new_url, triage.
+    cutover      readiness + cutover/plan.md; options: approve, by, note (refused while not ready -> failed).
     Expected failures (missing project, bad input, unknown finding, provider errors) come back as status="failed", never raised;
     an unknown `stage` raises ServiceError.
     """
-    if stage not in STAGES:
-        raise ServiceError(f"unknown stage {stage!r}; expected one of {', '.join(STAGES)}")
+    if stage not in STAGES + P2_STAGES:
+        raise ServiceError(f"unknown stage {stage!r}; expected one of {', '.join(STAGES + P2_STAGES)}")
     emit = _Emitter(on_event, ((config or {}).get("api_key") or "",))
     if max_usd is None and config and config.get("max_usd") is not None:
         max_usd = float(config["max_usd"])
     ev_llm: _EventLLM | None = None
+    holder: dict = {}
     try:
         proj = _open_project(Path(project_dir), stage, source)
         emit.log("info", f"stage {stage}: start")
+        if stage in P2_STAGES:
+            summary = _run_p2(proj, stage, emit, config, max_usd, offline, llm, dict(options or {}), holder)
+            ev_llm = holder.get("llm")
+            stopped = summary.pop("_stopped", None)
+            failed = summary.pop("_failed", None)
+            cost = ev_llm.usd if ev_llm else 0.0
+            if failed:
+                return _done(stage, "failed", summary, cost, emit, failed)
+            if stopped:
+                return _done(stage, "failed" if _is_auth(ev_llm) else "stopped_budget", summary, cost, emit, stopped)
+            return _done(stage, "ok", summary, cost, emit)
         if stage == "ingest":
             summary = _ingest(proj, source, incremental)
             emit({"type": "progress", "stage": stage, "done": 1, "total": 1})
@@ -176,6 +200,7 @@ def run_stage(project_dir: Path, stage: str, *, source: str | None = None, confi
         return _done(stage, "ok", summary, cost, emit)
     except Exception as e:  # noqa: BLE001
         from .llm.base import BudgetExceeded
+        ev_llm = ev_llm or holder.get("llm")
         cost = ev_llm.usd if ev_llm else 0.0
         st = "stopped_budget" if isinstance(e, BudgetExceeded) and not _is_auth(ev_llm) else "failed"
         return _done(stage, st, {}, cost, emit, f"{type(e).__name__}: {e}")
@@ -281,6 +306,134 @@ def _resolve(proj, emit, config, max_usd, offline, injected, finding_id, status,
                    removed_nodes=len(res.removed_nodes))
     generate_changelog(proj)
     return summary, ev
+
+
+# --------------------------------------------------------------------------- Phase 2 stages
+def _p2_llm(proj, stage: str, emit: _Emitter, config, max_usd, offline, injected, offline_factory, audit=None):
+    """_EventLLM over the injected client, the stage's offline client, or a LiteLLM client capped by
+    min(max_usd, remaining project budget) (migrate/ledger.budget_for). None when offline and no offline client."""
+    if injected is not None:
+        return _EventLLM(injected, stage, emit)
+    if offline:
+        return _EventLLM(offline_factory(), stage, emit) if offline_factory is not None else None
+    from .audit import AuditLog
+    from .llm.litellm_client import LiteLLMClient
+    from .migrate.ledger import budget_for, project_budget_usd
+    budget = budget_for(proj, project_budget_usd(proj), max_usd=max_usd)
+    inner = LiteLLMClient(_llm_config(config), budget=budget, cache_dir=proj.root / "llm_cache",
+                          audit=audit or AuditLog(proj.audit_dir / "audit.jsonl"))
+    return _EventLLM(inner, stage, emit)
+
+
+def _progress(emit: _Emitter, stage: str, done: int, total: int) -> None:
+    emit({"type": "progress", "stage": stage, "done": done, "total": total})
+
+
+def _run_p2(proj, stage, emit: _Emitter, config, max_usd, offline, injected, opts: dict, holder: dict) -> dict:
+    from .llm.base import BudgetExceeded, LLMAuthError
+    log = lambda m: emit.log("info", m)  # noqa: E731
+    _progress(emit, stage, 0, 1)
+    if stage == "target_fit":
+        from .migrate.fit import OfflineFitLLM, fit_blockers, run_fit
+        ev = holder["llm"] = _p2_llm(proj, stage, emit, config, max_usd, offline, injected, OfflineFitLLM)
+        run = run_fit(proj, ev, offline=offline, log=log)
+        r = run.report
+        out = {"risks": len(r.risks), "by_severity": {s: sum(x.severity == s for x in r.risks)
+                                                      for s in ("high", "medium", "low")},
+               "needs_decision": sum(x.needs_decision for x in r.risks), "dropped_unverified": r.dropped_unverified,
+               "model_calls": run.model.calls, "blockers": [b.id for b in fit_blockers(proj, allow_stale=True)]}
+        if run.model.budget_stopped:
+            out["_stopped"] = "budget reached during the model layer"
+    elif stage == "plan":
+        from .migrate.planner import plan_project
+        ev = None
+        if opts.get("name_with_model"):
+            from .llm.offline import OfflineLLM
+            ev = holder["llm"] = _p2_llm(proj, stage, emit, config, max_usd, offline, injected, OfflineLLM)
+        res = plan_project(proj, dry_run=bool(opts.get("dry_run")), offline=offline,
+                           name_with_model=bool(opts.get("name_with_model")), llm=ev, max_usd=max_usd)
+        out = {"version": res.plan.version, "slices": len(res.plan.slices), "dry_run": bool(opts.get("dry_run")),
+               "excluded_nodes": len(res.plan.excluded_nodes), "plan_blockers": res.report.plan_blockers,
+               "warnings": len(res.report.warnings),
+               "estimate_usd": round(sum(s.estimate_usd for s in res.plan.slices), 6)}
+    elif stage == "tests":
+        from .migrate.testgen import generate_cases
+        ev = holder["llm"] = None if offline and injected is None else \
+            _p2_llm(proj, stage, emit, config, max_usd, offline, injected, None)
+        rep = generate_cases(proj, ev, offline=offline and injected is None, node_ids=opts.get("node_ids"), log=log)
+        out = {"created": len(rep.created_cases), "kept": len(rep.kept_cases), "dropped": len(rep.dropped),
+               "needs_approval": len(rep.needs_approval), "provisional": len(rep.provisional),
+               "nodes": len(rep.nodes)}
+        if rep.stopped:
+            out["_stopped"] = rep.stopped
+        elif opts.get("record_url"):
+            from .migrate.recorder import record_cases
+            _progress(emit, stage, 1, 2)
+            rr = record_cases(proj, opts["record_url"], opts.get("record_url2"))
+            out["recorded"] = len(rr.by_status("recorded"))
+            out["record_issues"] = {s: len(rr.by_status(s)) for s in ("harness_issue", "unstable", "not_implemented")}
+    elif stage == "generate":
+        from .migrate.codegen import OfflineCodegenLLM
+        from .migrate.slice_runner import GenerateOptions, TaggedAudit, generate
+        audit = TaggedAudit(proj.audit_dir / "audit.jsonl")
+        ev = holder["llm"] = _p2_llm(proj, stage, emit, config, max_usd, offline, injected, OfflineCodegenLLM, audit)
+        go = GenerateOptions(max_usd=max_usd, max_usd_per_slice=opts.get("max_usd_per_slice"),
+                             from_comments=bool(opts.get("from_comments")))
+        if opts.get("max_iterations"):
+            go.max_iterations = int(opts["max_iterations"])
+        sid = opts.get("slice_id")
+        rep = generate(proj, slice_id=sid, all_slices=not sid, llm=ev, options=go, audit=audit)
+        out = {"outcomes": [o.model_dump(mode="json") for o in rep.outcomes], "warnings": rep.warnings,
+               "awaiting_human": sum(o.status == "awaiting_human" for o in rep.outcomes)}
+        if rep.stopped:
+            out["_stopped"] = rep.stopped
+    elif stage == "equivalence":
+        from .migrate.casestore import load_plan
+        from .migrate.equivalence import resolve_urls, run_equivalence
+        plan = load_plan(proj)
+        if plan is None:
+            return {"_failed": "no plan/migration_plan.json: run the plan stage first"}
+        ids = [opts["slice_id"]] if opts.get("slice_id") else [s.id for s in sorted(plan.slices,
+                                                                                  key=lambda s: (s.order, s.id))]
+        lu, nu = resolve_urls(proj, opts.get("legacy_url"), opts.get("new_url"))
+        ev = None
+        if opts.get("triage") and not offline:
+            ev = holder["llm"] = _p2_llm(proj, stage, emit, config, max_usd, offline, injected, None)
+        per = {}
+        _progress(emit, stage, 0, len(ids))
+        for i, sid in enumerate(ids, 1):
+            try:
+                rep = run_equivalence(proj, sid, lu, nu, llm=ev)
+            except (BudgetExceeded, LLMAuthError) as e:
+                return {"slices": per, "_stopped": str(e)}
+            per[sid] = {"cases": rep.cases_total, "equivalent": rep.cases_equivalent, "pct": rep.equivalence_pct,
+                        "regressions": sum(d.classification == "regression" for d in rep.diffs),
+                        "unknown": sum(d.classification == "unknown" for d in rep.diffs)}
+            _progress(emit, stage, i, len(ids))
+        out = {"slices": per, "unexplained": sum(v["regressions"] + v["unknown"] for v in per.values())}
+    else:   # cutover
+        from .migrate import cutover as co
+        if opts.get("approve"):
+            try:
+                appr = co.approve(proj, str(opts.get("by") or ""), str(opts.get("note") or ""))
+            except co.CutoverError as e:
+                return {"ready": False, "blockers": e.blockers, "_failed": str(e).splitlines()[0]}
+            out = {"ready": True, "approved": appr.model_dump(mode="json")}
+        else:
+            rd = co.readiness(proj)
+            co.write_plan(proj, rd)
+            out = {"ready": rd.ready, "blockers": rd.blockers, "warnings": rd.warnings,
+                   "approval": co.verify_approval(proj)}
+        out["plan"] = "cutover/plan.md"
+    _progress(emit, stage, 1, 1)
+    return out
+
+
+def metrics(project_dir: Path) -> dict:
+    """Phase 2 metrics (docs/phase2-plan.md section 10), same dict as `migration-agent metrics --format json`."""
+    from .migrate.metrics import compute_metrics
+    from .project import Project
+    return compute_metrics(Project.load(Path(project_dir)))
 
 
 def estimate(project_dir: Path, config: dict | None = None, incremental: bool = False) -> dict:

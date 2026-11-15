@@ -12,6 +12,7 @@ import webbrowser
 from datetime import datetime, timezone
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
+from typing import Literal
 from urllib.parse import parse_qs, urlsplit
 
 from pydantic import BaseModel, Field, ValidationError
@@ -20,6 +21,10 @@ from migration_agent.graph.models import Graph
 from migration_agent.ingest.secrets import redact_string
 from migration_agent.graph.store import GraphStoreError, diff_graphs, load_latest, load_snapshot, parse_graph
 from migration_agent.project import Project
+from migration_agent.review import approval as _approval
+from migration_agent.review._io import ReviewError
+from migration_agent.review.decisions import UnknownItem, add_decision, effective_list
+from migration_agent.review.docrender import write_latest
 from migration_agent.review_ui.markdown import anchors, render_sections
 from migration_agent.review_ui.page import render_page
 from migration_agent.verify.models import (
@@ -43,6 +48,55 @@ class _ResolutionIn(BaseModel):
     finding_id: str = Field(min_length=1, max_length=64)
     status: ResolutionStatus
     note: str = Field(default="", max_length=MAX_TEXT)
+
+
+class _DecisionIn(BaseModel):
+    item_id: str = Field(min_length=1, max_length=64)
+    decision: Literal["preserve", "fix"]
+    note: str = Field(default="", max_length=MAX_TEXT)
+
+
+class _ApproveIn(BaseModel):
+    approved_by: str = Field(min_length=1, max_length=64)
+    note: str = Field(default="", max_length=MAX_TEXT)
+
+
+class _P2CommentIn(BaseModel):
+    item_id: str = Field(min_length=1, max_length=64)
+    text: str = Field(min_length=1, max_length=MAX_TEXT)
+    author: str = Field(default="user", max_length=64)
+    file: str | None = Field(default=None, max_length=500)
+    line: int | None = Field(default=None, ge=1, le=10_000_000)
+
+
+class _P2ApproveIn(BaseModel):
+    slice_id: str = Field(min_length=1, max_length=32)
+    approved_by: str = Field(min_length=1, max_length=64)
+    note: str = Field(default="", max_length=MAX_TEXT)
+
+
+class _P2RejectIn(BaseModel):
+    slice_id: str = Field(min_length=1, max_length=32)
+    by: str = Field(min_length=1, max_length=64)
+    reason: str = Field(min_length=1, max_length=MAX_TEXT)
+
+
+class _P2RiskIn(BaseModel):
+    risk_id: str = Field(min_length=1, max_length=32)
+    status: str = Field(min_length=1, max_length=32)
+    note: str = Field(min_length=1, max_length=MAX_TEXT)
+    by: str = Field(default="user", max_length=64)
+
+
+class _P2MaskIn(BaseModel):
+    eq_id: str = Field(min_length=1, max_length=32)
+    by: str = Field(min_length=1, max_length=64)
+    reason: str = Field(default="", max_length=MAX_TEXT)
+
+
+P2_POST_ROUTES = ("/api/p2/comments", "/api/p2/approve-slice", "/api/p2/reject-slice", "/api/p2/resolve-risk",
+                  "/api/p2/approve-mask")
+_P2_MARKERS = ("target/fit_report.json", "plan/migration_plan.json", "slices")
 
 
 class ApiError(Exception):
@@ -72,7 +126,7 @@ def _atomic_write(path: Path, text: str) -> None:
 
 
 class ReviewState:
-    """File-backed state for one project (independent of the review/ package)."""
+    """File-backed state for one project (decisions and approval go through the review/ package)."""
 
     def __init__(self, project: Project):
         self.project = project
@@ -167,6 +221,11 @@ class ReviewState:
         g = self.graph()
         return {
             "project": safe(lambda: self.project.meta().name, ""),
+            "readiness": safe(lambda: _approval.readiness(self.project).model_dump(),
+                              {"ready": False, "blockers": ["readiness check failed"], "warnings": []}),
+            "approval": safe(lambda: _approval.approval_status(self.project),
+                             {"state": "none", "approval": None, "reason": "approval status unreadable"}),
+            "decisions": safe(lambda: [d.model_dump() for d in effective_list(self.project, g)] if g else [], []),
             "findings": findings.model_dump(),
             "resolutions": resolutions.model_dump(),
             "comments": comments.model_dump(),
@@ -174,6 +233,7 @@ class ReviewState:
             "sections": render_sections(doc),
             "coverage": self.coverage(doc, g),
             "known_ids": sorted(self.known_item_ids()),
+            "p2": safe(self.p2_state, None),
             "errors": errors,
         }
 
@@ -204,6 +264,202 @@ class ReviewState:
             rf.resolutions.append(r)
             _atomic_write(self.fb / "resolutions.json", rf.model_dump_json(indent=2) + "\n")
         return r.model_dump()
+
+    def add_decision(self, data: dict) -> dict:
+        inp = _DecisionIn.model_validate(data)
+        with self.lock:
+            try:
+                d = add_decision(self.project, inp.item_id, inp.decision, inp.note)
+            except UnknownItem:
+                raise ApiError(404, f"unknown item_id: {inp.item_id[:64]}")
+            except ReviewError as e:
+                raise ApiError(400, str(e)[:300])
+            write_latest(self.project)  # the doc shows the decision; keeps the stale-doc check green
+        return d.model_dump()
+
+    def approve(self, data: dict) -> dict:
+        inp = _ApproveIn.model_validate(data)
+        if not inp.approved_by.strip():
+            raise ApiError(400, "approved_by must not be empty")
+        with self.lock:
+            try:
+                a = _approval.approve(self.project, inp.approved_by, inp.note)
+            except ReviewError as e:
+                raise ApiError(400, str(e)[:2000])
+        return a.model_dump()
+
+    # -- Phase 2 (plan section 8): shown only when Phase 2 files exist ------------------------------
+    def p2_present(self) -> bool:
+        return any((self.project.root / m).exists() for m in _P2_MARKERS)
+
+    def p2_state(self) -> dict | None:
+        """Target fit, plan, comments and known Phase 2 IDs; None for a Phase 1-only project. Never raises."""
+        if not self.p2_present():
+            return None
+        try:
+            return self._p2_state()
+        except Exception as e:  # noqa: BLE001 - Phase 2 problems must not break the Phase 1 UI
+            return {"present": True, "fit": None, "plan": None, "comments": [], "known_ids": [],
+                    "errors": [f"phase 2 state: {type(e).__name__}"]}
+
+    def _p2_state(self) -> dict:
+        from migration_agent.migrate import approvals as _ap
+        from migration_agent.migrate import equivalence as _eq
+        from migration_agent.migrate.casestore import load_cases, load_plan
+        from migration_agent.migrate.fit import fit_state
+        from migration_agent.migrate.state import load_state
+        errors: list[str] = []
+        out: dict = {"present": True, "fit": None, "plan": None, "comments": [], "known_ids": [], "errors": errors}
+        lay_fit = self.project.root / "target" / "fit_report.json"
+        if lay_fit.exists():
+            out["fit"] = fit_state(self.project)
+        try:
+            plan = load_plan(self.project)
+        except (ValidationError, ValueError, OSError) as e:
+            plan = None
+            errors.append(f"plan: {type(e).__name__}")
+        known: set[str] = set()
+        if plan is not None:
+            rows = []
+            for sl in sorted(plan.slices, key=lambda x: (x.order, x.id)):
+                row = sl.model_dump(mode="json")
+                try:
+                    st = load_state(self.project, sl.id)
+                    row["status"], row["iteration"], row["reason"] = st.status, st.iteration, st.reason
+                    rep = _eq.load_report(self.project, sl.id)
+                    row["equivalence_pct"] = rep.equivalence_pct if rep else None
+                    row["unexplained"] = len(rep.unexplained) if rep else None
+                    row["approved"] = _ap.load_approval(self.project, sl.id) is not None
+                except (ValidationError, ValueError, OSError) as e:
+                    errors.append(f"{sl.id}: {type(e).__name__}")
+                rows.append(row)
+                known.add(sl.id)
+            out["plan"] = {"version": plan.version, "created": plan.created, "slices": rows,
+                           "excluded": len(plan.excluded_nodes),
+                           "estimate_usd": round(sum(x.estimate_usd for x in plan.slices), 4)}
+        try:
+            out["comments"] = [c.model_dump() for c in _ap.load_comments(self.project).comments]
+        except (ValidationError, ValueError, OSError) as e:
+            errors.append(f"comments: {type(e).__name__}")
+        try:
+            known |= {c.id for c in load_cases(self.project)}
+        except (ValidationError, ValueError, OSError):
+            pass
+        if out["fit"]:
+            known |= {r["id"] for r in out["fit"].get("risks", [])}
+        out["known_ids"] = sorted(known)
+        return out
+
+    def p2_slice(self, slice_id: str) -> dict:
+        try:
+            return self._p2_slice(slice_id)
+        except (ApiError, ValidationError, ValueError, OSError):
+            raise
+        except Exception as e:  # noqa: BLE001
+            raise ApiError(500, f"server error: {type(e).__name__}")
+
+    def _p2_slice(self, slice_id: str) -> dict:
+        from migration_agent.migrate import approvals as _ap
+        from migration_agent.migrate import equivalence as _eq
+        from migration_agent.migrate.casestore import load_cases, load_plan
+        from migration_agent.migrate.models import is_id
+        from migration_agent.migrate.state import load_state
+        if not is_id(slice_id, "SLICE"):
+            raise ApiError(400, "bad slice id")
+        plan = load_plan(self.project)
+        sl = next((x for x in plan.slices if x.id == slice_id), None) if plan else None
+        if sl is None:
+            raise ApiError(404, "unknown slice")
+        it = _ap.latest_iteration(self.project, slice_id)
+
+        def raw(name):
+            if it is None or not (it / name).is_file():
+                return None
+            try:
+                return json.loads((it / name).read_text(encoding="utf-8"))
+            except ValueError:
+                return {"error": f"{name} is not valid JSON"}
+
+        rep = _eq.load_report(self.project, slice_id)
+        meta = _eq.load_run_meta(self.project, slice_id)
+        appr = _ap.load_approval(self.project, slice_id)
+        cases = [c for c in load_cases(self.project) if c.slice == slice_id]
+        eq_ids = {d.id for d in rep.diffs} if rep else set()
+        mine = {slice_id} | {c.id for c in cases} | eq_ids | set(sl.node_ids)
+        try:
+            humans = _ap.human_commits(self.project)[:50]
+        except _ap.GitError:
+            humans = []
+        return {
+            "slice": sl.model_dump(mode="json"),
+            "state": load_state(self.project, slice_id).model_dump(mode="json"),
+            "iterations": _ap.iterations(self.project, slice_id),
+            "build": raw("build.json"), "tests": raw("tests.json"),
+            "review": _ap.review_findings(self.project, slice_id),
+            "diff": _ap.slice_diff(self.project, slice_id),
+            "equivalence": (rep.model_dump(mode="json") | {"equivalence_pct": rep.equivalence_pct}) if rep else None,
+            "run": meta.model_dump(mode="json") if meta else None,
+            "cases": [{"id": c.id, "covers": c.covers, "decision": c.decision, "tags": c.tags,
+                       "source": c.expect.source, "approved_by": c.expect.approved_by} for c in cases],
+            "blockers": _ap.approval_blockers(self.project, slice_id),
+            "decisions": _ap.load_decisions(self.project, slice_id).model_dump(mode="json"),
+            "fix_requests": _eq.load_fix_requests(self.project, slice_id).model_dump(mode="json"),
+            "masks": [m.model_dump() for m in _eq.load_masks(self.project).masks if m.eq_id in eq_ids],
+            "approval": appr.model_dump(mode="json") if appr else None,
+            "human_commits": humans,
+            "comments": [c.model_dump() for c in _ap.load_comments(self.project).comments if c.item_id in mine],
+        }
+
+    def p2_add_comment(self, data: dict) -> dict:
+        from migration_agent.migrate import approvals as _ap
+        inp = _P2CommentIn.model_validate(data)
+        with self.lock:
+            try:
+                c = _ap.add_comment(self.project, inp.item_id.strip(), inp.text, author=inp.author or "user",
+                                    file=inp.file, line=inp.line)
+            except _ap.ApprovalError as e:
+                raise ApiError(404 if str(e).startswith(("unknown item_id", "no such file")) else 400, str(e)[:300])
+        return c.model_dump()
+
+    def p2_approve_slice(self, data: dict) -> dict:
+        from migration_agent.migrate import approvals as _ap
+        inp = _P2ApproveIn.model_validate(data)
+        with self.lock:
+            try:
+                a = _ap.approve_slice(self.project, inp.slice_id, inp.approved_by, inp.note)
+            except _ap.ApprovalError as e:
+                raise ApiError(409 if e.blockers else 400, str(e)[:2000])
+        return a.model_dump(mode="json")
+
+    def p2_reject_slice(self, data: dict) -> dict:
+        from migration_agent.migrate import approvals as _ap
+        inp = _P2RejectIn.model_validate(data)
+        with self.lock:
+            try:
+                return _ap.reject_slice(self.project, inp.slice_id, inp.by, inp.reason)
+            except _ap.ApprovalError as e:
+                raise ApiError(409 if e.blockers else 400, str(e)[:2000])
+
+    def p2_resolve_risk(self, data: dict) -> dict:
+        from migration_agent.migrate.fit import FitError, resolve_risk
+        inp = _P2RiskIn.model_validate(data)
+        with self.lock:
+            try:
+                r = resolve_risk(self.project, inp.risk_id, inp.status, redact_string(inp.note),
+                                 by=redact_string(inp.by.strip()) or "user")
+            except FitError as e:
+                raise ApiError(404 if "not in" in str(e) else 400, str(e)[:300])
+        return r.model_dump(mode="json")
+
+    def p2_approve_mask(self, data: dict) -> dict:
+        from migration_agent.migrate.equivalence import EquivalenceError, approve_mask
+        inp = _P2MaskIn.model_validate(data)
+        with self.lock:
+            try:
+                m = approve_mask(self.project, inp.eq_id, inp.by, inp.reason)
+            except EquivalenceError as e:
+                raise ApiError(404 if "not a diff" in str(e) else 400, str(e)[:300])
+        return m.model_dump()
 
     def diff(self, a: int, b: int) -> dict:
         vs = set(self.versions())
@@ -338,6 +594,9 @@ class Handler(BaseHTTPRequestHandler):
             return self._json(200, st.state())
         if route == "/api/diff":
             return self._json(200, st.diff(self._int(query, "a"), self._int(query, "b")))
+        if route == "/api/p2/slice":
+            sid = (query.get("id") or [""])[0]
+            return self._json(200, st.p2_slice(sid))
         if route == "/graph":
             v = self._int(query, "v", None)
             prev = self._int(query, "prev", None)
@@ -370,7 +629,7 @@ class Handler(BaseHTTPRequestHandler):
         return int(vals[0])
 
     def _post(self, route: str, st: ReviewState):
-        if route not in ("/api/comments", "/api/resolutions"):
+        if route not in ("/api/comments", "/api/resolutions", "/api/decisions", "/api/approve") + P2_POST_ROUTES:
             return self._err(404, "not found")
         ctype = (self.headers.get("Content-Type") or "").split(";")[0].strip().lower()
         if ctype != "application/json":
@@ -392,6 +651,15 @@ class Handler(BaseHTTPRequestHandler):
             return self._err(400, "JSON object required")
         if route == "/api/comments":
             return self._json(201, st.add_comment(data))
+        if route == "/api/decisions":
+            return self._json(201, st.add_decision(data))
+        if route == "/api/approve":
+            return self._json(201, st.approve(data))
+        if route in P2_POST_ROUTES:
+            handler = {"/api/p2/comments": st.p2_add_comment, "/api/p2/approve-slice": st.p2_approve_slice,
+                       "/api/p2/reject-slice": st.p2_reject_slice, "/api/p2/resolve-risk": st.p2_resolve_risk,
+                       "/api/p2/approve-mask": st.p2_approve_mask}[route]
+            return self._json(201, handler(data))
         return self._json(201, st.add_resolution(data))
 
     def do_GET(self):

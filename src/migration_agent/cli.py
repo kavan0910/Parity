@@ -201,7 +201,8 @@ def review(project: Path, port: int, no_browser: bool) -> None:
 @main.command()
 @click.argument("project", type=click.Path(exists=True, path_type=Path))
 @click.argument("finding_id", required=False)
-@click.option("--status", type=click.Choice(["accepted_doc", "accepted_code", "dismissed", "needs_reanalysis"]), default=None)
+@click.option("--status", type=click.Choice(["accepted_doc", "accepted_code", "dismissed", "needs_reanalysis", "deferred"]),
+              default=None, help="deferred = postpone to the migration phase (recorded in the contract, no re-analysis).")
 @click.option("--note", default="")
 @click.option("--comment", "comment_item", default=None, help="Attach a comment to this item ID instead (text via --note).")
 @click.option("--reanalyze/--no-reanalyze", "do_re", default=True, help="Re-analyze affected code after recording.")
@@ -247,6 +248,69 @@ def changelog(project: Path) -> None:
     from .review.changelog import generate_changelog
     click.echo(str(generate_changelog(_proj(project))))
 
+
+@main.command()
+@click.argument("project", type=click.Path(exists=True, path_type=Path))
+@click.argument("item_id")
+@click.option("--preserve", "decision", flag_value="preserve", help="Keep the current behaviour in the migration (default).")
+@click.option("--fix", "decision", flag_value="fix", help="Fix the behaviour in the migration.")
+@click.option("--note", default="", help="Why (shown in the doc and the migration contract).")
+def decide(project: Path, item_id: str, decision: str | None, note: str) -> None:
+    """Record the migration decision (preserve or fix) for a quirk / suspected bug and re-render the doc (no LLM)."""
+    from .review._io import ReviewError
+    from .review.decisions import add_decision
+    from .review.docrender import write_latest
+    if decision is None:
+        raise click.UsageError("Give --preserve or --fix.")
+    p = _proj(project)
+    try:
+        d = add_decision(p, item_id, decision, note)
+        out = write_latest(p)
+    except ReviewError as e:
+        raise click.ClickException(str(e))
+    click.echo(f"decision for {d.item_id}: {d.decision}" + (f" ({d.note})" if d.note else ""))
+    click.echo(f"doc: {out}")
+
+
+def _print_status(p: Project) -> None:
+    from .review.approval import approval_status, readiness
+    r = readiness(p)
+    st = approval_status(p)
+    click.echo(f"ready for approval: {'yes' if r.ready else 'no'}")
+    for b in r.blockers:
+        click.echo(f"  blocker: {b}")
+    for w in r.warnings:
+        click.echo(f"  warning: {w}")
+    click.echo(f"approval: {st['state']} ({st['reason']})")
+
+
+@main.command()
+@click.argument("project", type=click.Path(exists=True, path_type=Path))
+def status(project: Path) -> None:
+    """Show Phase 1 readiness (blockers, warnings) and the approval state."""
+    _print_status(_proj(project))
+
+
+@main.command()
+@click.argument("project", type=click.Path(exists=True, path_type=Path))
+@click.option("--by", "approved_by", required=True, help="Name of the approver.")
+@click.option("--note", default="")
+def approve(project: Path, approved_by: str, note: str) -> None:
+    """Approve the understanding (Phase 1 exit gate) and write docs/migration_contract.json."""
+    from .review._io import ReviewError
+    from .review.approval import approve as do_approve, contract_path
+    p = _proj(project)
+    try:
+        a = do_approve(p, approved_by, note)
+    except ReviewError as e:
+        raise click.ClickException(str(e))
+    click.echo(f"approved graph v{a.graph_version} by {a.approved_by}")
+    for w in a.warnings:
+        click.echo(f"  warning: {w}")
+    click.echo(f"approved doc: {p.root / a.approved_doc}\ncontract:     {contract_path(p)}")
+
+
+from .migrate.cli import register as _register_phase2; _register_phase2(main)  # noqa: E402,E702 Phase 2 commands
 
 if __name__ == "__main__":
     main()

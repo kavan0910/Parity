@@ -60,6 +60,9 @@ blockquote { margin: 8px 0; padding: 2px 10px; border-left: 3px solid var(--bord
 .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; margin-bottom: 14px; }
 .stat { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 8px 12px; }
 .stat b { display: block; font-size: 22px; }
+.state-approved { color: var(--good); } .state-stale { color: var(--warn); } .state-none { color: var(--muted); }
+ul.blockers li { color: var(--bad); } ul.warnings li { color: var(--warn); }
+button:disabled { opacity: .5; cursor: not-allowed; }
 .added { color: var(--good); } .removed { color: var(--bad); } .changed { color: var(--warn); }
 iframe { width: 100%; height: 72vh; border: 1px solid var(--border); border-radius: 10px; background: var(--panel); }
 #drawer { position: fixed; right: 16px; bottom: 16px; width: min(360px, calc(100vw - 32px)); max-height: 70vh; overflow-y: auto; background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 14px; box-shadow: 0 8px 30px rgba(0,0,0,.18); display: none; }
@@ -120,14 +123,43 @@ iframe { width: 100%; height: 72vh; border: 1px solid var(--border); border-radi
     var res = latestRes();
     return S.findings.findings.filter(function (f) { return !res[f.id] || res[f.id].status === "open"; });
   }
+  function decisionFor(id) { return (S.decisions || []).filter(function (x) { return x.item_id === id; })[0] || null; }
+  function decisionCard(dec) {
+    var card = el("div", { cls: "card" });
+    var kinds = (dec.suspected_bug ? "suspected bug" : "") + (dec.quirk && dec.suspected_bug ? " · " : "") + (dec.quirk ? "quirk" : "");
+    card.appendChild(el("h3", {}, [idLink(dec.item_id), " " + dec.name]));
+    card.appendChild(el("div", { cls: "muted", text: kinds + " · migration decision: " + dec.decision + (dec.explicit ? "" : " (default)") + (dec.note ? " - " + dec.note : "") }));
+    var note = el("input", { type: "text", placeholder: "Optional note", maxlength: "5000", "aria-label": "Decision note for " + dec.item_id, style: "width:100%;margin-top:10px" });
+    note.value = dec.note || "";
+    card.appendChild(note);
+    var row = el("div", { cls: "row" });
+    [["preserve", "Keep as is (preserve)"], ["fix", "Fix it in the migration"]].forEach(function (a) {
+      var b = el("button", { type: "button", cls: dec.explicit && dec.decision === a[0] ? "primary" : "", text: a[1] });
+      b.addEventListener("click", function () {
+        post("/api/decisions", { item_id: dec.item_id, decision: a[0], note: note.value }).then(function () { toast("Saved"); return load(); }).catch(function (e) { toast("Error: " + e.message); });
+      });
+      row.appendChild(b);
+    });
+    card.appendChild(row);
+    return card;
+  }
   function wrap() { var m = document.getElementById("main"); m.textContent = ""; var w = el("div", { cls: "wrap" }); m.appendChild(w); m.scrollTop = 0; return w; }
 
   function renderTabs() {
     var t = document.getElementById("tabs"); t.textContent = "";
     var n = openFindings().length;
-    [["doc", "Document"], ["check", "To check"], ["map", "Map"], ["more", "More"]].forEach(function (x) {
+    var tabList = [["doc", "Document"], ["check", "To check"], ["map", "Map"], ["approval", "Approval"]];
+    if (S.p2) {
+      if (S.p2.fit && S.p2.fit.exists) tabList.push(["fit", "Target fit"]);
+      if (S.p2.plan) { tabList.push(["plan", "Plan"]); tabList.push(["slice", "Slice"]); }
+      tabList.push(["p2comments", "Comments"]);
+    }
+    tabList.push(["more", "More"]);
+    tabList.forEach(function (x) {
       var b = el("button", { type: "button", cls: tab === x[0] ? "on" : "", text: x[1] });
       if (x[0] === "check" && n) b.appendChild(el("span", { cls: "count", text: String(n) }));
+      if (x[0] === "approval" && S.readiness && S.readiness.blockers.length) b.appendChild(el("span", { cls: "count", text: String(S.readiness.blockers.length) }));
+      if (x[0] === "fit" && S.p2.fit.blockers && S.p2.fit.blockers.length) b.appendChild(el("span", { cls: "count", text: String(S.p2.fit.blockers.length) }));
       b.addEventListener("click", function () { tab = x[0]; renderAll(); });
       t.appendChild(b);
     });
@@ -140,6 +172,8 @@ iframe { width: 100%; height: 72vh; border: 1px solid var(--border); border-radi
     var x = el("button", { type: "button", cls: "x", "aria-label": "Close", text: "×" });
     x.addEventListener("click", function () { selected = null; renderDrawer(); });
     d.appendChild(x);
+    var dec = decisionFor(selected);
+    if (dec) d.appendChild(decisionCard(dec));
     d.appendChild(el("h2", {}, ["Comments on ", idLink(selected)]));
     commentsFor(selected).forEach(function (c) {
       d.appendChild(el("div", { cls: "card" }, [el("div", { cls: "muted", text: c.author + (c.processed ? " · used" : "") }), el("div", { text: c.text })]));
@@ -175,7 +209,8 @@ iframe { width: 100%; height: 72vh; border: 1px solid var(--border); border-radi
   var ANSWERS = [
     ["accepted_doc", "The document is right", true],
     ["accepted_code", "The code is right", false],
-    ["dismissed", "Not a real problem", false]
+    ["dismissed", "Not a real problem", false],
+    ["deferred", "Decide during migration (defer)", false]
   ];
   function renderCheck() {
     var w = wrap();
@@ -221,6 +256,37 @@ iframe { width: 100%; height: 72vh; border: 1px solid var(--border); border-radi
     w.appendChild(el("iframe", { title: "Relationship graph", sandbox: "allow-scripts allow-same-origin", src: BASE + "/graph" }));
   }
 
+  function renderApproval() {
+    var w = wrap();
+    var r = S.readiness || { ready: false, blockers: [], warnings: [] }, a = S.approval || { state: "none", reason: "" };
+    w.appendChild(el("h2", { cls: "title", text: "Approval" }));
+    w.appendChild(el("p", { cls: "lead", text: "Approving freezes this understanding as the contract for the migration. Any later re-analysis or doc change makes it stale." }));
+    var card = el("div", { cls: "card" });
+    card.appendChild(el("h3", { cls: "state-" + a.state, text: "State: " + a.state }));
+    card.appendChild(el("div", { cls: "muted", text: a.reason || "" }));
+    if (r.blockers.length) {
+      card.appendChild(el("h3", { text: "Blockers (" + r.blockers.length + ")" }));
+      var ub = el("ul", { cls: "blockers" }); r.blockers.forEach(function (x) { ub.appendChild(el("li", { text: x })); }); card.appendChild(ub);
+    } else card.appendChild(el("p", { cls: "added", text: "No blockers: ready to approve." }));
+    if (r.warnings.length) {
+      card.appendChild(el("h3", { text: "Warnings (" + r.warnings.length + ")" }));
+      var uw = el("ul", { cls: "warnings" }); r.warnings.forEach(function (x) { uw.appendChild(el("li", { text: x })); }); card.appendChild(uw);
+    }
+    var by = el("input", { type: "text", placeholder: "Your name", maxlength: "64", "aria-label": "Approved by", style: "width:100%;margin-top:10px" });
+    var note = el("input", { type: "text", placeholder: "Optional note", maxlength: "5000", "aria-label": "Approval note", style: "width:100%;margin-top:10px" });
+    var btn = el("button", { type: "button", cls: "primary", text: "Approve" });
+    if (r.blockers.length || a.state === "approved") btn.disabled = true;
+    btn.addEventListener("click", function () {
+      var name = by.value.trim(); if (!name) { toast("Enter your name first"); return; }
+      post("/api/approve", { approved_by: name, note: note.value }).then(function () { toast("Approved"); return load(); }).catch(function (e) { toast("Error: " + e.message); });
+    });
+    card.appendChild(by); card.appendChild(note); card.appendChild(el("div", { cls: "row" }, [btn]));
+    w.appendChild(card);
+    w.appendChild(el("h3", { text: "Quirks & suspected bugs: migration decisions" }));
+    if (!(S.decisions || []).length) w.appendChild(el("p", { cls: "muted", text: "No quirks or suspected bugs in the graph." }));
+    (S.decisions || []).forEach(function (d) { w.appendChild(decisionCard(d)); });
+  }
+
   function renderMore() {
     var w = wrap();
     w.appendChild(el("h2", { cls: "title", text: "More" }));
@@ -255,10 +321,180 @@ iframe { width: 100%; height: 72vh; border: 1px solid var(--border); border-radi
     w.appendChild(out);
   }
 
+
+  // ---- Phase 2 tabs (shown only when Phase 2 files exist). Everything is rendered with textContent. ----
+  var sliceId = null;
+  function pre(obj) { return el("pre", { text: typeof obj === "string" ? obj : JSON.stringify(obj, null, 2) }); }
+  function input(ph, label, max) { return el("input", { type: "text", placeholder: ph, maxlength: String(max || 5000), "aria-label": label, style: "width:100%;margin-top:8px" }); }
+  function fail(e) { toast("Error: " + e.message); }
+  function table(head, rows) {
+    var t = el("table", { style: "width:100%;border-collapse:collapse;font-size:13px" });
+    var tr = el("tr"); head.forEach(function (h) { tr.appendChild(el("th", { text: h, style: "text-align:left;border-bottom:1px solid var(--border);padding:4px" })); }); t.appendChild(tr);
+    rows.forEach(function (r) { var x = el("tr"); r.forEach(function (c) { var td = el("td", { style: "border-bottom:1px solid var(--border);padding:4px;vertical-align:top" }); td.appendChild(typeof c === "object" && c !== null && c.nodeType ? c : document.createTextNode(c == null ? "" : String(c))); x.appendChild(td); }); t.appendChild(x); });
+    return t;
+  }
+  function list(items, cls) { var u = el("ul", cls ? { cls: cls } : {}); items.forEach(function (x) { u.appendChild(el("li", { text: String(x) })); }); return u; }
+
+  function renderFit() {
+    var w = wrap(), f = S.p2.fit;
+    w.appendChild(el("h2", { cls: "title", text: "Target fit" }));
+    w.appendChild(el("p", { cls: "lead", text: "Constructs that do not map directly to the target. Open high-severity risks block planning." }));
+    if (f.error) w.appendChild(el("p", { cls: "removed", text: f.error }));
+    if (f.stale && f.stale.length) w.appendChild(list(f.stale, "warnings"));
+    f.risks.forEach(function (r) {
+      var card = el("div", { cls: "card" });
+      card.appendChild(el("h3", {}, [el("span", { cls: "pill sev-" + r.severity, text: r.severity }), r.id + " " + r.title]));
+      card.appendChild(el("div", { cls: "muted", text: r.kind + (r.blocking ? " · blocking" : "") + (r.resolution ? " · resolved: " + r.resolution.status + " (" + r.resolution.by + ")" : " · open") }));
+      if (r.detail) card.appendChild(el("p", { text: r.detail }));
+      if (r.proposed_handling) card.appendChild(el("p", { cls: "muted", text: "Proposed: " + r.proposed_handling }));
+      (r.evidence || []).slice(0, 3).forEach(function (e) { card.appendChild(el("blockquote", { text: (e.quote || "") }, [el("div", { text: e.file + ":" + e.line_start })])); });
+      if (r.item_ids.length) { var d = el("div", { cls: "muted" }, ["Related: "]); r.item_ids.forEach(function (i) { d.appendChild(idLink(i)); d.appendChild(document.createTextNode(" ")); }); card.appendChild(d); }
+      var sel = el("select", { "aria-label": "Resolution for " + r.id });
+      f.statuses.forEach(function (st) { sel.appendChild(el("option", { value: st, text: st })); });
+      var note = input("Why (required)", "Resolution note for " + r.id), by = input("Your name", "Resolved by", 64);
+      var b = el("button", { type: "button", cls: "primary", text: "Resolve" });
+      b.addEventListener("click", function () {
+        if (!note.value.trim()) { toast("A note is required"); return; }
+        post("/api/p2/resolve-risk", { risk_id: r.id, status: sel.value, note: note.value, by: by.value.trim() || "user" }).then(function () { toast("Saved"); return load(); }).catch(fail);
+      });
+      card.appendChild(note); card.appendChild(by); card.appendChild(el("div", { cls: "row" }, [sel, b]));
+      w.appendChild(card);
+    });
+    if (!f.risks.length) w.appendChild(el("div", { cls: "empty" }, [el("b", { text: "No risks" }), "The fit analysis found nothing to decide."]));
+  }
+
+  function renderPlan() {
+    var w = wrap(), p = S.p2.plan;
+    w.appendChild(el("h2", { cls: "title", text: "Plan (v" + p.version + ")" }));
+    w.appendChild(el("p", { cls: "lead", text: p.slices.length + " slices, estimated $" + p.estimate_usd + ". Click a slice to review it." }));
+    w.appendChild(table(["#", "Slice", "Name", "Status", "Depends on", "Blockers", "Est. $", "Equivalence"], p.slices.map(function (x) {
+      var a = el("button", { type: "button", text: x.id });
+      a.addEventListener("click", function () { sliceId = x.id; tab = "slice"; renderAll(); });
+      return [x.order, a, x.name + " (" + x.kind + ")", x.status + (x.reason ? ": " + x.reason : ""), (x.depends_on || []).join(", "), (x.blockers || []).join(", "), x.estimate_usd,
+        x.equivalence_pct == null ? "-" : x.equivalence_pct + "% (" + x.unexplained + " unexplained)"];
+    })));
+  }
+
+  function commentForm(items, after) {
+    var box = el("div", { cls: "card" });
+    box.appendChild(el("h3", { text: "Add a comment" }));
+    var sel = el("select", { "aria-label": "Comment on" });
+    items.forEach(function (i) { sel.appendChild(el("option", { value: i, text: i })); });
+    var free = input("or type an ID (SLICE-, CT-, EQ-, RISK-, graph ID)", "Item ID", 64);
+    var file = input("target_code file (optional)", "File", 500), line = input("line (optional)", "Line", 9);
+    var ta = el("textarea", { "aria-label": "Comment text", maxlength: "5000", placeholder: "What should change?" });
+    var b = el("button", { type: "button", cls: "primary", text: "Save comment" });
+    b.addEventListener("click", function () {
+      var body = { item_id: (free.value.trim() || sel.value), text: ta.value.trim() };
+      if (!body.item_id || !body.text) { toast("Item and text are required"); return; }
+      if (file.value.trim()) body.file = file.value.trim();
+      if (line.value.trim()) { var n = parseInt(line.value, 10); if (!(n > 0)) { toast("Line must be a number"); return; } body.line = n; }
+      post("/api/p2/comments", body).then(function () { toast("Saved"); return after(); }).catch(fail);
+    });
+    [sel, free, file, line, ta].forEach(function (x) { box.appendChild(x); });
+    box.appendChild(el("div", { cls: "row" }, [b]));
+    return box;
+  }
+  function commentList(cs) {
+    if (!cs.length) return el("p", { cls: "muted", text: "No comments yet." });
+    return table(["ID", "On", "Where", "Text", "By", "Used"], cs.map(function (c) { return [c.id, c.item_id, c.file ? c.file + (c.line ? ":" + c.line : "") : "", c.text, c.author, c.processed ? "yes" : "no"]; }));
+  }
+
+  function renderSlice() {
+    var w = wrap(), p = S.p2.plan;
+    if (!p || !p.slices.length) { w.appendChild(el("div", { cls: "empty" }, [el("b", { text: "No slices" }), "Run the plan command first."])); return; }
+    if (!sliceId) sliceId = p.slices[0].id;
+    var sel = el("select", { "aria-label": "Slice" });
+    p.slices.forEach(function (x) { var o = el("option", { value: x.id, text: x.id + " " + x.name + " (" + x.status + ")" }); if (x.id === sliceId) o.selected = true; sel.appendChild(o); });
+    sel.addEventListener("change", function () { sliceId = sel.value; renderSlice(); });
+    w.appendChild(el("div", { cls: "row" }, [sel]));
+    var body = el("div"); w.appendChild(body);
+    body.appendChild(el("p", { cls: "muted", text: "Loading..." }));
+    api("/api/p2/slice?id=" + encodeURIComponent(sliceId)).then(function (d) { drawSlice(body, d); }).catch(function (e) { body.textContent = ""; body.appendChild(el("p", { cls: "removed", text: "Error: " + e.message })); });
+  }
+
+  function drawSlice(body, d) {
+    body.textContent = "";
+    var sid = d.slice.id;
+    body.appendChild(el("h2", { cls: "title", text: sid + " " + d.slice.name }));
+    body.appendChild(el("p", { cls: "lead", text: "Status: " + d.state.status + " · iteration " + d.state.iteration + (d.state.reason ? " · " + d.state.reason : "") }));
+    var card = el("div", { cls: "card" });
+    card.appendChild(el("h3", { text: d.blockers.length ? "Approval blockers (" + d.blockers.length + ")" : "No blockers: ready to approve" }));
+    if (d.blockers.length) card.appendChild(list(d.blockers, "blockers"));
+    if (d.approval) card.appendChild(el("p", { cls: "added", text: "Approved by " + d.approval.approved_by + " at " + d.approval.approved_at + (d.approval.commit_sha ? " (" + d.approval.commit_sha.slice(0, 12) + ")" : "") }));
+    var by = input("Your name", "Your name", 64), note = input("Note (approval) or reason (rejection)", "Note or reason");
+    var ok = el("button", { type: "button", cls: "primary", text: "Approve slice" }), no = el("button", { type: "button", text: "Reject slice" });
+    if (d.blockers.length) ok.disabled = true;
+    ok.addEventListener("click", function () {
+      if (!by.value.trim()) { toast("Enter your name first"); return; }
+      post("/api/p2/approve-slice", { slice_id: sid, approved_by: by.value.trim(), note: note.value }).then(function () { toast("Approved"); return load(); }).catch(fail);
+    });
+    no.addEventListener("click", function () {
+      if (!by.value.trim() || !note.value.trim()) { toast("Name and reason are required"); return; }
+      post("/api/p2/reject-slice", { slice_id: sid, by: by.value.trim(), reason: note.value }).then(function () { toast("Rejected"); return load(); }).catch(fail);
+    });
+    card.appendChild(by); card.appendChild(note); card.appendChild(el("div", { cls: "row" }, [ok, no]));
+    body.appendChild(card);
+
+    body.appendChild(el("h3", { text: "Iterations" }));
+    body.appendChild(d.iterations.length ? table(["#", "Build", "Tests", "Files"], d.iterations.map(function (i) { return [i.iteration, i.build == null ? "-" : (i.build ? "green" : "red"), i.tests == null ? "-" : (i.tests ? "pass" : "fail"), i.files.join(", ")]; })) : el("p", { cls: "muted", text: "No iterations yet." }));
+    if (d.tests) { body.appendChild(el("h3", { text: "Latest test results" })); body.appendChild(pre(d.tests)); }
+    if (d.build) { body.appendChild(el("h3", { text: "Latest build" })); body.appendChild(pre(d.build)); }
+
+    body.appendChild(el("h3", { text: "Code diff (target_code)" }));
+    if (d.diff.error) body.appendChild(el("p", { cls: "muted", text: d.diff.error }));
+    else {
+      body.appendChild(el("p", { cls: "muted", text: "From " + d.diff.base_label + " (" + d.diff.base.slice(0, 12) + ") to HEAD " + d.diff.head.slice(0, 12) + (d.diff.truncated ? " · truncated" : "") }));
+      body.appendChild(pre(d.diff.stat || "(no changes)"));
+      if (d.diff.diff) body.appendChild(pre(d.diff.diff));
+    }
+    if (d.human_commits.length) { body.appendChild(el("h3", { text: "Human commits" })); body.appendChild(table(["Commit", "Author", "Subject"], d.human_commits.map(function (c) { return [c.sha.slice(0, 12), c.author, c.subject]; }))); }
+
+    body.appendChild(el("h3", { text: "Equivalence" }));
+    var eq = d.equivalence;
+    if (!eq) body.appendChild(el("p", { cls: "muted", text: "Not run yet." }));
+    else {
+      body.appendChild(el("p", { text: eq.cases_equivalent + "/" + eq.cases_total + " cases equivalent (" + eq.equivalence_pct + "%)" }));
+      var rows = eq.diffs.map(function (x) {
+        var act = "";
+        if (x.classification === "unknown" || x.classification === "regression") {
+          act = el("button", { type: "button", text: "Approve mask" });
+          act.addEventListener("click", function () {
+            var who = by.value.trim(); if (!who) { toast("Enter your name above first"); return; }
+            post("/api/p2/approve-mask", { eq_id: x.id, by: who, reason: note.value }).then(function () { toast("Mask approved; re-run equivalence"); renderSlice(); }).catch(fail);
+          });
+        }
+        return [x.id, x.case_id, x.field, x.classification + (x.decision_ref ? " (" + x.decision_ref + ")" : ""), JSON.stringify(x.legacy), JSON.stringify(x.new), (x.triage ? x.triage + ": " + x.triage_quote : "") + (x.note ? " " + x.note : ""), act];
+      });
+      body.appendChild(rows.length ? table(["EQ", "Case", "Field", "Class", "Legacy", "New", "Triage / note", ""], rows) : el("p", { cls: "added", text: "No differences." }));
+      if (Object.keys(eq.untestable || {}).length) { body.appendChild(el("h3", { text: "Untestable items" })); body.appendChild(list(Object.keys(eq.untestable).map(function (k) { return k + ": " + eq.untestable[k]; }))); }
+    }
+    if (d.fix_requests.requests.length) { body.appendChild(el("h3", { text: "Fix requests" })); body.appendChild(table(["EQ", "Case", "Field", "Reason", "Status"], d.fix_requests.requests.map(function (r) { return [r.eq_id, r.case_id, r.field, r.reason, r.status]; }))); }
+    if (d.decisions.decisions.length) { body.appendChild(el("h3", { text: "Decisions" })); body.appendChild(table(["Kind", "Ref", "Status", "Choice", "Question / note"], d.decisions.decisions.map(function (x) { return [x.kind, x.ref, x.status, x.choice, x.question || x.note]; }))); }
+    if (d.masks.length) { body.appendChild(el("h3", { text: "Masks" })); body.appendChild(table(["EQ", "Case", "Mask", "Status", "By"], d.masks.map(function (m) { return [m.eq_id, m.case_id, m.mask, m.status, m.approved_by || m.proposed_by]; }))); }
+    if (d.review.length) { body.appendChild(el("h3", { text: "Reviewer findings" })); body.appendChild(pre(d.review)); }
+    if (d.slice.blockers.length) { body.appendChild(el("h3", { text: "Plan blockers" })); body.appendChild(list(d.slice.blockers)); }
+
+    body.appendChild(el("h3", { text: "Comments" }));
+    body.appendChild(commentList(d.comments));
+    var items = [sid].concat(d.cases.map(function (c) { return c.id; }), eq ? eq.diffs.map(function (x) { return x.id; }) : []);
+    body.appendChild(commentForm(items, function () { return load().then(function () { tab = "slice"; renderAll(); }); }));
+  }
+
+  function renderP2Comments() {
+    var w = wrap();
+    w.appendChild(el("h2", { cls: "title", text: "Migration comments" }));
+    w.appendChild(el("p", { cls: "lead", text: "Comments on slices, test cases, equivalence diffs, risks or code lines. The next fix iteration reads unprocessed comments." }));
+    w.appendChild(commentList(S.p2.comments));
+    w.appendChild(commentForm(S.p2.known_ids, load));
+  }
+
   function renderAll() {
     document.getElementById("pname").textContent = (S.project || "Project") + " review";
     renderTabs(); renderDrawer();
-    if (tab === "check") renderCheck(); else if (tab === "map") renderMap(); else if (tab === "more") renderMore(); else renderDoc();
+    if (tab === "check") renderCheck(); else if (tab === "map") renderMap(); else if (tab === "approval") renderApproval(); else if (tab === "more") renderMore();
+    else if (tab === "fit" && S.p2) renderFit(); else if (tab === "plan" && S.p2) renderPlan(); else if (tab === "slice" && S.p2) renderSlice();
+    else if (tab === "p2comments" && S.p2) renderP2Comments(); else renderDoc();
   }
 
   // ---- first-run tour ----

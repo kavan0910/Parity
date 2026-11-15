@@ -10,6 +10,12 @@
   user_docs/            documents for the Verifier only (Phase C)
   feedback/             comments, resolutions (Phase C)
   audit/                audit.jsonl (A-07)
+
+schema_version 2 (Phase 2) adds the migration folders (legacy_src/, target/, plan/, characterization/,
+harness/, target_code/, slices/, runs/, migration/, config/, data/, equivalence/, cutover/, inputs/traffic/).
+They are NOT created here: migrate/paths.py creates each one lazily on first use, so a project that never
+runs Phase 2 keeps exactly the Phase 1 layout. v1 folders load unchanged; migrate/paths.py bumps
+project.json to 2 the first time it creates a Phase 2 folder.
 """
 from __future__ import annotations
 
@@ -19,7 +25,8 @@ from pathlib import Path
 
 from pydantic import BaseModel
 
-SCHEMA_VERSION = 1
+SCHEMA_VERSION = 2
+SUPPORTED_SCHEMA_VERSIONS = (1, 2)
 SUBDIRS = ("code", "facts", "graph", "graph/snapshots", "docs", "user_docs", "feedback", "audit")
 
 
@@ -62,6 +69,13 @@ class Project:
         p = cls(root)
         if not p.meta_path.exists():
             raise FileNotFoundError(f"not a project folder (no project.json): {p.root}")
+        try:
+            ver = json.loads(p.meta_path.read_text()).get("schema_version", 1)
+        except (ValueError, AttributeError):
+            return p  # unreadable metadata is reported by the command that needs it
+        if isinstance(ver, int) and ver > max(SUPPORTED_SCHEMA_VERSIONS):
+            raise ValueError(f"project schema_version {ver} is newer than this migration-agent supports "
+                             f"({max(SUPPORTED_SCHEMA_VERSIONS)}); upgrade migration-agent")
         return p
 
     def meta(self) -> ProjectMeta:

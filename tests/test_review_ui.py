@@ -245,3 +245,77 @@ def test_corrupt_feedback_not_overwritten(srv):
     assert f.read_text() == "{garbage"
     st = json.loads(req(server, "GET", b + "/api/state")[1])
     assert st["errors"]
+
+
+def test_state_has_readiness_approval_and_decisions(srv):
+    server, url, _ = srv
+    st = json.loads(req(server, "GET", base(url) + "/api/state")[1])
+    assert st["approval"]["state"] == "none"
+    assert st["readiness"]["ready"] is False and st["readiness"]["blockers"]
+    assert st["decisions"] == []
+
+
+def test_page_has_approval_panel_and_deferred(srv):
+    server, url, _ = srv
+    body = req(server, "GET", base(url) + "/")[1].decode()
+    assert '"deferred"' in body and "/api/approve" in body and "/api/decisions" in body
+    assert "renderApproval" in body and "btn.disabled = true" in body
+
+
+@pytest.fixture
+def real_srv(tmp_path, tmp_path_factory):
+    from phase1_helpers import make_project
+    p = make_project(tmp_path, tmp_path_factory)
+    server, url = serve(p.root)
+    yield server, url, p
+    server.stop()
+
+
+def test_post_decision_and_approve(real_srv):
+    server, url, p = real_srv
+    b = base(url)
+    D, A = b + "/api/decisions", b + "/api/approve"
+    # auth / origin: same rules as the other POST routes
+    assert req(server, "POST", "/api/decisions", {"item_id": p.bug_id, "decision": "fix"})[0] == 403
+    assert req(server, "POST", D, {"item_id": p.bug_id, "decision": "fix"}, headers={"Origin": "http://evil.example"})[0] == 403
+    assert req(server, "POST", "/api/approve", {"approved_by": "x"})[0] == 403
+    assert req(server, "POST", A, {"approved_by": "x"}, headers={"Sec-Fetch-Site": "cross-site"})[0] == 403
+    # validation
+    assert req(server, "POST", D, {"item_id": "COMP-9999", "decision": "fix"})[0] == 404
+    assert req(server, "POST", D, {"item_id": p.plain_id, "decision": "fix"})[0] == 400
+    assert req(server, "POST", D, {"item_id": p.bug_id, "decision": "maybe"})[0] == 400
+    assert req(server, "POST", D, "{}", headers={"Content-Type": "text/plain"})[0] == 415
+    assert req(server, "POST", A, {"approved_by": "   "})[0] == 400
+    assert req(server, "POST", A, {})[0] == 400
+    assert not (p.root / "feedback" / "decisions.json").exists()
+    # happy path
+    s, out, _ = req(server, "POST", D, {"item_id": p.bug_id, "decision": "fix", "note": "fix the refund"})
+    assert s == 201 and json.loads(out)["decision"] == "fix"
+    assert "Migration decision: fix - fix the refund" in (p.docs / "understanding.latest.md").read_text()
+    st = json.loads(req(server, "GET", b + "/api/state")[1])
+    dec = {d["item_id"]: d for d in st["decisions"]}
+    assert dec[p.bug_id]["explicit"] and dec[p.bug_id]["decision"] == "fix" and not dec[p.quirk_id]["explicit"]
+    assert st["readiness"]["ready"] is True
+    s, out, _ = req(server, "POST", A, {"approved_by": "alice", "note": "ok"})
+    assert s == 201 and json.loads(out)["approved_by"] == "alice"
+    assert (p.docs / "migration_contract.json").exists()
+    st = json.loads(req(server, "GET", b + "/api/state")[1])
+    assert st["approval"]["state"] == "approved"
+    assert req(server, "POST", A, {"approved_by": "bob"})[0] == 400  # already approved
+
+
+def test_approve_endpoint_refuses_when_blocked(real_srv):
+    server, url, p = real_srv
+    b = base(url)
+    assert req(server, "POST", b + "/api/comments", {"item_id": p.plain_id, "text": "hmm"})[0] == 201
+    s, out, _ = req(server, "POST", b + "/api/approve", {"approved_by": "alice"})
+    assert s == 400 and "not ready" in json.loads(out)["error"]
+    assert not (p.root / "feedback" / "approvals.json").exists()
+
+
+def test_post_deferred_resolution(srv):
+    server, url, proj = srv
+    s, _, _ = req(server, "POST", base(url) + "/api/resolutions", {"finding_id": "F-0001", "status": "deferred"})
+    assert s == 201
+    rf = ResolutionsFile.model_validate_json((proj.root / "feedback" / "resolutions.json").read_text())
+    assert rf.resolutions[0].status == "deferred"
